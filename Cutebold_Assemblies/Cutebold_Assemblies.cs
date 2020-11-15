@@ -239,7 +239,7 @@ namespace Cutebold_Assemblies
         {
             if(__result && pawn.def.defName == RaceName && __instance.ColorChannel == "eye")
             {
-                if (pawn.Map.glowGrid.GameGlowAt(pawn.Position) >= 0.3f || (pawn.CurJob != null && pawn.jobs.curDriver.asleep) || 
+                if (pawn.Dead || pawn.Map.glowGrid.GameGlowAt(pawn.Position) >= 0.3f || (pawn.CurJob != null && pawn.jobs.curDriver.asleep) || 
                     pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f || pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <=0.1f)
                 {
                     __result = false;

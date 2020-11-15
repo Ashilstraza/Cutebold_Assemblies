@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30225.117
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cutebold_Assemblies", "Cutebold_Assemblies\Cutebold_Assemblies.csproj", "{595E3FE8-C183-4363-83F6-03E75C56D839}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Assembly-CSharp", "E:\SteamLibrary\steamapps\common\RimWorld 1.2 Copy\RimWorldWin64_Data\Managed\Assembly-CSharp_Source\Assembly-CSharp.csproj", "{5AD4DDA2-46AE-46F1-88A2-C98283530998}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienRace", "AlienRaces\Source\AlienRace\AlienRace\AlienRace.csproj", "{E7AFA757-436C-40A3-AAFD-66351AA01536}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{595E3FE8-C183-4363-83F6-03E75C56D839}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{595E3FE8-C183-4363-83F6-03E75C56D839}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{595E3FE8-C183-4363-83F6-03E75C56D839}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{595E3FE8-C183-4363-83F6-03E75C56D839}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AD4DDA2-46AE-46F1-88A2-C98283530998}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AD4DDA2-46AE-46F1-88A2-C98283530998}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7AFA757-436C-40A3-AAFD-66351AA01536}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E7AFA757-436C-40A3-AAFD-66351AA01536}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E7AFA757-436C-40A3-AAFD-66351AA01536}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E7AFA757-436C-40A3-AAFD-66351AA01536}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {F130C33D-7A0B-463F-A4D4-12D5EC8D0BF7}
+	EndGlobalSection
+EndGlobal

@@ -51,11 +51,11 @@ namespace Cutebold_Assemblies
     public class HediffCompProperties_CuteboldDarkAdaptation : HediffCompProperties
     {
         /// <summary>How much we should gain/lose per day max.</summary>
-        private float maxSeverityPerDay;
+        private float maxSeverityPerDay = 0.1f;
         /// <summary>The maximum light level before losing severity.</summary>
-        private float maxLightLevel;
+        private float maxLightLevel = 0.5f;
         /// <summary>The minimum light level before gaining severity.</summary>
-        private float minLightLevel;
+        private float minLightLevel = 0.3f;
         /// <summary>List of how the light level affects global work speed.</summary>
         private List<Cutebold_lightDarkAdjustment> lightDarkAdjustment;
 
@@ -329,6 +329,9 @@ namespace Cutebold_Assemblies
 
             MaxLightGlobalWorkSpeed = lightDarkAdjustment.Light == -1.0f ? defaultLightglobalWorkSpeed - globalWorkSpeedDifference * lightDarkAdjustment.Multiplier : lightDarkAdjustment.Light;
             MaxDarkGlobalWorkSpeed = lightDarkAdjustment.Dark == -1.0f ? defaultDarkglobalWorkSpeed + globalWorkSpeedDifference * lightDarkAdjustment.Multiplier : lightDarkAdjustment.Dark;
+
+            if (MaxLightGlobalWorkSpeed < 0.5f) MaxLightGlobalWorkSpeed = 0.5f;
+            if (MaxDarkGlobalWorkSpeed < 0.5f) MaxDarkGlobalWorkSpeed = 0.5f;
 
             if (gogglesEquiped || (MaxLightGlobalWorkSpeed == defaultLightglobalWorkSpeed && MaxDarkGlobalWorkSpeed == defaultDarkglobalWorkSpeed))
             {

@@ -9,7 +9,49 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Assembly-CSharp", "E:\Steam
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienRace", "AlienRaces\Source\AlienRace\AlienRace\AlienRace.csproj", "{E7AFA757-436C-40A3-AAFD-66351AA01536}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienRace", "..\AlienRaces\Source\AlienRace\AlienRace\AlienRace.csproj", "{E7AFA757-436C-40A3-AAFD-66351AA01536}"
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Cutebold Race", "..\..\..\Documents\Rimworld Mods\Cutebold Race\", "{54E7CB60-1003-43AE-A434-61EAF95E913B}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_51018"
+		Debug.AspNetCompiler.PhysicalPath = "..\..\..\Documents\Rimworld Mods\Cutebold Race\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_51018\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_51018"
+		Release.AspNetCompiler.PhysicalPath = "..\..\..\Documents\Rimworld Mods\Cutebold Race\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_51018\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "51018"
+		SlnRelativePath = "..\..\..\Documents\Rimworld Mods\Cutebold Race\"
+	EndProjectSection
+EndProject
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Data", "E:\SteamLibrary\steamapps\common\RimWorld 1.2 Copy\Data\", "{A536579C-CA9B-4B50-82C2-0BF754392D83}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_51727"
+		Debug.AspNetCompiler.PhysicalPath = "E:\SteamLibrary\steamapps\common\RimWorld 1.2 Copy\Data\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_51727\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/localhost_51727"
+		Release.AspNetCompiler.PhysicalPath = "E:\SteamLibrary\steamapps\common\RimWorld 1.2 Copy\Data\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_51727\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		VWDPort = "51727"
+		SlnRelativePath = "E:\SteamLibrary\steamapps\common\RimWorld 1.2 Copy\Data\"
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,12 +66,18 @@ Global
 		{5AD4DDA2-46AE-46F1-88A2-C98283530998}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{5AD4DDA2-46AE-46F1-88A2-C98283530998}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7AFA757-436C-40A3-AAFD-66351AA01536}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E7AFA757-436C-40A3-AAFD-66351AA01536}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E7AFA757-436C-40A3-AAFD-66351AA01536}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E7AFA757-436C-40A3-AAFD-66351AA01536}.Release|Any CPU.Build.0 = Release|Any CPU
+		{54E7CB60-1003-43AE-A434-61EAF95E913B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{54E7CB60-1003-43AE-A434-61EAF95E913B}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{A536579C-CA9B-4B50-82C2-0BF754392D83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A536579C-CA9B-4B50-82C2-0BF754392D83}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{54E7CB60-1003-43AE-A434-61EAF95E913B} = {0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}
+		{A536579C-CA9B-4B50-82C2-0BF754392D83} = {0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F130C33D-7A0B-463F-A4D4-12D5EC8D0BF7}

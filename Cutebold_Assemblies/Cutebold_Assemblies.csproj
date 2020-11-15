@@ -36,11 +36,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>Source-DLLs\0Harmony.dll</HintPath>
+      <HintPath>E:\SteamLibrary\steamapps\common\RimWorld\Mods\__LocalCopy_Harmony__16_8\Current\Assemblies\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="AlienRace">
-      <HintPath>Source-DLLs\AlienRace.dll</HintPath>
+      <HintPath>..\..\AlienRaces\1.2\Assemblies\AlienRace.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="Assembly-CSharp">
@@ -48,23 +48,15 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="HarmonyMod">
-      <HintPath>Source-DLLs\HarmonyMod.dll</HintPath>
+      <HintPath>E:\SteamLibrary\steamapps\common\RimWorld\Mods\__LocalCopy_Harmony__16_8\Current\Assemblies\HarmonyMod.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="JetBrains.Annotations, Version=2020.1.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
       <HintPath>..\packages\JetBrains.Annotations.2020.1.0\lib\net20\JetBrains.Annotations.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
     <Reference Include="UnityEngine">
-      <HintPath>Source-DLLs\UnityEngine.dll</HintPath>
+      <HintPath>E:\SteamLibrary\steamapps\common\RimWorld 1.2 Copy\RimWorldWin64_Data\Managed\UnityEngine.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">

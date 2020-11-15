@@ -30,6 +30,17 @@ namespace Cutebold_Assemblies
         /// <summary>List of Underground Cutebold Adult Backstories</summary>
         public static List<Backstory> CuteboldUndergroundAdultBackstories { get; private set; }
 
+        private static List<RulePackDef> cuteboldNamers = new List<RulePackDef>()
+        {
+            Cutebold_DefOf.NamerPersonCutebold,
+            Cutebold_DefOf.NamerPersonCuteboldOther,
+            Cutebold_DefOf.NamerPersonCuteboldOtherFemale,
+            Cutebold_DefOf.NamerPersonCuteboldOutsider,
+            Cutebold_DefOf.NamerPersonCuteboldOutsiderFemale,
+            Cutebold_DefOf.NamerPersonCuteboldSlave
+        };
+        public static List<RulePackDef> CuteboldNamers { get; }
+
 
         /// <summary>
         /// Applies harmony patches on startup.
@@ -131,10 +142,17 @@ namespace Cutebold_Assemblies
         {
 
             //Log.Message("Generate Pawn Name Prefix");
+            //Log.Message("  pawn def=" + pawn.def.ToString() + " style=" + style.ToString());
 
             if (pawn.def == null || style != NameStyle.Full || pawn.def.defName != Cutebold_Assemblies.RaceName) return true;
 
+            //Log.Message("  pawn faction=" + pawn.Faction.ToString() + "  faction name maker="+((pawn.Faction != null && pawn.Faction.def.pawnNameMaker != null) ? pawn.Faction.def.pawnNameMaker.ToString() : ""));
             RulePackDef rulePack = null;
+
+            if (pawn.Faction != null && cuteboldNamers.Contains(pawn.Faction.def.pawnNameMaker))
+            {
+                rulePack = pawn.Faction.def.pawnNameMaker;
+            }
 
             // Cutebolds with no faction name maker
             if (pawn.Faction == null || pawn.Faction.def.pawnNameMaker == null)
@@ -185,10 +203,27 @@ namespace Cutebold_Assemblies
             if (rulePack != null)
             {
                 __result = CuteboldNameResolver(rulePack, forcedLastName);
+
+                for (int i = 0; i<100; i++)
+                {
+                    if (!CuteboldNameChecker(__result))
+                    {
+                        //Log.Message("  Generated name: "+__result.ToStringFull+" after "+i+" tries.");
+                        return false;
+                    }
+                    __result = CuteboldNameResolver(rulePack, forcedLastName);
+                }
+
+                Log.Warning(string.Format("{0}: Failed at creating a unique name, using {1}.", new object[] {
+                    Cutebold_Assemblies.ModName,
+                    __result.ToStringFull
+                }));
+                
                 return false;
             }
             else
             {
+                //Log.Message("RulePack still null, using regular name generator.");
                 return true;
             }
         }
@@ -208,9 +243,40 @@ namespace Cutebold_Assemblies
         }
 
         /// <summary>
+        /// Checks if a cutebold name has been already used.
+        /// </summary>
+        /// <param name="name">The name to check.</param>
+        /// <returns>If the name has been used.</returns>
+        private static bool CuteboldNameChecker(Name name)
+        {
+            //Log.Message("Cutebold Name Checker name=" + name.ToString());
+            NameTriple nameTriple = name as NameTriple;
+
+            foreach (Name otherName in NameUseChecker.AllPawnsNamesEverUsed)
+            {
+                NameTriple otherNameTriple = otherName as NameTriple;
+                if (otherNameTriple != null)
+                {
+                    if (!otherNameTriple.Nick.NullOrEmpty() && !nameTriple.Nick.NullOrEmpty() && otherNameTriple.Nick == nameTriple.Nick)
+                    {
+                        //Log.Message("  Nick already in use.");
+                        return true;
+                    }
+                    if(!otherNameTriple.First.NullOrEmpty() && !nameTriple.First.NullOrEmpty() && otherNameTriple.First == nameTriple.First
+                        && otherNameTriple.Last == nameTriple.Last)
+                    {
+                        //Log.Message("  First and last already in use.");
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
         /// Catches the result of the CanDoNext() method when starting a new game and it validates the pawn names.
         /// </summary>
-        /// <param name="__result">The result of the patched method before we possibly change it.</param>
+        /// <param name="__result">True if everyone's name is valid.</param>
         [HarmonyPriority(Priority.Low)]
         private static void CuteboldCanDoNextPostfix(ref bool __result)
         {

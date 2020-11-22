@@ -1,7 +1,9 @@
-﻿using RimWorld;
+﻿
+using RimWorld;
 using System.Collections.Generic;
 using System.Text;
 using Verse;
+using static AlienRace.AlienPartGenerator;
 
 namespace Cutebold_Assemblies
 {
@@ -18,11 +20,11 @@ namespace Cutebold_Assemblies
         private float multiplier = float.MaxValue;
 
         /// <summary>Flat value that the global work speed should be in 0% light.</summary>
-        public float Dark { get => dark; }
+        public float Dark => dark;
         /// <summary>Flat value that the global work sleed should be in 100% light.</summary>
-        public float Light { get => light; }
+        public float Light => light;
         /// <summary>Multiplier for the difference between the default global work speed values.</summary>
-        public float Multiplier { get => multiplier; }
+        public float Multiplier => multiplier;
 
         /// <summary>
         /// Checks the given fields and returns any issues with the configuration.
@@ -60,13 +62,13 @@ namespace Cutebold_Assemblies
         private List<Cutebold_lightDarkAdjustment> lightDarkAdjustment;
 
         /// <summary>How much we should gain/lose per day max.</summary>
-        public float MaxSeverityPerDay { get => maxSeverityPerDay; }
+        public float MaxSeverityPerDay => maxSeverityPerDay;
         /// <summary>The maximum light level before losing severity.</summary>
-        public float MaxLightLevel { get => maxLightLevel; }
+        public float MaxLightLevel => maxLightLevel;
         /// <summary>The minimum light level before gaining severity.</summary>
-        public float MinLightLevel { get => minLightLevel; }
+        public float MinLightLevel => minLightLevel;
         /// <summary>List of how the light level affects global work speed.</summary>
-        public List<Cutebold_lightDarkAdjustment> LightDarkAdjustment { get => lightDarkAdjustment; }
+        public List<Cutebold_lightDarkAdjustment> LightDarkAdjustment => lightDarkAdjustment;
 
         /// <summary>
         /// Adds a reference to the HediffComp on creation.
@@ -209,6 +211,10 @@ namespace Cutebold_Assemblies
         public float MaxDarkGlobalWorkSpeed { get; private set; } = 0f;
         /// <summary>Maximum global work speed in 100% light.</summary>
         public float MaxLightGlobalWorkSpeed { get; private set; } = 0f;
+        /// <summary>Left eye glow body addon.</summary>
+        public BodyAddon leftEyeGlow;
+        /// <summary>Right eye glow body addon.</summary>
+        public BodyAddon rightEyeGlow;
 
         /// <summary>
         /// Returns the debug information about the hediff.
@@ -242,12 +248,18 @@ namespace Cutebold_Assemblies
                 }
             }
 
+            if (pawn.Spawned) lightLevel = pawn.Map.glowGrid.GameGlowAt(pawn.Position);
+            else lightLevel = 0.75f;
+
+            if (rightEyeGlow != null && leftEyeGlow != null)
+            {
+                if (pawn.Dead || lightLevel >= 0.3f || !adaptationComp.CanSee) SetEyeGlowEnabled(false);
+                else SetEyeGlowEnabled(true);
+            }
+
             if (pawn.IsHashIntervalTick(60))
             {
                 var updateGlow = false;
-
-                if (pawn.Spawned) this.lightLevel = pawn.Map.glowGrid.GameGlowAt(pawn.Position);
-                else this.lightLevel = 0.75f;
 
                 if (goggles != null && goggles.Wearer != pawn)
                 {
@@ -258,9 +270,9 @@ namespace Cutebold_Assemblies
 
                 if (goggles == null)
                 {
-                    foreach(Apparel apparel in pawn.apparel.WornApparel)
+                    foreach (Apparel apparel in pawn.apparel.WornApparel)
                     {
-                        if(apparel.def == Cutebold_DefOf.Cutebold_Goggles)
+                        if (apparel.def == Cutebold_DefOf.Cutebold_Goggles)
                         {
                             goggles = apparel;
                             gogglesEquiped = true;
@@ -284,6 +296,18 @@ namespace Cutebold_Assemblies
         }
 
         /// <summary>
+        /// Changes the eye glow visibility.
+        /// </summary>
+        /// <param name="enabled">If the eye glow should be visible.</param>
+        private void SetEyeGlowEnabled(bool enabled)
+        {
+            rightEyeGlow.drawForFemale = enabled;
+            rightEyeGlow.drawForMale = enabled;
+            leftEyeGlow.drawForFemale = enabled;
+            leftEyeGlow.drawForMale = enabled;
+        }
+
+        /// <summary>
         /// Updates the dark adaptation component.
         /// </summary>
         private void UpdateCuteboldCompProperties()
@@ -294,7 +318,10 @@ namespace Cutebold_Assemblies
             {
                 adaptationComp.CanSee = false;
             }
-            else adaptationComp.CanSee = true;
+            else
+            {
+                adaptationComp.CanSee = true;
+            }
         }
 
         /// <summary>

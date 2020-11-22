@@ -204,7 +204,7 @@ namespace Cutebold_Assemblies
             {
                 __result = CuteboldNameResolver(rulePack, forcedLastName);
 
-                for (int i = 0; i<100; i++)
+                for (int i = 0; i < 100; i++)
                 {
                     if (!CuteboldNameChecker(__result))
                     {
@@ -218,7 +218,7 @@ namespace Cutebold_Assemblies
                     Cutebold_Assemblies.ModName,
                     __result.ToStringFull
                 }));
-                
+
                 return false;
             }
             else
@@ -262,7 +262,7 @@ namespace Cutebold_Assemblies
                         //Log.Message("  Nick already in use.");
                         return true;
                     }
-                    if(!otherNameTriple.First.NullOrEmpty() && !nameTriple.First.NullOrEmpty() && otherNameTriple.First == nameTriple.First
+                    if (!otherNameTriple.First.NullOrEmpty() && !nameTriple.First.NullOrEmpty() && otherNameTriple.First == nameTriple.First
                         && otherNameTriple.Last == nameTriple.Last)
                     {
                         //Log.Message("  First and last already in use.");

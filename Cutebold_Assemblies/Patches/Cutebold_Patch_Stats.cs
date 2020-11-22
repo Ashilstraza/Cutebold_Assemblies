@@ -7,7 +7,6 @@ using UnityEngine;
 using Verse;
 using Verse.AI;
 using Verse.Sound;
-using static AlienRace.AlienPartGenerator;
 
 namespace Cutebold_Assemblies
 {
@@ -60,7 +59,8 @@ namespace Cutebold_Assemblies
         {
             //Log.Message("CuteboldTrySapwnYieldMiningPostfix");
 
-            if (pawn == null || pawn.def.defName != Cutebold_Assemblies.RaceName || __instance == null || __instance.def.building.mineableThing == null || __instance.def.building.mineableDropChance < 1f || !__instance.def.building.mineableYieldWasteable) return;
+            if (pawn?.def.defName != Cutebold_Assemblies.RaceName || __instance == null || __instance.def.building.mineableThing == null || __instance.def.building.mineableDropChance < 1f || !__instance.def.building.mineableYieldWasteable) return;
+            //if (pawn == null || pawn.def.defName != Cutebold_Assemblies.RaceName || __instance == null || __instance.def.building.mineableThing == null || __instance.def.building.mineableDropChance < 1f || !__instance.def.building.mineableYieldWasteable) return;
 
             //Log.Message("  Effective Mineable Yield="+ __instance.def.building.EffectiveMineableYield.ToString());
             //Log.Message("  Yield Percent=" + ___yieldPct.ToString());
@@ -107,9 +107,15 @@ namespace Cutebold_Assemblies
                         if (extraPercent > 0f) yield return new StatDrawEntry(statEntry.category, stat, 1f + extraPercent, req);
                         else yield return statEntry;
                     }
-                    else yield return statEntry;
+                    else
+                    {
+                        yield return statEntry;
+                    }
                 }
-                else yield return statEntry;
+                else
+                {
+                    yield return statEntry;
+                }
             }
         }
 
@@ -204,7 +210,7 @@ namespace Cutebold_Assemblies
 
             //Log.Message("rawPercent=" + rawPercent + " basePercent=" + basePercent + " defaultMaxPercent=" + defaultMaxPercent);
 
-            return (rawPercent > basePercent) ? (basePercent - defaultMaxPercent) : (rawPercent < defaultMaxPercent) ? 0f : rawPercent - defaultMaxPercent;
+            return (rawPercent > basePercent) ? (basePercent - defaultMaxPercent) : ((rawPercent < defaultMaxPercent) ? 0f : (rawPercent - defaultMaxPercent));
         }
 
         /// <summary>
@@ -266,6 +272,24 @@ namespace Cutebold_Assemblies
 
                 hediff.Severity = new FloatRange(minSeverity, maxSeverity).RandomInRange;
 
+                var bodyAddons = new List<AlienPartGenerator.BodyAddon>(Cutebold_Assemblies.AlienRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons);
+
+                foreach (var bodyAddon in bodyAddons)
+                {
+                    if (bodyAddon.bodyPart == "left eye" && bodyAddon.ColorChannel == "eye")
+                    {
+                        bodyAddon.drawForFemale = false;
+                        bodyAddon.drawForMale = false;
+                        hediff.leftEyeGlow = bodyAddon;
+                    }
+                    if (bodyAddon.bodyPart == "right eye" && bodyAddon.ColorChannel == "eye")
+                    {
+                        bodyAddon.drawForFemale = false;
+                        bodyAddon.drawForMale = false;
+                        hediff.rightEyeGlow = bodyAddon;
+                    }
+                }
+
                 __instance.health.AddHediff(hediff);
             }
         }
@@ -278,7 +302,8 @@ namespace Cutebold_Assemblies
         /// <param name="respawningAfterLoad">If the pawn is spawning after a reload. (unused)</param>
         private static void CuteboldNoAdaptationSpawnSetupPostfix(Pawn __instance, Map map, bool respawningAfterLoad)
         {
-            if (__instance.Dead || __instance.def == null || __instance.def.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
+            if (__instance.Dead || __instance.def?.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
+            //if (__instance.Dead || __instance.def == null || __instance.def.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
 
             Hediff hediff = __instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
 

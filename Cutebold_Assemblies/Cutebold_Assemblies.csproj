@@ -22,7 +22,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>Cutebold_Assemblies.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>
+    </CodeAnalysisRuleSet>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -32,7 +33,8 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <DebugSymbols>false</DebugSymbols>
-    <CodeAnalysisRuleSet>Cutebold_Assemblies.ruleset</CodeAnalysisRuleSet>
+    <CodeAnalysisRuleSet>
+    </CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
@@ -65,17 +67,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Cutebold_Hediff_LightSickness.cs" />
-    <Compile Include="Cutebold_Patch_Names.cs" />
-    <Compile Include="Cutebold_Patch_Stats.cs" />
+    <Compile Include="Hediffs\Cutebold_Hediff_LightSickness.cs" />
+    <Compile Include="Patches\Cutebold_Patch_BodyAddons.cs" />
+    <Compile Include="Patches\Cutebold_Patch_Names.cs" />
+    <Compile Include="Patches\Cutebold_Patch_Stats.cs" />
     <Compile Include="Cutebold_DefOf.cs" />
     <Compile Include="Cutebold_Settings.cs" />
     <Compile Include="Cutebold_Assemblies.cs" />
-    <Compile Include="Cutebold_Hediff_DarkAdaptation.cs" />
+    <Compile Include="Hediffs\Cutebold_Hediff_DarkAdaptation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Cutebold_Assemblies.ruleset" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

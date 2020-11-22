@@ -9,7 +9,7 @@ using Verse;
 namespace Cutebold_Assemblies
 {
     /// <summary>
-    /// Main cutebold class that handles modifications that can not be done in XML.
+    /// Main cutebold class that handles modifications that can not be done in XML. Some patches are split off into their own classes for organization, one ones that are in this class are the left overs.
     /// </summary>
     /// <remarks>
     /// <para>Handles interpawn opinions and pawn thoughts.</para>
@@ -18,8 +18,6 @@ namespace Cutebold_Assemblies
     [StaticConstructorOnStartup]
     public static class Cutebold_Assemblies
     {
-        /// <summary>Cutebold alien race def.</summary>
-        private static ThingDef_AlienRace alienRaceDef;
         /// <summary>List of all the butcherable races that gives bad thoughts to cutebolds.</summary>
         private static IEnumerable<string> butcherRaceList;
         /// <summary>List of all the humanoid leathers.</summary>
@@ -29,10 +27,14 @@ namespace Cutebold_Assemblies
         /// <summary>If we already have logged the ingestor error</summary>
         private static bool ingestedLogged = false;
 
+        /// <summary>Cutebold alien race def.</summary>
+        public static ThingDef_AlienRace AlienRaceDef { get; private set; }
         /// <summary>Our mod name, for debug output purposes.</summary>
         public static string ModName { get; } = "Cutebold Race Mod";
         /// <summary>Cutebold race def string.</summary>
         public static string RaceName { get; } = "Alien_Cutebold";
+        /// <summary>Cutebold Harmony ID.</summary>
+        public static string HarmonyID { get; } = "rimworld.ashilstraza.races.cute.main";
 
         /// <summary>
         /// Main constructor for setting up some values and executing harmony patches.
@@ -40,9 +42,9 @@ namespace Cutebold_Assemblies
         static Cutebold_Assemblies()
         {
             var settings = LoadedModManager.GetMod<CuteboldMod>().GetSettings<Cutebold_Settings>();
-            var harmony = new Harmony("rimworld.ashilstraza.races.cute.main");
+            var harmony = new Harmony(HarmonyID);
 
-            alienRaceDef = (ThingDef_AlienRace)DefDatabase<ThingDef>.GetNamed(RaceName);
+            AlienRaceDef = (ThingDef_AlienRace)Cutebold_DefOf.Alien_Cutebold;
 
             try { CreateButcherRaceList(); }
             catch (MissingFieldException e)
@@ -62,10 +64,9 @@ namespace Cutebold_Assemblies
             harmony.Patch(AccessTools.Method(typeof(Corpse), "ButcherProducts", null, null), null, new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldButcherProductsPostfix", null), null, null);
             // Wearing Humanoid Clothing
             harmony.Patch(AccessTools.Method(typeof(ThoughtWorker_HumanLeatherApparel), "CurrentStateInternal", null, null), null, new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldCurrentStateInternalPostfix", null), null, null);
-            // Disable eye glow when sleeping/in light
-            harmony.Patch(AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), "CanDrawAddon", null, null), null, new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldCanDrawAddonPostfix", null), null, null);
 
-            // Optional Patches
+            new Cutebold_Patch_BodyAddons(settings);
+
             new Cutebold_Patch_Stats(harmony, settings);
         }
 
@@ -77,7 +78,7 @@ namespace Cutebold_Assemblies
             //Log.Message("Create Butcher Race List");
             List<string> butcherList = new List<string>();
 
-            foreach (ThingDef race in alienRaceDef.alienRace.thoughtSettings.butcherThoughtSpecific.FirstOrDefault().raceList)
+            foreach (ThingDef race in AlienRaceDef.alienRace.thoughtSettings.butcherThoughtSpecific.FirstOrDefault().raceList)
             {
                 //Log.Message("  Race: " + race.defName);
                 butcherList.Add(race.defName);
@@ -227,24 +228,6 @@ namespace Cutebold_Assemblies
             //Log.Message("num: " + num.ToString() + " Result Stage Index: " + __result.StageIndex.ToString() + "new Thought State Stage Index: " + newThoughtState.StageIndex.ToString());
 
             if (__result.StageIndex <= newThoughtState.StageIndex) __result = newThoughtState;
-        }
-
-        /// <summary>
-        /// Patch that hides the eye glow on cutebolds depending on a handfull of situations
-        /// </summary>
-        /// <param name="__instance">The body addon to check</param>
-        /// <param name="__result">If the body addon is hidden</param>
-        /// <param name="pawn">The pawn the body addon belongs to</param>
-        public static void CuteboldCanDrawAddonPostfix(AlienPartGenerator.BodyAddon __instance, ref bool __result, Pawn pawn)
-        {
-            if(__result && pawn.def.defName == RaceName && __instance.ColorChannel == "eye")
-            {
-                if (pawn.Dead || pawn.Map.glowGrid.GameGlowAt(pawn.Position) >= 0.3f || (pawn.CurJob != null && pawn.jobs.curDriver.asleep) || 
-                    pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f || pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <=0.1f)
-                {
-                    __result = false;
-                }
-            }
         }
     }
 }

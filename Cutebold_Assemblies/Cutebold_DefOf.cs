@@ -17,6 +17,8 @@ namespace Cutebold_Assemblies
             DefOfHelper.EnsureInitializedInCtor(typeof(Cutebold_DefOf));
         }
 
+        // RaceDef
+        public static ThingDef Alien_Cutebold;
         // Opinion ThoughtDefs
         public static ThoughtDef ButcheredCuteboldCorpseOpinion;
         public static ThoughtDef AteRawCuteboldMeat;

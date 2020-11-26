@@ -87,8 +87,18 @@ namespace Cutebold_Assemblies
         }
     }
 
+    /// <summary>
+    /// Enables the ability to disable a checkbox.
+    /// </summary>
     public class Cutebold_Listing : Listing_Standard
     {
+        /// <summary>
+        /// Creates a checkbox with the given paramaters.
+        /// </summary>
+        /// <param name="label">What the checkbox should be labeled.</param>
+        /// <param name="checkOn">If the checkbox is checked.</param>
+        /// <param name="tooltip">What the tooltio should be when hovered.</param>
+        /// <param name="disabled">If the checkbox should be disabled.</param>
         public void CheckboxLabeled(string label, ref bool checkOn, string tooltip = null, bool disabled = false)
         {
             float lineHeight = Text.LineHeight;

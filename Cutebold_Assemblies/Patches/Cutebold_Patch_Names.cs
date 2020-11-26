@@ -118,15 +118,8 @@ namespace Cutebold_Assemblies
 
             //Log.Message("Generate Name Prefix");
 
-            foreach (var included in request.Includes)
-            {
-                //Log.Message("  "+ included.ToString());
-                if (included == Cutebold_DefOf.NamerPersonCutebold || included == Cutebold_DefOf.NamerPersonCuteboldSlave)
-                {
-                    //Log.Message("    Ignore Validator");
-                    validator = null;
-                }
-            }
+            if(request.Includes.Any(included => included == Cutebold_DefOf.NamerPersonCutebold || included == Cutebold_DefOf.NamerPersonCuteboldSlave))
+                validator = null;
         }
 
         /// <summary>
@@ -202,22 +195,7 @@ namespace Cutebold_Assemblies
 
             if (rulePack != null)
             {
-                __result = CuteboldNameResolver(rulePack, forcedLastName);
-
-                for (int i = 0; i < 100; i++)
-                {
-                    if (!CuteboldNameChecker(__result))
-                    {
-                        //Log.Message("  Generated name: "+__result.ToStringFull+" after "+i+" tries.");
-                        return false;
-                    }
-                    __result = CuteboldNameResolver(rulePack, forcedLastName);
-                }
-
-                Log.Warning(string.Format("{0}: Failed at creating a unique name, using {1}.", new object[] {
-                    Cutebold_Assemblies.ModName,
-                    __result.ToStringFull
-                }));
+                __result = CuteboldNameGenerator(rulePack, forcedLastName);
 
                 return false;
             }
@@ -226,6 +204,33 @@ namespace Cutebold_Assemblies
                 //Log.Message("RulePack still null, using regular name generator.");
                 return true;
             }
+        }
+
+        /// <summary>
+        /// Generates a name for a cutebold. May generate a name that has been used if unable to create a unique one.
+        /// </summary>
+        /// <param name="rulePack">The given name rules.</param>
+        /// <param name="forcedLastName">The forced last name.</param>
+        /// <returns>Returns a new cutebold name.</returns>
+        private static Name CuteboldNameGenerator(RulePackDef rulePack, string forcedLastName)
+        {
+            var name = CuteboldNameResolver(rulePack, forcedLastName);
+
+            for (int i = 0; i < 100; i++)
+            {
+                if (!CuteboldNameChecker(name))
+                {
+                    //Log.Message("  Generated name: "+__result.ToStringFull+" after "+i+" tries.");
+                    return name;
+                }
+                name = CuteboldNameResolver(rulePack, forcedLastName);
+            }
+
+            Log.Warning(string.Format("{0}: Failed at creating a unique name, using {1}.", new object[] {
+                    Cutebold_Assemblies.ModName,
+                    name.ToStringFull
+                }));
+            return name;
         }
 
         /// <summary>
@@ -282,17 +287,8 @@ namespace Cutebold_Assemblies
         {
             if (__result) return;
 
-            bool result = true;
-
-            using (List<Pawn>.Enumerator enumerator = Find.GameInitData.startingAndOptionalPawns.GetEnumerator())
-            {
-                while (enumerator.MoveNext())
-                {
-                    if (!enumerator.Current.Name.IsValid && enumerator.Current.def.defName != Cutebold_Assemblies.RaceName) result = false;
-                }
-            }
-
-            __result = result;
+            if (Find.GameInitData.startingAndOptionalPawns.Any(pawn => !pawn.Name.IsValid && pawn.def.defName != Cutebold_Assemblies.RaceName))
+                __result = false;
         }
     }
 }

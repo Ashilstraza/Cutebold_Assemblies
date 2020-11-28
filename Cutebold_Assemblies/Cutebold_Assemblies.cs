@@ -65,9 +65,11 @@ namespace Cutebold_Assemblies
             // Wearing Humanoid Clothing
             harmony.Patch(AccessTools.Method(typeof(ThoughtWorker_HumanLeatherApparel), "CurrentStateInternal", null, null), null, new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldCurrentStateInternalPostfix", null), null, null);
 
-            new Cutebold_Patch_BodyAddons(settings);
+            new Cutebold_Patch_BodyAddons(harmony, settings);
 
             new Cutebold_Patch_Stats(harmony, settings);
+
+            new Cutebold_Patch_HediffRelated(harmony, settings);
         }
 
         /// <summary>

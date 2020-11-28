@@ -2,6 +2,7 @@
 using HarmonyLib;
 using RimWorld;
 using System;
+using System.Linq;
 using System.Collections.Generic;
 using UnityEngine;
 using Verse;
@@ -31,21 +32,9 @@ namespace Cutebold_Assemblies
                 // Edits the stats in the stat bio window to be the correct value.
                 harmony.Patch(AccessTools.Method(typeof(StatsReportUtility), "StatsToDraw", new Type[] { typeof(Thing) }, null), null, new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldStatsToDrawPostfix", null), null, null);
             }
-
-            if (settings.eyeAdaptation)
-            {
-                // Allows for dark adaptation, obviously not cave adaptation since that is a different game with cute kobolds.
-                harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "FactorFromGlow", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldFactorFromGlowPostfix", null), null, null);
-                // Applies dark adaptation to all cutebolds as they spawn.               
-                harmony.Patch(AccessTools.Method(typeof(Pawn), "SpawnSetup", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldAdaptationSpawnSetupPostfix", null), null, null);
-            }
-            else
-            {
-                // Removes dark adaptation to all cutebolds as they spawn in.
-                harmony.Patch(AccessTools.Method(typeof(Pawn), "SpawnSetup", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldNoAdaptationSpawnSetupPostfix", null), null, null);
-            }
         }
 
+        /// TODO: Try and change into a transpiler?
         /// <summary>
         /// Adds extra materials to mined rock when the yield is over the default max.
         /// </summary>
@@ -92,7 +81,7 @@ namespace Cutebold_Assemblies
         /// </summary>
         /// <param name="__result">The list of stats being displayed in the stats bio page.</param>
         /// <param name="thing">The pawn or object being inspected.</param>
-        /// <returns></returns>
+        /// <returns>Requested stat entry.</returns>
         private static IEnumerable<StatDrawEntry> CuteboldStatsToDrawPostfix(IEnumerable<StatDrawEntry> __result, Thing thing)
         {
             foreach (StatDrawEntry statEntry in __result)
@@ -119,6 +108,7 @@ namespace Cutebold_Assemblies
             }
         }
 
+        /// TODO: Change into a transpiler.
         /// <summary>
         /// Replaces the plant harvest toil of a cutebold to allow them to harvest over 100%.
         /// </summary>
@@ -211,106 +201,6 @@ namespace Cutebold_Assemblies
             //Log.Message("rawPercent=" + rawPercent + " basePercent=" + basePercent + " defaultMaxPercent=" + defaultMaxPercent);
 
             return (rawPercent > basePercent) ? (basePercent - defaultMaxPercent) : ((rawPercent < defaultMaxPercent) ? 0f : (rawPercent - defaultMaxPercent));
-        }
-
-        /// <summary>
-        /// Overrides the regular glow curve for cutebolds to allow for dark adaptation.
-        /// </summary>
-        /// <param name="__result">The previous glow curve result.</param>
-        /// <param name="t">The thing that is being evaluated.</param>
-        private static void CuteboldFactorFromGlowPostfix(ref float __result, Thing t)
-        {
-            if (t.def.defName == Cutebold_Assemblies.RaceName)
-            {
-                Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)((Pawn)t).health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
-                if (hediff != null) __result = hediff.GlowCurve.Evaluate(t.Map.glowGrid.GameGlowAt(t.Position));
-            }
-        }
-
-        /// <summary>
-        /// Applies the dark adaptation hediff to cutebolds as they spawn if they don't have it.
-        /// </summary>
-        /// <param name="__instance">The pawn</param>
-        /// <param name="map">The map they are located on. (unused)</param>
-        /// <param name="respawningAfterLoad">If the pawn is spawning after a reload.</param>
-        private static void CuteboldAdaptationSpawnSetupPostfix(Pawn __instance, Map map, bool respawningAfterLoad)
-        {
-            if (__instance.Dead || __instance.def == null || __instance.def.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
-
-            if (__instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) == null)
-            {
-                Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)HediffMaker.MakeHediff(Cutebold_DefOf.CuteboldDarkAdaptation, __instance);
-                float minSeverity = 0f;
-                float maxSeverity = 0.1f;
-
-                if (!(__instance.story.traits.HasTrait(TraitDef.Named("Wimp")) && __instance.health.hediffSet.PainTotal > 0.0f) && __instance.health.hediffSet.PainTotal <= 0.5f && !respawningAfterLoad)
-                {
-                    if (__instance.story.childhood != null && Cutebold_Patch_Names.CuteboldUndergroundChildBackstories.Contains(__instance.story.childhood))
-                    {
-                        minSeverity += 0.05f;
-                        maxSeverity += 0.15f;
-                    }
-
-                    if (__instance.story.adulthood != null && Cutebold_Patch_Names.CuteboldUndergroundAdultBackstories.Contains(__instance.story.childhood))
-                    {
-                        minSeverity += 0.20f;
-                        maxSeverity += 0.30f;
-                    }
-
-                    if (__instance.story.traits.HasTrait(TraitDefOf.Undergrounder))
-                    {
-                        minSeverity += 0.10f;
-                        maxSeverity += 0.20f;
-                    }
-
-                    if (__instance.story.traits.HasTrait(TraitDef.Named("Wimp")))
-                    {
-                        minSeverity = minSeverity > 0.5f ? 0.5f : minSeverity;
-                        maxSeverity = maxSeverity > 0.7f ? 0.7f : maxSeverity;
-                    }
-                }
-
-                hediff.Severity = new FloatRange(minSeverity, maxSeverity).RandomInRange;
-
-                var bodyAddons = new List<AlienPartGenerator.BodyAddon>(Cutebold_Assemblies.AlienRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons);
-
-                foreach (var bodyAddon in bodyAddons)
-                {
-                    if (bodyAddon.bodyPart == "left eye" && bodyAddon.ColorChannel == "eye")
-                    {
-                        bodyAddon.drawForFemale = false;
-                        bodyAddon.drawForMale = false;
-                        hediff.leftEyeGlow = bodyAddon;
-                    }
-                    if (bodyAddon.bodyPart == "right eye" && bodyAddon.ColorChannel == "eye")
-                    {
-                        bodyAddon.drawForFemale = false;
-                        bodyAddon.drawForMale = false;
-                        hediff.rightEyeGlow = bodyAddon;
-                    }
-                }
-
-                __instance.health.AddHediff(hediff);
-            }
-        }
-
-        /// <summary>
-        /// Removes the dark adaptation hediff on cutebolds if they spawn with it.
-        /// </summary>
-        /// <param name="__instance">The pawn</param>
-        /// <param name="map">The map they are located on. (unused)</param>
-        /// <param name="respawningAfterLoad">If the pawn is spawning after a reload. (unused)</param>
-        private static void CuteboldNoAdaptationSpawnSetupPostfix(Pawn __instance, Map map, bool respawningAfterLoad)
-        {
-            if (__instance.Dead || __instance.def?.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
-            //if (__instance.Dead || __instance.def == null || __instance.def.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
-
-            Hediff hediff = __instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
-
-            if (hediff != null)
-            {
-                __instance.health.RemoveHediff(hediff);
-            }
         }
     }
 }

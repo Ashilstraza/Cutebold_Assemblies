@@ -69,6 +69,7 @@
   <ItemGroup>
     <Compile Include="Hediffs\Cutebold_Hediff_LightSickness.cs" />
     <Compile Include="Patches\Cutebold_Patch_BodyAddons.cs" />
+    <Compile Include="Patches\Cutebold_Patch_HediffRelated.cs" />
     <Compile Include="Patches\Cutebold_Patch_Names.cs" />
     <Compile Include="Patches\Cutebold_Patch_Stats.cs" />
     <Compile Include="Cutebold_DefOf.cs" />

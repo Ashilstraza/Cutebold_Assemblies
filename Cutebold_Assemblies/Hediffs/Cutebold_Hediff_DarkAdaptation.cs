@@ -1,6 +1,8 @@
 ﻿
 using RimWorld;
+using RimWorld.Planet;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Verse;
 using static AlienRace.AlienPartGenerator;
@@ -110,7 +112,7 @@ namespace Cutebold_Assemblies
         private const float SeverityUpdateMultiplier = 1f / (60000f / SeverityUpdateInterval);
         /// <summary>Set of properties for the hediff component.</summary>
         private HediffCompProperties_CuteboldDarkAdaptation Props => (HediffCompProperties_CuteboldDarkAdaptation)props;
-
+        
         /// <summary>Light level of the pawn at the current location.</summary>
         public float LightLevel = 0f;
         /// <summary>If the pawn can see.</summary>
@@ -180,8 +182,6 @@ namespace Cutebold_Assemblies
     {
         /// <summary>Light level of the pawn at the current location.</summary>
         private float lightLevel = 0f;
-        /// <summary>Indicates if goggles are equiped.</summary>
-        private bool gogglesEquiped = false;
         /// <summary>The equiped goggles.</summary>
         private Apparel goggles;
         /// <summary>The defualt glow curve.</summary>
@@ -202,6 +202,10 @@ namespace Cutebold_Assemblies
         private int lastIndex = -1;
         /// <summary>The adaptation component.</summary>
         private HediffComp_CuteboldDarkAdaptation adaptationComp;
+        /// <summary>If the pawn's eyes are missing.</summary>
+        private bool eyesMissing = false;
+        /// <summary>If the glow curve should be updated.</summary>
+        private bool updateGlowCurve = true;
 
         /// <summary>If the current hediff stage should be visible.</summary>
         public override bool Visible => CurStage.becomeVisible;
@@ -211,10 +215,6 @@ namespace Cutebold_Assemblies
         public float MaxDarkGlobalWorkSpeed { get; private set; } = 0f;
         /// <summary>Maximum global work speed in 100% light.</summary>
         public float MaxLightGlobalWorkSpeed { get; private set; } = 0f;
-        /// <summary>Left eye glow body addon.</summary>
-        public BodyAddon leftEyeGlow;
-        /// <summary>Right eye glow body addon.</summary>
-        public BodyAddon rightEyeGlow;
 
         /// <summary>
         /// Returns the debug information about the hediff.
@@ -248,43 +248,13 @@ namespace Cutebold_Assemblies
                 }
             }
 
-            if (pawn.Spawned) lightLevel = pawn.Map.glowGrid.GameGlowAt(pawn.Position);
-            else lightLevel = 0.75f;
-
-            if (rightEyeGlow != null && leftEyeGlow != null)
-            {
-                if (pawn.Dead || lightLevel >= 0.3f || !adaptationComp.CanSee) SetEyeGlowEnabled(false);
-                else SetEyeGlowEnabled(true);
-            }
-
             if (pawn.IsHashIntervalTick(60))
             {
-                var updateGlow = false;
-
-                if (goggles != null && goggles.Wearer != pawn)
-                {
-                    goggles = null;
-                    gogglesEquiped = false;
-                    updateGlow = true;
-                }
-
-                if (goggles == null)
-                {
-                    foreach (Apparel apparel in pawn.apparel.WornApparel)
-                    {
-                        if (apparel.def == Cutebold_DefOf.Cutebold_Goggles)
-                        {
-                            goggles = apparel;
-                            gogglesEquiped = true;
-                            updateGlow = true;
-                            break;
-                        }
-                    }
-                }
+                lightLevel = CheckLightLevel();
 
                 UpdateCuteboldCompProperties();
 
-                if (updateGlow || (lastIndex != CurStageIndex))
+                if (updateGlowCurve || (lastIndex != CurStageIndex))
                 {
                     lastIndex = CurStageIndex;
 
@@ -296,15 +266,29 @@ namespace Cutebold_Assemblies
         }
 
         /// <summary>
-        /// Changes the eye glow visibility.
+        /// Checks the light level at a pawn or their caravan.
         /// </summary>
-        /// <param name="enabled">If the eye glow should be visible.</param>
-        private void SetEyeGlowEnabled(bool enabled)
+        /// <returns>The light level.</returns>
+        private float CheckLightLevel()
         {
-            rightEyeGlow.drawForFemale = enabled;
-            rightEyeGlow.drawForMale = enabled;
-            leftEyeGlow.drawForFemale = enabled;
-            leftEyeGlow.drawForMale = enabled;
+            if (pawn.Spawned)
+            {
+                return pawn.Map.glowGrid.GameGlowAt(pawn.Position);
+            }
+            else if(pawn.CarriedBy != null)
+            {
+                return pawn.CarriedBy.Map.glowGrid.GameGlowAt(pawn.CarriedBy.Position);
+            }
+            else if(pawn.ParentHolder != null && pawn.ParentHolder is Caravan)
+            {
+                var time = GenDate.HourFloat(GenTicks.TicksAbs, Find.WorldGrid.LongLatOf(((Caravan)pawn.ParentHolder).Tile).x);
+
+                if (time > 19 || time < 5) return 0f; // Night
+                else if (time > 18 || time < 6) return 0.5f; // Dusk/Dawn
+                else return 1f; // Day
+            }
+
+            return 0.5f;
         }
 
         /// <summary>
@@ -314,13 +298,15 @@ namespace Cutebold_Assemblies
         {
             adaptationComp.LightLevel = this.lightLevel;
 
-            if (gogglesEquiped || (pawn.CurJob != null && pawn.jobs.curDriver.asleep) || pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f || pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f)
+            if (goggles != null || eyesMissing || pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f)
             {
                 adaptationComp.CanSee = false;
             }
-            else
+            else adaptationComp.CanSee = true;
+
+            if (eyesMissing)
             {
-                adaptationComp.CanSee = true;
+                this.Severity = 0f;
             }
         }
 
@@ -360,7 +346,7 @@ namespace Cutebold_Assemblies
             if (MaxLightGlobalWorkSpeed < 0.5f) MaxLightGlobalWorkSpeed = 0.5f;
             if (MaxDarkGlobalWorkSpeed < 0.5f) MaxDarkGlobalWorkSpeed = 0.5f;
 
-            if (gogglesEquiped || (MaxLightGlobalWorkSpeed == defaultLightglobalWorkSpeed && MaxDarkGlobalWorkSpeed == defaultDarkglobalWorkSpeed))
+            if (goggles != null || (MaxLightGlobalWorkSpeed == defaultLightglobalWorkSpeed && MaxDarkGlobalWorkSpeed == defaultDarkglobalWorkSpeed))
             {
                 GlowCurve = new SimpleCurve(defaultGlowCurve);
             }
@@ -372,6 +358,38 @@ namespace Cutebold_Assemblies
                                     new CurvePoint(1.0f,MaxLightGlobalWorkSpeed)
                                 });
             }
+        }
+
+        /// <summary>
+        /// Updates the eyesMissing bool.
+        /// </summary>
+        public void UpdateEyes()
+        {
+            if (!pawn.health.hediffSet.GetNotMissingParts().Any(eye => eye.untranslatedCustomLabel == "left eye") &&
+                !pawn.health.hediffSet.GetNotMissingParts().Any(eye => eye.untranslatedCustomLabel == "right eye"))
+            {
+                eyesMissing = true;
+            }
+            else eyesMissing = false;
+        }
+
+        /// <summary>
+        /// Updates the reference to the goggles if worn.
+        /// </summary>
+        public void UpdateGoggles()
+        {
+            foreach (Apparel apparel in pawn.apparel.WornApparel)
+            {
+                if (apparel.def == Cutebold_DefOf.Cutebold_Goggles)
+                {
+                    goggles = apparel;
+                    updateGlowCurve = true;
+                    return;
+                }
+            }
+
+            goggles = null;
+            updateGlowCurve = true;
         }
     }
 }

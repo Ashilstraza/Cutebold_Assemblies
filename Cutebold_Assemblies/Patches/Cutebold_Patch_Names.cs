@@ -287,8 +287,8 @@ namespace Cutebold_Assemblies
         {
             if (__result) return;
 
-            if (Find.GameInitData.startingAndOptionalPawns.Any(pawn => !pawn.Name.IsValid && pawn.def.defName != Cutebold_Assemblies.RaceName))
-                __result = false;
+            if (Find.GameInitData.startingAndOptionalPawns.Any(pawn => !pawn.Name.IsValid && pawn.def.defName == Cutebold_Assemblies.RaceName))
+                __result = true;
         }
     }
 }

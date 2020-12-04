@@ -29,6 +29,7 @@ namespace Cutebold_Assemblies
                 // Removes dark adaptation to all cutebolds as they spawn in.
                 harmony.Patch(AccessTools.Method(typeof(Pawn), "SpawnSetup", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldNoAdaptationSpawnSetupPostfix", null), null, null);
             }
+
             // Adjust layer offset for cutebold goggles.
             harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] { 
                     typeof(Vector3), 
@@ -41,6 +42,7 @@ namespace Cutebold_Assemblies
                     typeof(bool), typeof(bool) 
                 }), null, null, new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldRenderPawnInternalTranspiler", null), null);
         }
+
         /// <summary>
         /// Overrides the regular glow curve for cutebolds to allow for dark adaptation.
         /// </summary>

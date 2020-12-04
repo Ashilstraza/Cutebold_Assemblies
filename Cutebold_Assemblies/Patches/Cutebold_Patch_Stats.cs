@@ -62,7 +62,7 @@ namespace Cutebold_Assemblies
             // Based on the RimWorld base code to allow for mining yield over 100% cause cutebolds are just that good at mining.
             if (___yieldPct >= 1f && extraPercent > 0f)
             {
-                Thing minedMaterial = ThingMaker.MakeThing(__instance.def.building.mineableThing, null);
+                Thing minedMaterial = ThingMaker.MakeThing(__instance.def.building.mineableThing);
                 minedMaterial.stackCount = GenMath.RoundRandom(__instance.def.building.EffectiveMineableYield * extraPercent);
                 GenPlace.TryPlaceThing(minedMaterial, __instance.Position, map, ThingPlaceMode.Near, ForbidIfNecessary);
             }

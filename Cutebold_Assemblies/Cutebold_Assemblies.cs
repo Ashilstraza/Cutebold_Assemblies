@@ -22,9 +22,9 @@ namespace Cutebold_Assemblies
         private static IEnumerable<string> butcherRaceList;
         /// <summary>List of all the humanoid leathers.</summary>
         private static IEnumerable<ThingDef> humanoidLeathers;
-        /// <summary>If we already have logged the butcher error</summary>
+        /// <summary>If we already have logged the butcher error.</summary>
         private static bool butcherLogged = false;
-        /// <summary>If we already have logged the ingestor error</summary>
+        /// <summary>If we already have logged the ingestor error.</summary>
         private static bool ingestedLogged = false;
 
         /// <summary>Cutebold alien race def.</summary>

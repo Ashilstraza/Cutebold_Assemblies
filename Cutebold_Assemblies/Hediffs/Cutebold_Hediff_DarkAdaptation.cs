@@ -36,15 +36,15 @@ namespace Cutebold_Assemblies
         {
             if (dark == -1.0f && light == -1.0f && multiplier == float.MaxValue)
             {
-                yield return "a lightDarkAdjustment is empty in .xml";
+                yield return "A lightDarkAdjustment is empty in .xml.";
             }
             if ((dark == -1.0f && light != -1.0f) || (dark != -1.0f && light == -1.0f))
             {
-                yield return "lightDarkAdjustment has only a single light or dark value";
+                yield return "A lightDarkAdjustment has only a single light or dark value.";
             }
             if ((dark != -1.0f || light != -1.0f) && multiplier != float.MaxValue)
             {
-                yield return "lightDarkAdjustment has both a light and/or dark value along with a multiplier, the light and/or dark value will be used instead of the multiplier";
+                yield return "A lightDarkAdjustment has both a light and/or dark value along with a multiplier, the light and/or dark value will be used instead of the multiplier.";
             }
         }
     }
@@ -60,8 +60,10 @@ namespace Cutebold_Assemblies
         private float maxLightLevel = 0.5f;
         /// <summary>The minimum light level before gaining severity.</summary>
         private float minLightLevel = 0.3f;
+#pragma warning disable CS0649 // Ignore not being assigned to warning: lightDarkAdjustment should always be set in the .xml
         /// <summary>List of how the light level affects global work speed.</summary>
         private List<Cutebold_lightDarkAdjustment> lightDarkAdjustment;
+#pragma warning restore CS0649
 
         /// <summary>How much we should gain/lose per day max.</summary>
         public float MaxSeverityPerDay => maxSeverityPerDay;
@@ -88,15 +90,15 @@ namespace Cutebold_Assemblies
         {
             if (maxSeverityPerDay == 0.0f)
             {
-                yield return "HediffCompProperties_CuteboldDarkAdaptation maxSeverityPerDay is 0";
+                yield return "HediffCompProperties_CuteboldDarkAdaptation maxSeverityPerDay is 0.";
             }
             if (minLightLevel > maxLightLevel)
             {
-                yield return "HediffCompProperties_CuteboldDarkAdaptation minLightLevel is greater than maxLightLevel";
+                yield return "HediffCompProperties_CuteboldDarkAdaptation minLightLevel is greater than maxLightLevel.";
             }
             if (lightDarkAdjustment == null)
             {
-                yield return "HediffCompProperties_CuteboldDarkAdaptation lightDarkAdjustment is null";
+                yield return "HediffCompProperties_CuteboldDarkAdaptation lightDarkAdjustment is null.";
             }
         }
     }

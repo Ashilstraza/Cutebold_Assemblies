@@ -32,7 +32,6 @@ namespace Cutebold_Assemblies
         public static RulePackDef NamerPersonCuteboldOtherFemale;
         public static RulePackDef NamerPersonCuteboldOutsider;
         public static RulePackDef NamerPersonCuteboldOutsiderFemale;
-        public static RulePackDef DamageEvent_CuteboldTrapBoulder;
         // HediffDefs
         public static HediffDef CuteboldDarkAdaptation;
         public static HediffDef CuteboldLightSickness;

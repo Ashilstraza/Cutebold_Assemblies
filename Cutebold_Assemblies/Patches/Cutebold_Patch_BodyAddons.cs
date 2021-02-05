@@ -154,8 +154,8 @@ namespace Cutebold_Assemblies
 
             __result = true;
             
-            if (pawn.Dead || 
-                (pawn.CarriedBy == null ? pawn.Map.glowGrid.GameGlowAt(pawn.Position) : pawn.CarriedBy.Map.glowGrid.GameGlowAt(pawn.CarriedBy.Position)) >= 0.3f || 
+            if (pawn.Dead ||
+                ((pawn.ParentHolder as Map) != null ? pawn.Map.glowGrid.GameGlowAt(pawn.Position) : (pawn.CarriedBy != null ? pawn.CarriedBy.Map.glowGrid.GameGlowAt(pawn.CarriedBy.Position) : 0.5f)) >= 0.3f ||
                 (pawn.CurJob != null && pawn.jobs.curDriver.asleep) || 
                 pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f || 
                 pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f)

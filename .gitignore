@@ -345,3 +345,5 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+/Cutebold_Assemblies/Traps
+/XML Schema Generator

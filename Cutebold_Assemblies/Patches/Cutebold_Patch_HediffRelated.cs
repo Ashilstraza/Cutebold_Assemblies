@@ -30,17 +30,21 @@ namespace Cutebold_Assemblies
                 harmony.Patch(AccessTools.Method(typeof(Pawn), "SpawnSetup", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldNoAdaptationSpawnSetupPostfix", null), null, null);
             }
 
-            // Adjust layer offset for cutebold goggles.
-            harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] { 
-                    typeof(Vector3), 
-                    typeof(float), 
-                    typeof(bool), 
-                    typeof(Rot4), 
-                    typeof(Rot4), 
-                    typeof(RotDrawMode), 
-                    typeof(bool), 
-                    typeof(bool), typeof(bool) 
+            // Don't patch if CE is running, we will use that to put goggles below headgear.
+            if (ModLister.GetActiveModWithIdentifier("CETeam.CombatExtended") == null)
+            {
+                // Adjust layer offset for cutebold goggles.
+                harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
+                    typeof(Vector3),
+                    typeof(float),
+                    typeof(bool),
+                    typeof(Rot4),
+                    typeof(Rot4),
+                    typeof(RotDrawMode),
+                    typeof(bool),
+                    typeof(bool), typeof(bool)
                 }), null, null, new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldRenderPawnInternalTranspiler", null), null);
+            }
         }
 
         /// <summary>

@@ -8,6 +8,9 @@ using UnityEngine;
 using Verse;
 using Verse.AI;
 using Verse.Sound;
+using System.Reflection.Emit;
+using System.Reflection;
+using System.Text;
 
 namespace Cutebold_Assemblies
 {
@@ -16,6 +19,8 @@ namespace Cutebold_Assemblies
     /// </summary>
     class Cutebold_Patch_Stats
     {
+        private static bool adaptation = false;
+
         /// <summary>
         /// Applies harmony patches on startup.
         /// </summary>
@@ -25,16 +30,27 @@ namespace Cutebold_Assemblies
         {
             if (settings.extraYield)
             {
+                
+                if (settings.eyeAdaptation)
+                {
+                    adaptation = true;
+                    
+                    harmony.Patch(AccessTools.Method(typeof(StatWorker), "GetExplanationUnfinalized"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldGetExplanationUnfinalizedPostfix"));
+                }
+                
                 // Tweaks Mining Yield for Cutebolds
-                harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldTrySpawnYieldMiningPostfix", null), null, null);
+                harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldTrySpawnYieldMiningTranspiler"));
                 // Tweaks Harvist Yield for Cutebolds
-                harmony.Patch(AccessTools.Method(typeof(JobDriver_PlantWork), "MakeNewToils", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkPostfix", null), null, null);
+                var plantWorkToilMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_PlantWork).GetNestedTypes(AccessTools.all).First()).ElementAt(1);
+                harmony.Patch(plantWorkToilMethod, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkTranspiler"));
                 // Edits the stats in the stat bio window to be the correct value.
-                harmony.Patch(AccessTools.Method(typeof(StatsReportUtility), "StatsToDraw", new Type[] { typeof(Thing) }, null), null, new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldStatsToDrawPostfix", null), null, null);
+                harmony.Patch(AccessTools.Method(typeof(StatsReportUtility), "StatsToDraw", new [] { typeof(Thing) }), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldStatsToDrawPostfix"));
+                
             }
         }
 
-        /// TODO: Try and change into a transpiler?
+        /*
+        /// Convered into a transpiler.
         /// <summary>
         /// Adds extra materials to mined rock when the yield is over the default max.
         /// </summary>
@@ -55,7 +71,7 @@ namespace Cutebold_Assemblies
             //Log.Message("  Yield Percent=" + ___yieldPct.ToString());
             //Log.Message("  Mineable Thing=" + __instance.def.building.mineableThing.ToString());
 
-            float extraPercent = calculateExtraPercent(StatDefOf.MiningYield, StatRequest.For(pawn));
+            float extraPercent = CuteboldCalculateExtraPercent(StatDefOf.MiningYield, StatRequest.For(pawn));
 
             //Log.Message("  Pawn Additional Mining Percent=" + extraPercent);
 
@@ -74,6 +90,121 @@ namespace Cutebold_Assemblies
                     minedMaterial.SetForbidden(value: true, warnOnFail: false);
                 }
             }
+        }*/
+
+        /// <summary>
+        /// /// Allows for cutebolds to exceed the max mining yield.
+        /// </summary>
+        /// <param name="instructions">The instructions we are messing with.</param>
+        /// <param name="ilGenerator">The IDGenerator that allows us to create local variables and labels.</param>
+        /// <returns>All the code!</returns>
+        private static IEnumerable<CodeInstruction> CuteboldTrySpawnYieldMiningTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
+        {
+            FieldInfo miningYield = AccessTools.Field(typeof(StatDefOf), nameof(StatDefOf.MiningYield));
+            MethodInfo statRequest = AccessTools.Method(typeof(StatRequest), nameof(StatRequest.For), new [] { typeof(Thing) });
+            MethodInfo calculateExtraPercent = AccessTools.Method(typeof(Cutebold_Patch_Stats), nameof(CuteboldCalculateExtraPercent));
+            FieldInfo def = AccessTools.Field(typeof(Thing), nameof(Thing.def));
+            FieldInfo building = AccessTools.Field(typeof(ThingDef), nameof(ThingDef.building));
+            MethodInfo getEffectiveMineableYield = AccessTools.Method(typeof(BuildingProperties), "get_EffectiveMineableYield");
+            MethodInfo roundRandom = AccessTools.Method(typeof(GenMath), nameof(GenMath.RoundRandom), new[] { typeof(float)});
+            FieldInfo stackCount = AccessTools.Field(typeof(Thing), nameof(Thing.stackCount));
+
+            List<CodeInstruction> instructionList = instructions.ToList();
+            int instructionListCount = instructionList.Count;
+
+            /*
+             * See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
+             *
+             * num += GenMath.RoundRandom(
+             *          CuteboldCalculateExtraPercent(StatDefOf.MiningYield, StatRequest.For(pawn), true)) *
+             *          __instance.def.building.EffectiveMineableYield)
+             */
+            List<CodeInstruction> extraYield = new List<CodeInstruction>()
+            {
+                new CodeInstruction(OpCodes.Ldsfld, miningYield), // Load StatDefOf.MiningYield
+                new CodeInstruction(OpCodes.Ldarg_S, 4), // Load pawn
+                new CodeInstruction(OpCodes.Call, statRequest), // Calls StatRequest.For on pawn
+                new CodeInstruction(OpCodes.Ldc_I4_1), // Load 1 onto the stack
+                new CodeInstruction(OpCodes.Call, calculateExtraPercent), // Call CuteboldCalculateExtraPercent(StatDefOf.MiningYield, StatRequest.For(pawn), true)
+                new CodeInstruction(OpCodes.Ldarg_0), // Load this
+                new CodeInstruction(OpCodes.Ldfld, def), // Load def
+                new CodeInstruction(OpCodes.Ldfld, building), // Load building
+                new CodeInstruction(OpCodes.Callvirt, getEffectiveMineableYield), // Call virtual get_EffectiveMineableYield()
+                new CodeInstruction(OpCodes.Conv_R4), // Converts result of get_EffectiveMineableYield to a float
+                new CodeInstruction(OpCodes.Mul), // Multiplies effective yield and extra percent together
+                new CodeInstruction(OpCodes.Call, roundRandom), // Call RoundRandom(float)
+                new CodeInstruction(OpCodes.Ldloc_1), // Load num
+                new CodeInstruction(OpCodes.Add), // Add num and the extra yield together
+                new CodeInstruction(OpCodes.Stloc_1), // Stores the new yield in num
+            };
+
+            for (int i = 0; i < instructionListCount; i++)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if(i-3 > 0 && instructionList[i-3].Is(OpCodes.Call, roundRandom))
+                {
+                    foreach(CodeInstruction codeInstruction in extraYield)
+                    {
+                        yield return codeInstruction;
+                    }
+                }
+
+                yield return instruction;
+            }
+        }
+
+        /// <summary>
+        /// Allows for cutebolds to exceed the max harvesting yield.
+        /// </summary>
+        /// <param name="instructions">The instructions we are messing with.</param>
+        /// <param name="ilGenerator">The IDGenerator that allows us to create local variables and labels.</param>
+        /// <returns>All the code!</returns>
+        private static IEnumerable<CodeInstruction> CuteboldMakeNewToilsPlantWorkTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
+        {
+            MethodInfo yieldNow = AccessTools.Method(typeof(Plant), nameof(Plant.YieldNow));
+            FieldInfo plantHarvestYield = AccessTools.Field(typeof(StatDefOf), nameof(StatDefOf.PlantHarvestYield));
+            MethodInfo statRequest = AccessTools.Method(typeof(StatRequest), nameof(StatRequest.For), new[] { typeof(Thing) });
+            MethodInfo calculateExtraPercent = AccessTools.Method(typeof(Cutebold_Patch_Stats), nameof(CuteboldCalculateExtraPercent));
+            MethodInfo roundRandom = AccessTools.Method(typeof(GenMath), nameof(GenMath.RoundRandom), new[] { typeof(float) });
+
+            List<CodeInstruction> instructionList = instructions.ToList();
+            int instructionListCount = instructionList.Count;
+
+            /*
+             * See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
+             * 
+             * int num2 = GenMath.RoundRandom((float)plant.YieldNow() * (1f + Cutebold_Patch_Stats.CuteboldCalculateExtraPercent(StatDefOf.PlantHarvestYield, StatRequest.For(actor), true)));
+             * 
+             */
+            List<CodeInstruction> extraYield = new List<CodeInstruction>()
+            {
+                new CodeInstruction(OpCodes.Conv_R4), // Convert result of YieldNow to a float
+                new CodeInstruction(OpCodes.Ldc_R4, 1f), // Load 1f onto the stack
+                new CodeInstruction(OpCodes.Ldsfld, plantHarvestYield), // Load StatDefOf.PlantHarvestYield
+                new CodeInstruction(OpCodes.Ldloc_0), // Load pawn
+                new CodeInstruction(OpCodes.Call, statRequest), // Calls StatRequest.For on pawn
+                new CodeInstruction(OpCodes.Ldc_I4_1), // Load 1 onto the stack
+                new CodeInstruction(OpCodes.Call, calculateExtraPercent), // Call CuteboldCalculateExtraPercent(StatDefOf.PlantHarvestYield, StatRequest.For(pawn), true)
+                new CodeInstruction(OpCodes.Add), // Add 1f to the result of the extra percent
+                new CodeInstruction(OpCodes.Mul), // Multiplies the plant yield with the extra percent
+                new CodeInstruction(OpCodes.Call, roundRandom) // Calls RoundRandom on the result of the new yield
+            };
+
+            for (int i = 0; i < instructionListCount; i++)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if(i>0 && instructionList[i-1].Is(OpCodes.Callvirt, yieldNow))
+                {
+                    foreach (CodeInstruction codeInstruction in extraYield)
+                    {
+                        yield return codeInstruction;
+                    }
+                }
+
+                yield return instruction;
+            }
         }
 
         /// <summary>
@@ -86,13 +217,13 @@ namespace Cutebold_Assemblies
         {
             foreach (StatDrawEntry statEntry in __result)
             {
-                if (thing.def != null && thing.def.defName == Cutebold_Assemblies.RaceName)
+                if (thing.def?.defName == Cutebold_Assemblies.RaceName)
                 {
                     var stat = statEntry.stat;
                     if (stat == StatDefOf.MiningYield || stat == StatDefOf.PlantHarvestYield)
                     {
                         var req = StatRequest.For(thing);
-                        var extraPercent = calculateExtraPercent(stat, req);
+                        var extraPercent = CuteboldCalculateExtraPercent(stat, req);
                         if (extraPercent > 0f) yield return new StatDrawEntry(statEntry.category, stat, 1f + extraPercent, req);
                         else yield return statEntry;
                     }
@@ -108,7 +239,32 @@ namespace Cutebold_Assemblies
             }
         }
 
-        /// TODO: Change into a transpiler.
+        /// <summary>
+        /// Inserts the extra mining yield multiplier into the mining yield detailed description
+        /// </summary>
+        /// <param name="__result">The description we are adding onto.</param>
+        /// <param name="__instance">The StatWorker</param>
+        /// <param name="___stat">The StatDef of the StatWorker</param>
+        /// <param name="req">The item requesting the stat.</param>
+        /// <param name="numberSense">Unused</param>
+        private static void CuteboldGetExplanationUnfinalizedPostfix(ref string __result, StatWorker __instance, StatDef ___stat, StatRequest req, ToStringNumberSense numberSense)
+        {
+            Pawn pawn = req.Pawn ?? (req.Thing is Pawn ? (Pawn)req.Thing : null);
+
+            if (pawn?.def != Cutebold_Assemblies.AlienRaceDef || ___stat != StatDefOf.MiningYield) return;
+
+            float rawPercent = CuteboldCalculateExtraPercent(___stat, req, false);
+            float multiplier = miningMultiplier(pawn);
+            StringBuilder stringBuilder = new StringBuilder(__result);
+
+            stringBuilder.AppendLine("Dark Adaptation");
+            stringBuilder.AppendLine($"    Extra Percentage: {rawPercent.ToStringPercent()} (base, 15% max) x {multiplier.ToStringPercent()} (adaptation, 100% max) => +{(rawPercent * multiplier).ToStringPercent()}");
+
+            __result = stringBuilder.ToString();
+        }
+
+        /*
+        /// Changed into a transpiler.
         /// <summary>
         /// Replaces the plant harvest toil of a cutebold to allow them to harvest over 100%.
         /// </summary>
@@ -117,11 +273,11 @@ namespace Cutebold_Assemblies
         /// <returns>A headache. (The new toils)</returns>
         private static IEnumerable<Toil> CuteboldMakeNewToilsPlantWorkPostfix(IEnumerable<Toil> __result, JobDriver_PlantWork __instance)
         {
-            //Log.Message("CuteboldTrySapwnYieldMiningPostfix");
+            //Log.Message("CuteboldMakeNewToilsPlantWorkPostfix");
 
             foreach (Toil toil in __result)
             {
-                if (toil.tickAction != null && __instance.pawn != null && __instance.pawn.def.defName == Cutebold_Assemblies.RaceName)
+                if (toil.tickAction != null && __instance.pawn?.def.defName == Cutebold_Assemblies.RaceName)
                 {
                     //Log.Message("  Edit Toil");
 
@@ -153,7 +309,7 @@ namespace Cutebold_Assemblies
                                 }
                                 else
                                 {
-                                    int currentYield = GenMath.RoundRandom(plant.YieldNow() * (1f + calculateExtraPercent(StatDefOf.PlantHarvestYield, StatRequest.For(actor))));
+                                    int currentYield = GenMath.RoundRandom(plant.YieldNow() * (1f + CuteboldCalculateExtraPercent(StatDefOf.PlantHarvestYield, StatRequest.For(actor))));
 
                                     //Log.Message("  Pawn Additional Harvest Percent=" + calculateExtraPercent(StatDefOf.PlantHarvestYield, StatRequest.For(actor)));
                                     //Log.Message("  Plant Yield Before=" + plant.YieldNow() + " Plant Yield After=" + currentYield);
@@ -183,6 +339,7 @@ namespace Cutebold_Assemblies
                 yield return toil;
             }
         }
+        */
 
         /// <summary>
         /// Calculates the extra yield for a given task and pawn.
@@ -190,17 +347,36 @@ namespace Cutebold_Assemblies
         /// <param name="stat">The stat to check</param>
         /// <param name="req">The pawn we are checking the stat on</param>
         /// <returns>The extra yield</returns>
-        private static float calculateExtraPercent(StatDef stat, StatRequest req)
+        private static float CuteboldCalculateExtraPercent(StatDef stat, StatRequest req, bool useMultiplier = true)
         {
             if (stat == null || req == null) return 0f;
+            if (stat == StatDefOf.PlantHarvestYield) useMultiplier = false;
 
             float rawPercent = stat.Worker.GetValueUnfinalized(req, false);
-            float basePercent = StatUtility.GetStatValueFromList(req.StatBases, stat, 1f);
+            float pawnBasePercent = StatUtility.GetStatValueFromList(req.StatBases, stat, 1f);
             float defaultMaxPercent = stat.maxValue;
+            float multiplier = 1f;
+            Pawn pawn = req.Pawn ?? (Pawn)req.Thing;
 
-            //Log.Message("rawPercent=" + rawPercent + " basePercent=" + basePercent + " defaultMaxPercent=" + defaultMaxPercent);
+            //Log.Message("adaptation=" + adaptation + "has hediff="+ pawn?.health.hediffSet.HasHediff(Cutebold_DefOf.CuteboldDarkAdaptation).ToString());
 
-            return (rawPercent > basePercent) ? (basePercent - defaultMaxPercent) : ((rawPercent < defaultMaxPercent) ? 0f : (rawPercent - defaultMaxPercent));
+            if (adaptation && useMultiplier && pawn?.health.hediffSet.HasHediff(Cutebold_DefOf.CuteboldDarkAdaptation) == true) multiplier = miningMultiplier(pawn);
+
+            //Log.Message("rawPercent=" + rawPercent + " pawnBasePercent=" + pawnBasePercent + " defaultMaxPercent=" + defaultMaxPercent + "multiplier=" + multiplier);
+
+            return (rawPercent > pawnBasePercent) ? (pawnBasePercent - defaultMaxPercent) * multiplier : ((rawPercent < defaultMaxPercent) ? 0f : (rawPercent - defaultMaxPercent) * multiplier);
+        }
+
+        /// <summary>
+        /// Calculates the multiplier from dark adaptation
+        /// </summary>
+        /// <param name="pawn">The pawn to check dark adaptation on</param>
+        /// <returns>multiplier</returns>
+        private static float miningMultiplier(Pawn pawn)
+        {
+            Hediff_CuteboldDarkAdaptation darkAdaptation = (Hediff_CuteboldDarkAdaptation)pawn.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
+            var severity = darkAdaptation.Severity;
+            return darkAdaptation.WearingGoggles ? 0.25f : (severity < 0.25f) ? 0.25f : (severity < 0.5f) ? 0.5f : (severity < 0.75f) ? 0.75f : 1f;
         }
     }
 }

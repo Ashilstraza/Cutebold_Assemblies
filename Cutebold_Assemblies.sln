@@ -8,6 +8,10 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Assembly-CSharp", "E:\SteamLibrary\steamapps\common\RimWorld 1.2 Copy\RimWorldWin64_Data\Managed\Assembly-CSharp_Source\Assembly-CSharp.csproj", "{5AD4DDA2-46AE-46F1-88A2-C98283530998}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}"
+	ProjectSection(SolutionItems) = preProject
+		2.3.txt = 2.3.txt
+		2.4+.txt = 2.4+.txt
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienRace", "..\AlienRaces\Source\AlienRace\AlienRace\AlienRace.csproj", "{E7AFA757-436C-40A3-AAFD-66351AA01536}"
 EndProject
@@ -53,8 +57,6 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Data", "E:\SteamLibrary\ste
 		SlnRelativePath = "E:\SteamLibrary\steamapps\common\RimWorld 1.2 Copy\Data\"
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "XML Schema Generator", "XML Schema Generator\XML Schema Generator.csproj", "{02141A9C-EBDD-4D9B-A30E-F8785CD5FDF0}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,10 +75,6 @@ Global
 		{54E7CB60-1003-43AE-A434-61EAF95E913B}.Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{A536579C-CA9B-4B50-82C2-0BF754392D83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A536579C-CA9B-4B50-82C2-0BF754392D83}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{02141A9C-EBDD-4D9B-A30E-F8785CD5FDF0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{02141A9C-EBDD-4D9B-A30E-F8785CD5FDF0}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{02141A9C-EBDD-4D9B-A30E-F8785CD5FDF0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{02141A9C-EBDD-4D9B-A30E-F8785CD5FDF0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

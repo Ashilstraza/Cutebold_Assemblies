@@ -1,6 +1,7 @@
 ﻿using AlienRace;
 using HarmonyLib;
 using RimWorld;
+using RimWorld.QuestGen;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -46,7 +47,7 @@ namespace Cutebold_Assemblies
 
             AlienRaceDef = (ThingDef_AlienRace)Cutebold_DefOf.Alien_Cutebold;
 
-            try { CreateButcherRaceList(); }
+            try { CreateButcherRaceList(); } // Added because of an update to HAR that changed how referencing other races worked.
             catch (MissingFieldException e)
             {
                 Log.Error(string.Format("{0}: Unable to create butcher race list. Check and see if Humanoid Alien Races has been updated.\n    {1}", new object[]{
@@ -59,11 +60,11 @@ namespace Cutebold_Assemblies
             new Cutebold_Patch_Names(harmony);
 
             // Eating Humanoid Meat
-            harmony.Patch(AccessTools.Method(typeof(Thing), "Ingested", null, null), null, new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldIngestedPostfix", null), null, null);
+            harmony.Patch(AccessTools.Method(typeof(Thing), "Ingested"), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldIngestedPostfix"));
             // Butchering Humanoid Corpses
-            harmony.Patch(AccessTools.Method(typeof(Corpse), "ButcherProducts", null, null), null, new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldButcherProductsPostfix", null), null, null);
+            harmony.Patch(AccessTools.Method(typeof(Corpse), "ButcherProducts"), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldButcherProductsPostfix"));
             // Wearing Humanoid Clothing
-            harmony.Patch(AccessTools.Method(typeof(ThoughtWorker_HumanLeatherApparel), "CurrentStateInternal", null, null), null, new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldCurrentStateInternalPostfix", null), null, null);
+            harmony.Patch(AccessTools.Method(typeof(ThoughtWorker_HumanLeatherApparel), "CurrentStateInternal"), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldCurrentStateInternalPostfix"));
 
             new Cutebold_Patch_BodyAddons(harmony, settings);
 
@@ -99,7 +100,7 @@ namespace Cutebold_Assemblies
 
             foreach (var thingDef in DefDatabase<ThingDef>.AllDefs)
             {
-                if (thingDef.race != null && thingDef.race.leatherDef != null)
+                if (thingDef.race?.leatherDef != null)
                 {
                     //Log.Message("thingDef: " + thingDef.ToString()+" thingDef.race: " + thingDef.race.ToString() + " thingDef.race.leatherDef: " + thingDef.race.leatherDef.ToString(), true);
                     if (thingDef.race.Humanlike)
@@ -130,7 +131,7 @@ namespace Cutebold_Assemblies
         {
             //Log.Message("Ingested Postfix");
             //Log.Message("Instance: " + __instance.ToString() + " Instance Source: " + ((__instance.def.ingestible != null && __instance.def.ingestible.sourceDef != null) ? __instance.def.ingestible.sourceDef.defName.ToString() : "Null") + " ingester: " + ingester.ToString());
-            if (__instance != null && ingester != null && __instance.def.ingestible != null && __instance.def.ingestible.sourceDef != null)
+            if (ingester != null &&  __instance?.def.ingestible?.sourceDef != null)
             {
                 try
                 {
@@ -168,7 +169,7 @@ namespace Cutebold_Assemblies
         {
             //Log.Message("Butcher Products Postfix");
             //Log.Message("Instance: " +  __instance.ToString() + " Instance Source: " + ((__instance.def.ingestible != null && __instance.def.ingestible.sourceDef != null) ? __instance.def.ingestible.sourceDef.defName.ToString() : "Null") + " butcher: " + butcher.ToString());
-            if (__instance != null && butcher != null && __instance.def.ingestible != null && __instance.def.ingestible.sourceDef != null)
+            if (butcher != null && __instance?.def.ingestible?.sourceDef != null)
             {
                 try
                 {

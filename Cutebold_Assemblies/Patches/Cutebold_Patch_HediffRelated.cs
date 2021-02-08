@@ -16,25 +16,25 @@ namespace Cutebold_Assemblies
             if (settings.eyeAdaptation)
             {
                 // Allows for dark adaptation, obviously not cave adaptation since that is a different game with cute kobolds.
-                harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "FactorFromGlow", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldFactorFromGlowPostfix", null), null, null);
+                harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "FactorFromGlow"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldFactorFromGlowPostfix"));
                 // Applies dark adaptation to all cutebolds as they spawn.               
-                harmony.Patch(AccessTools.Method(typeof(Pawn), "SpawnSetup", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldAdaptationSpawnSetupPostfix", null), null, null);
+                harmony.Patch(AccessTools.Method(typeof(Pawn), "SpawnSetup"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldAdaptationSpawnSetupPostfix"));
                 // Update dark adaptation eye references.
-                harmony.Patch(AccessTools.Method(typeof(HediffSet), "DirtyCache", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldHediffSetDirtyCachePostfix", null), null, null);
+                harmony.Patch(AccessTools.Method(typeof(HediffSet), "DirtyCache"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldHediffSetDirtyCachePostfix"));
                 // Update dark adaptation goggle references.
-                harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "ApparelChanged", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix", null), null, null);
+                harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "ApparelChanged"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
             }
             else
             {
                 // Removes dark adaptation to all cutebolds as they spawn in.
-                harmony.Patch(AccessTools.Method(typeof(Pawn), "SpawnSetup", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldNoAdaptationSpawnSetupPostfix", null), null, null);
+                harmony.Patch(AccessTools.Method(typeof(Pawn), "SpawnSetup"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldNoAdaptationSpawnSetupPostfix"));
             }
 
             // Don't patch if CE is running, we will use that to put goggles below headgear.
             if (ModLister.GetActiveModWithIdentifier("CETeam.CombatExtended") == null)
             {
                 // Adjust layer offset for cutebold goggles.
-                harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
+                harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new [] {
                     typeof(Vector3),
                     typeof(float),
                     typeof(bool),
@@ -42,8 +42,9 @@ namespace Cutebold_Assemblies
                     typeof(Rot4),
                     typeof(RotDrawMode),
                     typeof(bool),
-                    typeof(bool), typeof(bool)
-                }), null, null, new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldRenderPawnInternalTranspiler", null), null);
+                    typeof(bool), 
+                    typeof(bool)
+                }), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldRenderPawnInternalTranspiler"));
             }
         }
 

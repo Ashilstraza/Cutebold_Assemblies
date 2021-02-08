@@ -217,6 +217,15 @@ namespace Cutebold_Assemblies
         public float MaxDarkGlobalWorkSpeed { get; private set; } = 0f;
         /// <summary>Maximum global work speed in 100% light.</summary>
         public float MaxLightGlobalWorkSpeed { get; private set; } = 0f;
+        /// <summary>Returns true if the cutebold is wearing goggles.</summary>
+        public bool WearingGoggles
+        {
+            get
+            {
+                if (goggles != null) return true;
+                return false;
+            }
+        }
 
         /// <summary>
         /// Returns the debug information about the hediff.
@@ -300,7 +309,7 @@ namespace Cutebold_Assemblies
         {
             adaptationComp.LightLevel = this.lightLevel;
 
-            if (goggles != null || eyesMissing || pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f)
+            if (WearingGoggles || eyesMissing || pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f)
             {
                 adaptationComp.CanSee = false;
             }
@@ -348,7 +357,7 @@ namespace Cutebold_Assemblies
             if (MaxLightGlobalWorkSpeed < 0.5f) MaxLightGlobalWorkSpeed = 0.5f;
             if (MaxDarkGlobalWorkSpeed < 0.5f) MaxDarkGlobalWorkSpeed = 0.5f;
 
-            if (goggles != null || (MaxLightGlobalWorkSpeed == defaultLightglobalWorkSpeed && MaxDarkGlobalWorkSpeed == defaultDarkglobalWorkSpeed))
+            if (WearingGoggles || (MaxLightGlobalWorkSpeed == defaultLightglobalWorkSpeed && MaxDarkGlobalWorkSpeed == defaultDarkglobalWorkSpeed))
             {
                 GlowCurve = new SimpleCurve(defaultGlowCurve);
             }

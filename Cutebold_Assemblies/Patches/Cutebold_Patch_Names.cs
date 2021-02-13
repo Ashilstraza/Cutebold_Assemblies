@@ -54,11 +54,11 @@ namespace Cutebold_Assemblies
                 createdLists = true;
 
                 // Disable Cutebold Name Validation
-                harmony.Patch(AccessTools.Method(typeof(NameGenerator), "GenerateName", new Type[] { 
-                    typeof(GrammarRequest), 
-                    typeof(Predicate<string>), 
-                    typeof(bool), 
-                    typeof(string), 
+                harmony.Patch(AccessTools.Method(typeof(NameGenerator), "GenerateName", new Type[] {
+                    typeof(GrammarRequest),
+                    typeof(Predicate<string>),
+                    typeof(bool),
+                    typeof(string),
                     typeof(string)
                 }), prefix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldGenerateNamePrefix"));
                 // Generate Cutebold Names
@@ -124,7 +124,7 @@ namespace Cutebold_Assemblies
 
             //Log.Message("Generate Name Prefix");
 
-            if(request.Includes.Any(included => included == Cutebold_DefOf.NamerPersonCutebold || included == Cutebold_DefOf.NamerPersonCuteboldSlave))
+            if (request.Includes.Any(included => included == Cutebold_DefOf.NamerPersonCutebold || included == Cutebold_DefOf.NamerPersonCuteboldSlave))
                 validator = null;
         }
 

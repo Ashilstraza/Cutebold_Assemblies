@@ -154,11 +154,11 @@ namespace Cutebold_Assemblies
             if (pawn.def.defName != Cutebold_Assemblies.RaceName || (__instance.bodyPart != "left eye" && __instance.bodyPart != "right eye")) return true;
 
             __result = true;
-            
+
             if (pawn.Dead ||
                 ((pawn.ParentHolder as Map) != null ? pawn.Map.glowGrid.GameGlowAt(pawn.Position) : (pawn.CarriedBy != null ? pawn.CarriedBy.Map.glowGrid.GameGlowAt(pawn.CarriedBy.Position) : 0.5f)) >= 0.3f ||
-                (pawn.CurJob != null && pawn.jobs.curDriver.asleep) || 
-                pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f || 
+                (pawn.CurJob != null && pawn.jobs.curDriver.asleep) ||
+                pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f ||
                 pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f)
             {
                 __result = false;
@@ -167,8 +167,8 @@ namespace Cutebold_Assemblies
             {
                 // Blink Fucntion
                 var offsetTicks = Math.Abs(pawn.HashOffsetTicks());
-                if (Math.Abs((offsetTicks % 182)/1.8 - Math.Abs(80*Math.Sin(offsetTicks/89))) < 1) __result = false;
-            }            
+                if (Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89))) < 1) __result = false;
+            }
 
             return __result;
         }

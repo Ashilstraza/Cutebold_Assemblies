@@ -1,16 +1,11 @@
-﻿using AlienRace;
-using HarmonyLib;
+﻿using HarmonyLib;
 using RimWorld;
-using System;
-using System.Linq;
 using System.Collections.Generic;
-using UnityEngine;
-using Verse;
-using Verse.AI;
-using Verse.Sound;
-using System.Reflection.Emit;
+using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
+using Verse;
 
 namespace Cutebold_Assemblies
 {
@@ -30,22 +25,22 @@ namespace Cutebold_Assemblies
         {
             if (settings.extraYield)
             {
-                
+
                 if (settings.eyeAdaptation)
                 {
                     adaptation = true;
-                    
+
                     harmony.Patch(AccessTools.Method(typeof(StatWorker), "GetExplanationUnfinalized"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldGetExplanationUnfinalizedPostfix"));
                 }
-                
+
                 // Tweaks Mining Yield for Cutebolds
                 harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldTrySpawnYieldMiningTranspiler"));
                 // Tweaks Harvist Yield for Cutebolds
                 var plantWorkToilMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_PlantWork).GetNestedTypes(AccessTools.all).First()).ElementAt(1);
                 harmony.Patch(plantWorkToilMethod, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkTranspiler"));
                 // Edits the stats in the stat bio window to be the correct value.
-                harmony.Patch(AccessTools.Method(typeof(StatsReportUtility), "StatsToDraw", new [] { typeof(Thing) }), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldStatsToDrawPostfix"));
-                
+                harmony.Patch(AccessTools.Method(typeof(StatsReportUtility), "StatsToDraw", new[] { typeof(Thing) }), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldStatsToDrawPostfix"));
+
             }
         }
 
@@ -101,12 +96,12 @@ namespace Cutebold_Assemblies
         private static IEnumerable<CodeInstruction> CuteboldTrySpawnYieldMiningTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
         {
             FieldInfo miningYield = AccessTools.Field(typeof(StatDefOf), nameof(StatDefOf.MiningYield));
-            MethodInfo statRequest = AccessTools.Method(typeof(StatRequest), nameof(StatRequest.For), new [] { typeof(Thing) });
+            MethodInfo statRequest = AccessTools.Method(typeof(StatRequest), nameof(StatRequest.For), new[] { typeof(Thing) });
             MethodInfo calculateExtraPercent = AccessTools.Method(typeof(Cutebold_Patch_Stats), nameof(CuteboldCalculateExtraPercent));
             FieldInfo def = AccessTools.Field(typeof(Thing), nameof(Thing.def));
             FieldInfo building = AccessTools.Field(typeof(ThingDef), nameof(ThingDef.building));
             MethodInfo getEffectiveMineableYield = AccessTools.Method(typeof(BuildingProperties), "get_EffectiveMineableYield");
-            MethodInfo roundRandom = AccessTools.Method(typeof(GenMath), nameof(GenMath.RoundRandom), new[] { typeof(float)});
+            MethodInfo roundRandom = AccessTools.Method(typeof(GenMath), nameof(GenMath.RoundRandom), new[] { typeof(float) });
             FieldInfo stackCount = AccessTools.Field(typeof(Thing), nameof(Thing.stackCount));
 
             List<CodeInstruction> instructionList = instructions.ToList();
@@ -142,9 +137,9 @@ namespace Cutebold_Assemblies
             {
                 CodeInstruction instruction = instructionList[i];
 
-                if(i-3 > 0 && instructionList[i-3].Is(OpCodes.Call, roundRandom))
+                if (i - 3 > 0 && instructionList[i - 3].Is(OpCodes.Call, roundRandom))
                 {
-                    foreach(CodeInstruction codeInstruction in extraYield)
+                    foreach (CodeInstruction codeInstruction in extraYield)
                     {
                         yield return codeInstruction;
                     }
@@ -195,7 +190,7 @@ namespace Cutebold_Assemblies
             {
                 CodeInstruction instruction = instructionList[i];
 
-                if(i>0 && instructionList[i-1].Is(OpCodes.Callvirt, yieldNow))
+                if (i > 0 && instructionList[i - 1].Is(OpCodes.Callvirt, yieldNow))
                 {
                     foreach (CodeInstruction codeInstruction in extraYield)
                     {

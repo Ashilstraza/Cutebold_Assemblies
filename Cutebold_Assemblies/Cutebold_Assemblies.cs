@@ -1,7 +1,6 @@
 ﻿using AlienRace;
 using HarmonyLib;
 using RimWorld;
-using RimWorld.QuestGen;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -131,7 +130,7 @@ namespace Cutebold_Assemblies
         {
             //Log.Message("Ingested Postfix");
             //Log.Message("Instance: " + __instance.ToString() + " Instance Source: " + ((__instance.def.ingestible != null && __instance.def.ingestible.sourceDef != null) ? __instance.def.ingestible.sourceDef.defName.ToString() : "Null") + " ingester: " + ingester.ToString());
-            if (ingester != null &&  __instance?.def.ingestible?.sourceDef != null)
+            if (ingester != null && __instance?.def.ingestible?.sourceDef != null)
             {
                 try
                 {

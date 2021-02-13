@@ -34,7 +34,7 @@ namespace Cutebold_Assemblies
             if (ModLister.GetActiveModWithIdentifier("CETeam.CombatExtended") == null)
             {
                 // Adjust layer offset for cutebold goggles.
-                harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new [] {
+                harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
                     typeof(Vector3),
                     typeof(float),
                     typeof(bool),
@@ -42,7 +42,7 @@ namespace Cutebold_Assemblies
                     typeof(Rot4),
                     typeof(RotDrawMode),
                     typeof(bool),
-                    typeof(bool), 
+                    typeof(bool),
                     typeof(bool)
                 }), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldRenderPawnInternalTranspiler"));
             }
@@ -245,7 +245,7 @@ namespace Cutebold_Assemblies
                 {
                     //x = 30;
 
-                    foreach(CodeInstruction codeInstruction in checkForGoggles)
+                    foreach (CodeInstruction codeInstruction in checkForGoggles)
                     {
                         //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
                         yield return codeInstruction;
@@ -259,7 +259,7 @@ namespace Cutebold_Assemblies
                 {
                     revertChange[1].operand = instruction.operand; // Sets the jump value
 
-                    foreach(CodeInstruction codeInstruction in revertChange)
+                    foreach (CodeInstruction codeInstruction in revertChange)
                     {
                         //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
                         yield return codeInstruction;
@@ -273,7 +273,7 @@ namespace Cutebold_Assemblies
                     Log.Message("    "+instruction.ToString() + (instruction.labels.Count > 0 ? instruction.labels[0].ToString() : ""));
                     x--;
                 }*/
-                
+
                 yield return instruction;
             }
         }

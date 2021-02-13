@@ -77,6 +77,15 @@ namespace Cutebold_Assemblies
                 Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)HediffMaker.MakeHediff(Cutebold_DefOf.CuteboldDarkAdaptation, __instance);
                 float minSeverity = 0f;
                 float maxSeverity = 0.1f;
+                bool goggles = false;
+
+                foreach (Apparel apparel in __instance.apparel.WornApparel)
+                {
+                    if (apparel.def == Cutebold_DefOf.Cutebold_Goggles)
+                    {
+                        goggles = true;
+                    }
+                }
 
                 if (!(__instance.story.traits.HasTrait(TraitDef.Named("Wimp")) && __instance.health.hediffSet.PainTotal > 0.0f) && __instance.health.hediffSet.PainTotal <= 0.5f && !respawningAfterLoad)
                 {
@@ -98,12 +107,19 @@ namespace Cutebold_Assemblies
                         maxSeverity += 0.20f;
                     }
 
-                    if (__instance.story.traits.HasTrait(TraitDef.Named("Wimp")))
+                    if (__instance.story.traits.HasTrait(TraitDef.Named("Wimp")) && !goggles)
                     {
                         minSeverity = minSeverity > 0.5f ? 0.5f : minSeverity;
                         maxSeverity = maxSeverity > 0.7f ? 0.7f : maxSeverity;
                     }
+                    else if (goggles)
+                    {
+                        minSeverity = minSeverity * 3f + 0.3f;
+                        maxSeverity = maxSeverity * 3f + 0.4f;
+                    }
                 }
+
+                
 
                 hediff.Severity = new FloatRange(minSeverity, maxSeverity).RandomInRange;
 
@@ -177,6 +193,8 @@ namespace Cutebold_Assemblies
             /*
              * See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
              * 
+             * Adjusts the y offset to put goggles below other headgear.
+             * 
              * modified = false;
              * 
              * if (apparelGraphics[j].sourceApparel.def == Cutebold_DefOf.Cutebold_Goggles)
@@ -215,6 +233,8 @@ namespace Cutebold_Assemblies
 
             /*
              * See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
+             * 
+             * Reverts the y offset for other headgear.
              * 
              * if(modified)
              * {

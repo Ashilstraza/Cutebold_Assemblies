@@ -23,7 +23,7 @@ namespace Cutebold_Assemblies
         /// <param name="settings">Our list of saved settings.</param>
         public Cutebold_Patch_Stats(Harmony harmony, Cutebold_Settings settings)
         {
-            if (settings.extraYield)
+            if (settings.extraYield && ModLister.GetActiveModWithIdentifier("syrchalis.harvestyieldpatch") == null)
             {
 
                 if (settings.eyeAdaptation)

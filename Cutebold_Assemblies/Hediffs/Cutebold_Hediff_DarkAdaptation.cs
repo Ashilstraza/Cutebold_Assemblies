@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Verse;
-using static AlienRace.AlienPartGenerator;
 
 namespace Cutebold_Assemblies
 {
@@ -114,7 +113,7 @@ namespace Cutebold_Assemblies
         private const float SeverityUpdateMultiplier = 1f / (60000f / SeverityUpdateInterval);
         /// <summary>Set of properties for the hediff component.</summary>
         private HediffCompProperties_CuteboldDarkAdaptation Props => (HediffCompProperties_CuteboldDarkAdaptation)props;
-        
+
         /// <summary>Light level of the pawn at the current location.</summary>
         public float LightLevel = 0f;
         /// <summary>If the pawn can see.</summary>
@@ -217,6 +216,7 @@ namespace Cutebold_Assemblies
         public float MaxDarkGlobalWorkSpeed { get; private set; } = 0f;
         /// <summary>Maximum global work speed in 100% light.</summary>
         public float MaxLightGlobalWorkSpeed { get; private set; } = 0f;
+        
         /// <summary>Returns true if the cutebold is wearing goggles.</summary>
         public bool WearingGoggles
         {
@@ -226,6 +226,20 @@ namespace Cutebold_Assemblies
                 return false;
             }
         }
+
+        public override string TipStringExtra
+        {
+            get
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.Append(base.TipStringExtra);
+                stringBuilder.AppendLine("Adaptation: " + this.Severity.ToStringPercent());
+                //stringBuilder.AppendLine("------------------");
+
+                return stringBuilder.ToString();
+            }
+        }
+
 
         /// <summary>
         /// Returns the debug information about the hediff.
@@ -286,11 +300,11 @@ namespace Cutebold_Assemblies
             {
                 return pawn.Map.glowGrid.GameGlowAt(pawn.Position);
             }
-            else if(pawn.CarriedBy != null)
+            else if (pawn.CarriedBy != null)
             {
                 return pawn.CarriedBy.Map.glowGrid.GameGlowAt(pawn.CarriedBy.Position);
             }
-            else if(pawn.ParentHolder != null && pawn.ParentHolder is Caravan)
+            else if (pawn.ParentHolder != null && pawn.ParentHolder is Caravan)
             {
                 var time = GenDate.HourFloat(GenTicks.TicksAbs, Find.WorldGrid.LongLatOf(((Caravan)pawn.ParentHolder).Tile).x);
 
@@ -313,7 +327,10 @@ namespace Cutebold_Assemblies
             {
                 adaptationComp.CanSee = false;
             }
-            else adaptationComp.CanSee = true;
+            else
+            {
+                adaptationComp.CanSee = true;
+            }
 
             if (eyesMissing)
             {
@@ -381,7 +398,10 @@ namespace Cutebold_Assemblies
             {
                 eyesMissing = true;
             }
-            else eyesMissing = false;
+            else
+            {
+                eyesMissing = false;
+            }
         }
 
         /// <summary>

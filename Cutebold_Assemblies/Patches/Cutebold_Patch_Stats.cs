@@ -5,7 +5,10 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
+using UnityEngine;
 using Verse;
+using Verse.AI;
+using Verse.Sound;
 
 namespace Cutebold_Assemblies
 {
@@ -30,21 +33,32 @@ namespace Cutebold_Assemblies
                 {
                     adaptation = true;
 
+                    // Insert Dark Adaptation bonus yield explination
                     harmony.Patch(AccessTools.Method(typeof(StatWorker), "GetExplanationUnfinalized"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldGetExplanationUnfinalizedPostfix"));
                 }
 
-                // Tweaks Mining Yield for Cutebolds
-                harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldTrySpawnYieldMiningTranspiler"));
-                // Tweaks Harvist Yield for Cutebolds
-                var plantWorkToilMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_PlantWork).GetNestedTypes(AccessTools.all).First()).ElementAt(1);
-                harmony.Patch(plantWorkToilMethod, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkTranspiler"));
+                if (settings.altYield) // Use Postfixes
+                {
+                    // Tweaks Mining Yield for Cutebolds
+                    harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldTrySpawnYieldMiningPostfix"));
+                    // Tweaks Harvist Yield for Cutebolds
+                    harmony.Patch(AccessTools.Method(typeof(JobDriver_PlantWork), "MakeNewToils"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkPostfix"));
+                }
+                else // Use Transpilers
+                {
+                    // Tweaks Mining Yield for Cutebolds
+                    harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldTrySpawnYieldMiningTranspiler"));
+                    // Tweaks Harvist Yield for Cutebolds
+                    var plantWorkToilMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_PlantWork).GetNestedTypes(AccessTools.all).First()).ElementAt(1);
+                    harmony.Patch(plantWorkToilMethod, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkTranspiler"));
+                }
+                
                 // Edits the stats in the stat bio window to be the correct value.
                 harmony.Patch(AccessTools.Method(typeof(StatsReportUtility), "StatsToDraw", new[] { typeof(Thing) }), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldStatsToDrawPostfix"));
 
             }
         }
-
-        /*
+        
         /// Convered into a transpiler.
         /// <summary>
         /// Adds extra materials to mined rock when the yield is over the default max.
@@ -85,7 +99,7 @@ namespace Cutebold_Assemblies
                     minedMaterial.SetForbidden(value: true, warnOnFail: false);
                 }
             }
-        }*/
+        }
 
         /// <summary>
         /// /// Allows for cutebolds to exceed the max mining yield.
@@ -258,7 +272,6 @@ namespace Cutebold_Assemblies
             __result = stringBuilder.ToString();
         }
 
-        /*
         /// Changed into a transpiler.
         /// <summary>
         /// Replaces the plant harvest toil of a cutebold to allow them to harvest over 100%.
@@ -334,7 +347,6 @@ namespace Cutebold_Assemblies
                 yield return toil;
             }
         }
-        */
 
         /// <summary>
         /// Calculates the extra yield for a given task and pawn.
@@ -344,14 +356,15 @@ namespace Cutebold_Assemblies
         /// <returns>The extra yield</returns>
         private static float CuteboldCalculateExtraPercent(StatDef stat, StatRequest req, bool useMultiplier = true)
         {
-            if (stat == null || req == null) return 0f;
+            Pawn pawn = req.Pawn ?? (req.Thing is Pawn ? (Pawn)req.Thing : null);
+
+            if (stat == null || req == null || pawn?.def != Cutebold_Assemblies.AlienRaceDef) return 0f;
             if (stat == StatDefOf.PlantHarvestYield) useMultiplier = false;
 
             float rawPercent = stat.Worker.GetValueUnfinalized(req, false);
             float pawnBasePercent = StatUtility.GetStatValueFromList(req.StatBases, stat, 1f);
             float defaultMaxPercent = stat.maxValue;
             float multiplier = 1f;
-            Pawn pawn = req.Pawn ?? (Pawn)req.Thing;
 
             //Log.Message("adaptation=" + adaptation + "has hediff="+ pawn?.health.hediffSet.HasHediff(Cutebold_DefOf.CuteboldDarkAdaptation).ToString());
 
@@ -359,7 +372,9 @@ namespace Cutebold_Assemblies
 
             //Log.Message("rawPercent=" + rawPercent + " pawnBasePercent=" + pawnBasePercent + " defaultMaxPercent=" + defaultMaxPercent + "multiplier=" + multiplier);
 
-            return (rawPercent > pawnBasePercent) ? (pawnBasePercent - defaultMaxPercent) * multiplier : ((rawPercent < defaultMaxPercent) ? 0f : (rawPercent - defaultMaxPercent) * multiplier);
+            float extraPercent = (rawPercent > pawnBasePercent) ? (pawnBasePercent - defaultMaxPercent) * multiplier : ((rawPercent < defaultMaxPercent) ? 0f : (rawPercent - defaultMaxPercent) * multiplier);
+
+            return (extraPercent > 0f) ? extraPercent : 0f;
         }
 
         /// <summary>

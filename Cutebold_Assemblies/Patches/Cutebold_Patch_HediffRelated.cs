@@ -70,7 +70,7 @@ namespace Cutebold_Assemblies
         /// <param name="respawningAfterLoad">If the pawn is spawning after a reload.</param>
         private static void CuteboldAdaptationSpawnSetupPostfix(Pawn __instance, Map map, bool respawningAfterLoad)
         {
-            if (__instance.Dead || __instance.def == null || __instance.def.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
+            if (__instance.Dead || __instance?.def.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
 
             if (__instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) == null)
             {
@@ -119,7 +119,7 @@ namespace Cutebold_Assemblies
                     }
                 }
 
-                
+
 
                 hediff.Severity = new FloatRange(minSeverity, maxSeverity).RandomInRange;
 
@@ -136,7 +136,6 @@ namespace Cutebold_Assemblies
         private static void CuteboldNoAdaptationSpawnSetupPostfix(Pawn __instance, Map map, bool respawningAfterLoad)
         {
             if (__instance.Dead || __instance.def?.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
-            //if (__instance.Dead || __instance.def == null || __instance.def.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
 
             Hediff hediff = __instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
 

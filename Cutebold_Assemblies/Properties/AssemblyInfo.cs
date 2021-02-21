@@ -27,4 +27,9 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.4")]
+[assembly: AssemblyVersion("1.0.5")]
+
+// 1.0.5: Cutebold Mime Eye Color
+// 1.0.4: Yield Bug Fix
+// 1.0.3: Dark Adaptation + Yield
+// 1.0.0: Initial

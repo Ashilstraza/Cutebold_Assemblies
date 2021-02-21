@@ -39,7 +39,7 @@ namespace Cutebold_Assemblies
     public class CuteboldMod : Mod
     {
         /// <summary>List of saved settings</summary>
-        private Cutebold_Settings settings;
+        private readonly Cutebold_Settings settings;
 
         /// <summary>
         /// Required constructor to allow for the rest of the mod to be able to use the settings.
@@ -61,12 +61,12 @@ namespace Cutebold_Assemblies
             Cutebold_Listing settingEntries = new Cutebold_Listing();
 
             settingEntries.Begin(inRect);
-            settingEntries.CheckboxLabeled("Cutebolds are able to extract extra resources (requires restart):"+(extraYieldDisabled ? " [SYR] Harvest Yield enabled, using that instead." : ""), ref settings.extraYield, (extraYieldDisabled ? "Humans mis... didn't miss a spot?" : "Human missed a spot!"), extraYieldDisabled);
+            settingEntries.CheckboxLabeled("Cutebolds are able to extract extra resources (requires restart):" + (extraYieldDisabled ? " [SYR] Harvest Yield enabled, using that instead." : ""), ref settings.extraYield, (extraYieldDisabled ? "Humans mis... didn't miss a spot?" : "Human missed a spot!"), extraYieldDisabled);
             if (Prefs.DevMode)
             {
                 settingEntries.CheckboxLabeled("  Use alternative yield patching method (requires restart):", ref settings.altYield, "Eeeeeek!", !settings.extraYield);
-            
-                if(settingEntries.ButtonText("Check Patched Methods"))
+
+                if (settingEntries.ButtonText("Check Patched Methods"))
                 {
                     Cutebold_Assemblies.CheckPatchedMethods();
                 }

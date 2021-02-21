@@ -26,9 +26,9 @@ namespace Cutebold_Assemblies
         /// <summary>Reference to our harmony instance.</summary>
         private static Harmony harmonyRef;
         /// <summary>Reference to the CanDrawAddon method.</summary>
-        private static System.Reflection.MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), "CanDrawAddon");
+        private static readonly System.Reflection.MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), "CanDrawAddon");
         /// <summary>Our prefix to the CanDrawAddon method.</summary>
-        private static HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldCanDrawAddonPrefix");
+        private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldCanDrawAddonPrefix");
 
         /// <summary>
         /// Enables/Disables body addons on startup.

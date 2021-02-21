@@ -28,15 +28,15 @@ namespace Cutebold_Assemblies
         private static bool ingestedLogged = false;
 
         /// <summary>Cutebold alien race def.</summary>
-        public static ThingDef_AlienRace AlienRaceDef { get; private set; }
+        public static readonly ThingDef_AlienRace AlienRaceDef = (ThingDef_AlienRace)Cutebold_DefOf.Alien_Cutebold;
         /// <summary>Our mod name, for debug output purposes.</summary>
-        public static string ModName { get; } = "Cutebold Race Mod";
+        public static readonly string ModName = "Cutebold Race Mod";
         /// <summary>Cutebold race def string.</summary>
-        public static string RaceName { get; } = "Alien_Cutebold";
+        public static readonly string RaceName = "Alien_Cutebold";
         /// <summary>Cutebold Harmony ID.</summary>
-        public static string HarmonyID { get; } = "rimworld.ashilstraza.races.cute.main";
+        public static readonly string HarmonyID = "rimworld.ashilstraza.races.cute.main";
         /// <summary>Reference to harmony.</summary>
-        private static Harmony harmony = new Harmony(HarmonyID);
+        private static readonly Harmony harmony = new Harmony(HarmonyID);
 
 
         /// <summary>
@@ -45,8 +45,6 @@ namespace Cutebold_Assemblies
         static Cutebold_Assemblies()
         {
             var settings = LoadedModManager.GetMod<CuteboldMod>().GetSettings<Cutebold_Settings>();
-
-            AlienRaceDef = (ThingDef_AlienRace)Cutebold_DefOf.Alien_Cutebold;
 
             try { CreateButcherRaceList(); } // Added because of an update to HAR that changed how referencing other races worked.
             catch (MissingFieldException e)
@@ -247,7 +245,7 @@ namespace Cutebold_Assemblies
                             Log.Warning($"            index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
                         }
                     }
-                    if(patches.Postfixes.Count > 0)
+                    if (patches.Postfixes.Count > 0)
                     {
                         Log.Warning($"        Postfixes:");
                         foreach (var patch in patches.Postfixes)
@@ -255,7 +253,7 @@ namespace Cutebold_Assemblies
                             Log.Warning($"            index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
                         }
                     }
-                    if(patches.Transpilers.Count > 0)
+                    if (patches.Transpilers.Count > 0)
                     {
                         Log.Warning($"        Transpilers:");
                         foreach (var patch in patches.Transpilers)
@@ -263,7 +261,7 @@ namespace Cutebold_Assemblies
                             Log.Warning($"            index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
                         }
                     }
-                    if(patches.Finalizers.Count > 0)
+                    if (patches.Finalizers.Count > 0)
                     {
                         Log.Warning($"        Finalziers:");
                         foreach (var patch in patches.Finalizers)
@@ -272,7 +270,10 @@ namespace Cutebold_Assemblies
                         }
                     }
                 }
-                else Log.Warning($"        Patches is null");
+                else
+                {
+                    Log.Warning($"        Patches is null");
+                }
             }
 
             Log.Warning($"    End of Check");

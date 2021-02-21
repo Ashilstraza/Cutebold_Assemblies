@@ -13,7 +13,7 @@ namespace Cutebold_Assemblies
     class Cutebold_Patch_Names
     {
         /// <summary>If we have created the different backstory lists.</summary>
-        private bool createdLists = false;
+        private readonly bool createdLists = false;
 
         /// <summary>List of Regular Cutebold Child Backstories</summary>
         public static List<Backstory> CuteboldRegularChildBackstories { get; private set; }

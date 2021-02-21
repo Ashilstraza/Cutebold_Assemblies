@@ -52,13 +52,13 @@ namespace Cutebold_Assemblies
                     var plantWorkToilMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_PlantWork).GetNestedTypes(AccessTools.all).First()).ElementAt(1);
                     harmony.Patch(plantWorkToilMethod, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkTranspiler"));
                 }
-                
+
                 // Edits the stats in the stat bio window to be the correct value.
                 harmony.Patch(AccessTools.Method(typeof(StatsReportUtility), "StatsToDraw", new[] { typeof(Thing) }), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldStatsToDrawPostfix"));
 
             }
         }
-        
+
         /// Convered into a transpiler.
         /// <summary>
         /// Adds extra materials to mined rock when the yield is over the default max.

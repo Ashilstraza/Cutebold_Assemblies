@@ -16,31 +16,36 @@ namespace Cutebold_Assemblies
             if (settings.eyeAdaptation)
             {
                 // Allows for dark adaptation, obviously not cave adaptation since that is a different game with cute kobolds.
-                harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "FactorFromGlow", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldFactorFromGlowPostfix", null), null, null);
+                harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "FactorFromGlow"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldFactorFromGlowPostfix"));
                 // Applies dark adaptation to all cutebolds as they spawn.               
-                harmony.Patch(AccessTools.Method(typeof(Pawn), "SpawnSetup", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldAdaptationSpawnSetupPostfix", null), null, null);
+                harmony.Patch(AccessTools.Method(typeof(Pawn), "SpawnSetup"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldAdaptationSpawnSetupPostfix"));
                 // Update dark adaptation eye references.
-                harmony.Patch(AccessTools.Method(typeof(HediffSet), "DirtyCache", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldHediffSetDirtyCachePostfix", null), null, null);
+                harmony.Patch(AccessTools.Method(typeof(HediffSet), "DirtyCache"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldHediffSetDirtyCachePostfix"));
                 // Update dark adaptation goggle references.
-                harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "ApparelChanged", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix", null), null, null);
+                harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "ApparelChanged"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
             }
             else
             {
                 // Removes dark adaptation to all cutebolds as they spawn in.
-                harmony.Patch(AccessTools.Method(typeof(Pawn), "SpawnSetup", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldNoAdaptationSpawnSetupPostfix", null), null, null);
+                harmony.Patch(AccessTools.Method(typeof(Pawn), "SpawnSetup"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldNoAdaptationSpawnSetupPostfix"));
             }
 
-            // Adjust layer offset for cutebold goggles.
-            harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] { 
-                    typeof(Vector3), 
-                    typeof(float), 
-                    typeof(bool), 
-                    typeof(Rot4), 
-                    typeof(Rot4), 
-                    typeof(RotDrawMode), 
-                    typeof(bool), 
-                    typeof(bool), typeof(bool) 
-                }), null, null, new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldRenderPawnInternalTranspiler", null), null);
+            // Don't patch if CE is running, we will use that to put goggles below headgear.
+            if (ModLister.GetActiveModWithIdentifier("CETeam.CombatExtended") == null)
+            {
+                // Adjust layer offset for cutebold goggles.
+                harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
+                    typeof(Vector3),
+                    typeof(float),
+                    typeof(bool),
+                    typeof(Rot4),
+                    typeof(Rot4),
+                    typeof(RotDrawMode),
+                    typeof(bool),
+                    typeof(bool),
+                    typeof(bool)
+                }), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldRenderPawnInternalTranspiler"));
+            }
         }
 
         /// <summary>
@@ -65,13 +70,22 @@ namespace Cutebold_Assemblies
         /// <param name="respawningAfterLoad">If the pawn is spawning after a reload.</param>
         private static void CuteboldAdaptationSpawnSetupPostfix(Pawn __instance, Map map, bool respawningAfterLoad)
         {
-            if (__instance.Dead || __instance.def == null || __instance.def.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
+            if (__instance.Dead || __instance?.def.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
 
             if (__instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) == null)
             {
                 Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)HediffMaker.MakeHediff(Cutebold_DefOf.CuteboldDarkAdaptation, __instance);
                 float minSeverity = 0f;
                 float maxSeverity = 0.1f;
+                bool goggles = false;
+
+                foreach (Apparel apparel in __instance.apparel.WornApparel)
+                {
+                    if (apparel.def == Cutebold_DefOf.Cutebold_Goggles)
+                    {
+                        goggles = true;
+                    }
+                }
 
                 if (!(__instance.story.traits.HasTrait(TraitDef.Named("Wimp")) && __instance.health.hediffSet.PainTotal > 0.0f) && __instance.health.hediffSet.PainTotal <= 0.5f && !respawningAfterLoad)
                 {
@@ -93,12 +107,19 @@ namespace Cutebold_Assemblies
                         maxSeverity += 0.20f;
                     }
 
-                    if (__instance.story.traits.HasTrait(TraitDef.Named("Wimp")))
+                    if (__instance.story.traits.HasTrait(TraitDef.Named("Wimp")) && !goggles)
                     {
                         minSeverity = minSeverity > 0.5f ? 0.5f : minSeverity;
                         maxSeverity = maxSeverity > 0.7f ? 0.7f : maxSeverity;
                     }
+                    else if (goggles)
+                    {
+                        minSeverity = minSeverity * 3f + 0.3f;
+                        maxSeverity = maxSeverity * 3f + 0.4f;
+                    }
                 }
+
+
 
                 hediff.Severity = new FloatRange(minSeverity, maxSeverity).RandomInRange;
 
@@ -115,7 +136,6 @@ namespace Cutebold_Assemblies
         private static void CuteboldNoAdaptationSpawnSetupPostfix(Pawn __instance, Map map, bool respawningAfterLoad)
         {
             if (__instance.Dead || __instance.def?.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
-            //if (__instance.Dead || __instance.def == null || __instance.def.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
 
             Hediff hediff = __instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
 
@@ -172,6 +192,8 @@ namespace Cutebold_Assemblies
             /*
              * See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
              * 
+             * Adjusts the y offset to put goggles below other headgear.
+             * 
              * modified = false;
              * 
              * if (apparelGraphics[j].sourceApparel.def == Cutebold_DefOf.Cutebold_Goggles)
@@ -211,6 +233,8 @@ namespace Cutebold_Assemblies
             /*
              * See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
              * 
+             * Reverts the y offset for other headgear.
+             * 
              * if(modified)
              * {
              *     loc2.y += offset;
@@ -240,7 +264,7 @@ namespace Cutebold_Assemblies
                 {
                     //x = 30;
 
-                    foreach(CodeInstruction codeInstruction in checkForGoggles)
+                    foreach (CodeInstruction codeInstruction in checkForGoggles)
                     {
                         //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
                         yield return codeInstruction;
@@ -254,7 +278,7 @@ namespace Cutebold_Assemblies
                 {
                     revertChange[1].operand = instruction.operand; // Sets the jump value
 
-                    foreach(CodeInstruction codeInstruction in revertChange)
+                    foreach (CodeInstruction codeInstruction in revertChange)
                     {
                         //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
                         yield return codeInstruction;
@@ -268,7 +292,7 @@ namespace Cutebold_Assemblies
                     Log.Message("    "+instruction.ToString() + (instruction.labels.Count > 0 ? instruction.labels[0].ToString() : ""));
                     x--;
                 }*/
-                
+
                 yield return instruction;
             }
         }

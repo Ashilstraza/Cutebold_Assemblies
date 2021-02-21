@@ -4,6 +4,7 @@ using RimWorld.Planet;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 using Verse;
 using static AlienRace.AlienPartGenerator;
 
@@ -15,11 +16,13 @@ namespace Cutebold_Assemblies
     public class Cutebold_lightDarkAdjustment
     {
         /// <summary>Flat value that the global work speed should be in 0% light.</summary>
+#pragma warning disable IDE0044 // Ignore add readonly modifier: these should always be set in the .xml
         private float dark = -1.0f;
         /// <summary>Flat value that the global work sleed should be in 100% light.</summary>
         private float light = -1.0f;
         /// <summary>Multiplier for the difference between the default global work speed values.</summary>
         private float multiplier = float.MaxValue;
+#pragma warning restore IDE0044
 
         /// <summary>Flat value that the global work speed should be in 0% light.</summary>
         public float Dark => dark;
@@ -54,6 +57,7 @@ namespace Cutebold_Assemblies
     /// </summary>
     public class HediffCompProperties_CuteboldDarkAdaptation : HediffCompProperties
     {
+#pragma warning disable IDE0044 // Ignore add readonly modifier: these should always be set in the .xml
         /// <summary>How much we should gain/lose per day max.</summary>
         private float maxSeverityPerDay = 0.1f;
         /// <summary>The maximum light level before losing severity.</summary>
@@ -64,6 +68,7 @@ namespace Cutebold_Assemblies
         /// <summary>List of how the light level affects global work speed.</summary>
         private List<Cutebold_lightDarkAdjustment> lightDarkAdjustment;
 #pragma warning restore CS0649
+#pragma warning restore IDE0044
 
         /// <summary>How much we should gain/lose per day max.</summary>
         public float MaxSeverityPerDay => maxSeverityPerDay;
@@ -114,7 +119,7 @@ namespace Cutebold_Assemblies
         private const float SeverityUpdateMultiplier = 1f / (60000f / SeverityUpdateInterval);
         /// <summary>Set of properties for the hediff component.</summary>
         private HediffCompProperties_CuteboldDarkAdaptation Props => (HediffCompProperties_CuteboldDarkAdaptation)props;
-        
+
         /// <summary>Light level of the pawn at the current location.</summary>
         public float LightLevel = 0f;
         /// <summary>If the pawn can see.</summary>
@@ -193,13 +198,13 @@ namespace Cutebold_Assemblies
             new CurvePoint(0.3f,1.0f)
         });
         /// <summary>Default rimworld global work speed in 100% light.</summary>
-        private static float defaultLightglobalWorkSpeed = 1.0f;
+        private static readonly float defaultLightglobalWorkSpeed = 1.0f;
         /// <summary>Default rimworld global work speed in 0% light</summary>
-        private static float defaultDarkglobalWorkSpeed = 0.8f;
+        private static readonly float defaultDarkglobalWorkSpeed = 0.8f;
         /// <summary>Difference between the two global work speed extremes.</summary>
-        private static float globalWorkSpeedDifference = defaultLightglobalWorkSpeed - defaultDarkglobalWorkSpeed;
+        private static readonly float globalWorkSpeedDifference = defaultLightglobalWorkSpeed - defaultDarkglobalWorkSpeed;
         /// <summary>Reference to the lightSickness Hediff</summary>
-        private HediffDef lightSickness = Cutebold_DefOf.CuteboldLightSickness;
+        private readonly HediffDef lightSickness = Cutebold_DefOf.CuteboldLightSickness;
         /// <summary>Hediff stage index on last update.</summary>
         private int lastIndex = -1;
         /// <summary>The adaptation component.</summary>
@@ -217,6 +222,30 @@ namespace Cutebold_Assemblies
         public float MaxDarkGlobalWorkSpeed { get; private set; } = 0f;
         /// <summary>Maximum global work speed in 100% light.</summary>
         public float MaxLightGlobalWorkSpeed { get; private set; } = 0f;
+
+        /// <summary>Returns true if the cutebold is wearing goggles.</summary>
+        public bool WearingGoggles
+        {
+            get
+            {
+                if (goggles != null) return true;
+                return false;
+            }
+        }
+
+        public override string TipStringExtra
+        {
+            get
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                stringBuilder.Append(base.TipStringExtra);
+                stringBuilder.AppendLine("Adaptation: " + this.Severity.ToStringPercent());
+                //stringBuilder.AppendLine("------------------");
+
+                return stringBuilder.ToString();
+            }
+        }
+
 
         /// <summary>
         /// Returns the debug information about the hediff.
@@ -250,6 +279,8 @@ namespace Cutebold_Assemblies
                 }
             }
 
+            if (ageTicks == 1) CheckdMime();
+
             if (pawn.IsHashIntervalTick(60))
             {
                 lightLevel = CheckLightLevel();
@@ -268,6 +299,19 @@ namespace Cutebold_Assemblies
         }
 
         /// <summary>
+        /// Changes the eye glow to an orange-red color on mimes.
+        /// </summary>
+        /// <param name="pawn">The pawn we want to possibly change the eye color of.</param>
+        private void CheckdMime()
+        {
+            if (pawn.health.hediffSet.hediffs.Find((Hediff hediff) => hediff.def.defName == "AA_MimeHediff") != null)
+            {
+                pawn.TryGetComp<AlienComp>().GetChannel("eye").first = new Color(Rand.Range(0.7f, 0.8f), Rand.Range(0.5f, 0.6f), 0f);
+                pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+            }
+        }
+
+        /// <summary>
         /// Checks the light level at a pawn or their caravan.
         /// </summary>
         /// <returns>The light level.</returns>
@@ -277,11 +321,11 @@ namespace Cutebold_Assemblies
             {
                 return pawn.Map.glowGrid.GameGlowAt(pawn.Position);
             }
-            else if(pawn.CarriedBy != null)
+            else if (pawn.CarriedBy != null)
             {
                 return pawn.CarriedBy.Map.glowGrid.GameGlowAt(pawn.CarriedBy.Position);
             }
-            else if(pawn.ParentHolder != null && pawn.ParentHolder is Caravan)
+            else if (pawn.ParentHolder != null && pawn.ParentHolder is Caravan)
             {
                 var time = GenDate.HourFloat(GenTicks.TicksAbs, Find.WorldGrid.LongLatOf(((Caravan)pawn.ParentHolder).Tile).x);
 
@@ -300,11 +344,14 @@ namespace Cutebold_Assemblies
         {
             adaptationComp.LightLevel = this.lightLevel;
 
-            if (goggles != null || eyesMissing || pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f)
+            if (WearingGoggles || eyesMissing || pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f)
             {
                 adaptationComp.CanSee = false;
             }
-            else adaptationComp.CanSee = true;
+            else
+            {
+                adaptationComp.CanSee = true;
+            }
 
             if (eyesMissing)
             {
@@ -348,7 +395,7 @@ namespace Cutebold_Assemblies
             if (MaxLightGlobalWorkSpeed < 0.5f) MaxLightGlobalWorkSpeed = 0.5f;
             if (MaxDarkGlobalWorkSpeed < 0.5f) MaxDarkGlobalWorkSpeed = 0.5f;
 
-            if (goggles != null || (MaxLightGlobalWorkSpeed == defaultLightglobalWorkSpeed && MaxDarkGlobalWorkSpeed == defaultDarkglobalWorkSpeed))
+            if (WearingGoggles || (MaxLightGlobalWorkSpeed == defaultLightglobalWorkSpeed && MaxDarkGlobalWorkSpeed == defaultDarkglobalWorkSpeed))
             {
                 GlowCurve = new SimpleCurve(defaultGlowCurve);
             }
@@ -372,7 +419,10 @@ namespace Cutebold_Assemblies
             {
                 eyesMissing = true;
             }
-            else eyesMissing = false;
+            else
+            {
+                eyesMissing = false;
+            }
         }
 
         /// <summary>

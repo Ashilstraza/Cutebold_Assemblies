@@ -18,25 +18,24 @@ namespace Cutebold_Assemblies
         }
 
         // RaceDef
-        public static ThingDef Alien_Cutebold;
+        public static readonly ThingDef Alien_Cutebold;
         // Opinion ThoughtDefs
-        public static ThoughtDef ButcheredCuteboldCorpseOpinion;
-        public static ThoughtDef AteRawCuteboldMeat;
+        public static readonly ThoughtDef ButcheredCuteboldCorpseOpinion;
+        public static readonly ThoughtDef AteRawCuteboldMeat;
         // TaleDefs
-        public static TaleDef AteRawCuteboldMeatTale;
-        public static TaleDef ButcheredCuteboldCorpseTale;
+        public static readonly TaleDef AteRawCuteboldMeatTale;
+        public static readonly TaleDef ButcheredCuteboldCorpseTale;
         // RulePackDefs
-        public static RulePackDef NamerPersonCutebold;
-        public static RulePackDef NamerPersonCuteboldSlave;
-        public static RulePackDef NamerPersonCuteboldOther;
-        public static RulePackDef NamerPersonCuteboldOtherFemale;
-        public static RulePackDef NamerPersonCuteboldOutsider;
-        public static RulePackDef NamerPersonCuteboldOutsiderFemale;
-        public static RulePackDef DamageEvent_CuteboldTrapBoulder;
+        public static readonly RulePackDef NamerPersonCutebold;
+        public static readonly RulePackDef NamerPersonCuteboldSlave;
+        public static readonly RulePackDef NamerPersonCuteboldOther;
+        public static readonly RulePackDef NamerPersonCuteboldOtherFemale;
+        public static readonly RulePackDef NamerPersonCuteboldOutsider;
+        public static readonly RulePackDef NamerPersonCuteboldOutsiderFemale;
         // HediffDefs
-        public static HediffDef CuteboldDarkAdaptation;
-        public static HediffDef CuteboldLightSickness;
+        public static readonly HediffDef CuteboldDarkAdaptation;
+        public static readonly HediffDef CuteboldLightSickness;
         // ApparelDefs
-        public static ThingDef Cutebold_Goggles;
+        public static readonly ThingDef Cutebold_Goggles;
     }
 }

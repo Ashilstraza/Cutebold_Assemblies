@@ -28,13 +28,16 @@ namespace Cutebold_Assemblies
         private static bool ingestedLogged = false;
 
         /// <summary>Cutebold alien race def.</summary>
-        public static ThingDef_AlienRace AlienRaceDef { get; private set; }
+        public static readonly ThingDef_AlienRace AlienRaceDef = (ThingDef_AlienRace)Cutebold_DefOf.Alien_Cutebold;
         /// <summary>Our mod name, for debug output purposes.</summary>
-        public static string ModName { get; } = "Cutebold Race Mod";
+        public static readonly string ModName = "Cutebold Race Mod";
         /// <summary>Cutebold race def string.</summary>
-        public static string RaceName { get; } = "Alien_Cutebold";
+        public static readonly string RaceName = "Alien_Cutebold";
         /// <summary>Cutebold Harmony ID.</summary>
-        public static string HarmonyID { get; } = "rimworld.ashilstraza.races.cute.main";
+        public static readonly string HarmonyID = "rimworld.ashilstraza.races.cute.main";
+        /// <summary>Reference to harmony.</summary>
+        private static readonly Harmony harmony = new Harmony(HarmonyID);
+
 
         /// <summary>
         /// Main constructor for setting up some values and executing harmony patches.
@@ -42,28 +45,22 @@ namespace Cutebold_Assemblies
         static Cutebold_Assemblies()
         {
             var settings = LoadedModManager.GetMod<CuteboldMod>().GetSettings<Cutebold_Settings>();
-            var harmony = new Harmony(HarmonyID);
 
-            AlienRaceDef = (ThingDef_AlienRace)Cutebold_DefOf.Alien_Cutebold;
-
-            try { CreateButcherRaceList(); }
+            try { CreateButcherRaceList(); } // Added because of an update to HAR that changed how referencing other races worked.
             catch (MissingFieldException e)
             {
-                Log.Error(string.Format("{0}: Unable to create butcher race list. Check and see if Humanoid Alien Races has been updated.\n    {1}", new object[]{
-                    ModName,
-                    e.GetBaseException().ToString()
-                }));
+                Log.Error($"{ModName}: Unable to create butcher race list. Check and see if Humanoid Alien Races has been updated.\n    {e.GetBaseException()}");
             }
             CreateHumanoidLeatherList();
 
             new Cutebold_Patch_Names(harmony);
 
             // Eating Humanoid Meat
-            harmony.Patch(AccessTools.Method(typeof(Thing), "Ingested", null, null), null, new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldIngestedPostfix", null), null, null);
+            harmony.Patch(AccessTools.Method(typeof(Thing), "Ingested"), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldIngestedPostfix"));
             // Butchering Humanoid Corpses
-            harmony.Patch(AccessTools.Method(typeof(Corpse), "ButcherProducts", null, null), null, new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldButcherProductsPostfix", null), null, null);
+            harmony.Patch(AccessTools.Method(typeof(Corpse), "ButcherProducts"), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldButcherProductsPostfix"));
             // Wearing Humanoid Clothing
-            harmony.Patch(AccessTools.Method(typeof(ThoughtWorker_HumanLeatherApparel), "CurrentStateInternal", null, null), null, new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldCurrentStateInternalPostfix", null), null, null);
+            harmony.Patch(AccessTools.Method(typeof(ThoughtWorker_HumanLeatherApparel), "CurrentStateInternal"), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldCurrentStateInternalPostfix"));
 
             new Cutebold_Patch_BodyAddons(harmony, settings);
 
@@ -99,7 +96,7 @@ namespace Cutebold_Assemblies
 
             foreach (var thingDef in DefDatabase<ThingDef>.AllDefs)
             {
-                if (thingDef.race != null && thingDef.race.leatherDef != null)
+                if (thingDef.race?.leatherDef != null)
                 {
                     //Log.Message("thingDef: " + thingDef.ToString()+" thingDef.race: " + thingDef.race.ToString() + " thingDef.race.leatherDef: " + thingDef.race.leatherDef.ToString(), true);
                     if (thingDef.race.Humanlike)
@@ -130,7 +127,7 @@ namespace Cutebold_Assemblies
         {
             //Log.Message("Ingested Postfix");
             //Log.Message("Instance: " + __instance.ToString() + " Instance Source: " + ((__instance.def.ingestible != null && __instance.def.ingestible.sourceDef != null) ? __instance.def.ingestible.sourceDef.defName.ToString() : "Null") + " ingester: " + ingester.ToString());
-            if (__instance != null && ingester != null && __instance.def.ingestible != null && __instance.def.ingestible.sourceDef != null)
+            if (ingester != null && __instance?.def.ingestible?.sourceDef != null)
             {
                 try
                 {
@@ -146,11 +143,7 @@ namespace Cutebold_Assemblies
                 {
                     if (Prefs.DevMode && !ingestedLogged)
                     {
-                        Log.Warning(string.Format("{0}: Ingested an item that has an issue, only logging once.\n  Thing ingested: {1}\n  Ingestor: {2}", new object[]{
-                            ModName,
-                            __instance.ToString(),
-                            ingester.ToString()
-                    }));
+                        Log.Warning($"{ModName}: Ingested an item that has an issue, only logging once.\n  Thing ingested: {__instance}\n  Ingestor: {ingester}");
                         ingestedLogged = true;
                     }
                 }
@@ -168,7 +161,7 @@ namespace Cutebold_Assemblies
         {
             //Log.Message("Butcher Products Postfix");
             //Log.Message("Instance: " +  __instance.ToString() + " Instance Source: " + ((__instance.def.ingestible != null && __instance.def.ingestible.sourceDef != null) ? __instance.def.ingestible.sourceDef.defName.ToString() : "Null") + " butcher: " + butcher.ToString());
-            if (__instance != null && butcher != null && __instance.def.ingestible != null && __instance.def.ingestible.sourceDef != null)
+            if (butcher != null && __instance?.def.ingestible?.sourceDef != null)
             {
                 try
                 {
@@ -184,11 +177,7 @@ namespace Cutebold_Assemblies
                 {
                     if (Prefs.DevMode && !butcherLogged)
                     {
-                        Log.Warning(string.Format("{0}: Butchered an item that has an issue, only logging once.\n  Corpse Butchered: {1}\n  Butcher: {2}", new object[]{
-                            ModName,
-                            __instance.ToString(),
-                            butcher.ToString()
-                    }));
+                        Log.Warning($"{ModName}: Butchered an item that has an issue, only logging once.\n  Corpse Butchered: {__instance}\n  Butcher: {butcher}");
                         butcherLogged = true;
                     }
                 }
@@ -230,6 +219,64 @@ namespace Cutebold_Assemblies
             //Log.Message("num: " + num.ToString() + " Result Stage Index: " + __result.StageIndex.ToString() + "new Thought State Stage Index: " + newThoughtState.StageIndex.ToString());
 
             if (__result.StageIndex <= newThoughtState.StageIndex) __result = newThoughtState;
+        }
+
+        /// <summary>
+        /// Runs a check on all the methods we patch and outputs all the patches for those methods.
+        /// </summary>
+        public static void CheckPatchedMethods()
+        {
+            Log.Warning($"{ModName}: Checking Patched Methods...");
+            var patchedMethods = harmony.GetPatchedMethods();
+
+            foreach (var method in patchedMethods)
+            {
+                var patches = Harmony.GetPatchInfo(method);
+
+                Log.Warning($"    {method.Name}");
+
+                if (patches != null)
+                {
+                    if (patches.Prefixes.Count > 0)
+                    {
+                        Log.Warning($"        Prefixes:");
+                        foreach (var patch in patches.Prefixes)
+                        {
+                            Log.Warning($"            index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
+                        }
+                    }
+                    if (patches.Postfixes.Count > 0)
+                    {
+                        Log.Warning($"        Postfixes:");
+                        foreach (var patch in patches.Postfixes)
+                        {
+                            Log.Warning($"            index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
+                        }
+                    }
+                    if (patches.Transpilers.Count > 0)
+                    {
+                        Log.Warning($"        Transpilers:");
+                        foreach (var patch in patches.Transpilers)
+                        {
+                            Log.Warning($"            index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
+                        }
+                    }
+                    if (patches.Finalizers.Count > 0)
+                    {
+                        Log.Warning($"        Finalziers:");
+                        foreach (var patch in patches.Finalizers)
+                        {
+                            Log.Warning($"            index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
+                        }
+                    }
+                }
+                else
+                {
+                    Log.Warning($"        Patches is null");
+                }
+            }
+
+            Log.Warning($"    End of Check");
         }
     }
 }

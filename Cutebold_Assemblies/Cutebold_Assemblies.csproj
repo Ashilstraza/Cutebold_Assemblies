@@ -35,10 +35,11 @@
     <DebugSymbols>false</DebugSymbols>
     <CodeAnalysisRuleSet>
     </CodeAnalysisRuleSet>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
-      <HintPath>E:\SteamLibrary\steamapps\common\RimWorld\Mods\__LocalCopy_Harmony__16_8\Current\Assemblies\0Harmony.dll</HintPath>
+      <HintPath>E:\SteamLibrary\steamapps\workshop\content\294100\2009463077\Current\Assemblies\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="AlienRace">
@@ -50,7 +51,7 @@
       <Private>False</Private>
     </Reference>
     <Reference Include="HarmonyMod">
-      <HintPath>E:\SteamLibrary\steamapps\common\RimWorld\Mods\__LocalCopy_Harmony__16_8\Current\Assemblies\HarmonyMod.dll</HintPath>
+      <HintPath>E:\SteamLibrary\steamapps\workshop\content\294100\2009463077\Current\Assemblies\HarmonyMod.dll</HintPath>
       <Private>False</Private>
     </Reference>
     <Reference Include="JetBrains.Annotations, Version=2020.1.0.0, Culture=neutral, PublicKeyToken=1010a0d8d6380325, processorArchitecture=MSIL">
@@ -80,6 +81,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

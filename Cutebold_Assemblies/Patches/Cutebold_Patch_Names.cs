@@ -13,7 +13,7 @@ namespace Cutebold_Assemblies
     class Cutebold_Patch_Names
     {
         /// <summary>If we have created the different backstory lists.</summary>
-        private bool createdLists = false;
+        private readonly bool createdLists = false;
 
         /// <summary>List of Regular Cutebold Child Backstories</summary>
         public static List<Backstory> CuteboldRegularChildBackstories { get; private set; }
@@ -54,11 +54,17 @@ namespace Cutebold_Assemblies
                 createdLists = true;
 
                 // Disable Cutebold Name Validation
-                harmony.Patch(AccessTools.Method(typeof(NameGenerator), "GenerateName", new Type[] { typeof(GrammarRequest), typeof(Predicate<string>), typeof(bool), typeof(string), typeof(string) }, null), new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldGenerateNamePrefix", null), null, null, null);
+                harmony.Patch(AccessTools.Method(typeof(NameGenerator), "GenerateName", new Type[] {
+                    typeof(GrammarRequest),
+                    typeof(Predicate<string>),
+                    typeof(bool),
+                    typeof(string),
+                    typeof(string)
+                }), prefix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldGenerateNamePrefix"));
                 // Generate Cutebold Names
-                harmony.Patch(AccessTools.Method(typeof(PawnBioAndNameGenerator), "GeneratePawnName", null, null), new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldGeneratePawnNamePrefix", null), null, null, null);
+                harmony.Patch(AccessTools.Method(typeof(PawnBioAndNameGenerator), "GeneratePawnName"), prefix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldGeneratePawnNamePrefix"));
                 // Ignores Validation for Player's Cutebold Names on World Gen
-                harmony.Patch(AccessTools.Method(typeof(Page_ConfigureStartingPawns), "CanDoNext", null, null), null, new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldCanDoNextPostfix", null), null, null);
+                harmony.Patch(AccessTools.Method(typeof(Page_ConfigureStartingPawns), "CanDoNext"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldCanDoNextPostfix"));
             }
         }
 
@@ -118,7 +124,7 @@ namespace Cutebold_Assemblies
 
             //Log.Message("Generate Name Prefix");
 
-            if(request.Includes.Any(included => included == Cutebold_DefOf.NamerPersonCutebold || included == Cutebold_DefOf.NamerPersonCuteboldSlave))
+            if (request.Includes.Any(included => included == Cutebold_DefOf.NamerPersonCutebold || included == Cutebold_DefOf.NamerPersonCuteboldSlave))
                 validator = null;
         }
 
@@ -137,7 +143,7 @@ namespace Cutebold_Assemblies
             //Log.Message("Generate Pawn Name Prefix");
             //Log.Message("  pawn def=" + pawn.def.ToString() + " style=" + style.ToString());
 
-            if (pawn.def == null || style != NameStyle.Full || pawn.def.defName != Cutebold_Assemblies.RaceName) return true;
+            if (pawn.def?.defName != Cutebold_Assemblies.RaceName || style != NameStyle.Full) return true;
 
             //Log.Message("  pawn faction=" + pawn.Faction.ToString() + "  faction name maker="+((pawn.Faction != null && pawn.Faction.def.pawnNameMaker != null) ? pawn.Faction.def.pawnNameMaker.ToString() : ""));
             RulePackDef rulePack = null;
@@ -148,7 +154,7 @@ namespace Cutebold_Assemblies
             }
 
             // Cutebolds with no faction name maker
-            if (pawn.Faction == null || pawn.Faction.def.pawnNameMaker == null)
+            if (pawn.Faction?.def.pawnNameMaker == null)
             {
                 //Log.Message("  Faction null or pawnNameMaker null");
                 if (pawn.story.childhood == null || (pawn.story.adulthood != null && CuteboldRegularChildBackstories.Contains(pawn.story.childhood) && CuteboldRegularAdultBackstories.Contains(pawn.story.adulthood))) // Cutebold somehow does not have a childhood or is from a cutebold tribe

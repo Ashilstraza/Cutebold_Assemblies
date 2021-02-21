@@ -1,6 +1,7 @@
 ﻿using AlienRace;
 using HarmonyLib;
 using RimWorld;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Verse;
@@ -25,9 +26,9 @@ namespace Cutebold_Assemblies
         /// <summary>Reference to our harmony instance.</summary>
         private static Harmony harmonyRef;
         /// <summary>Reference to the CanDrawAddon method.</summary>
-        private static System.Reflection.MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), "CanDrawAddon", null, null);
+        private static readonly System.Reflection.MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), "CanDrawAddon");
         /// <summary>Our prefix to the CanDrawAddon method.</summary>
-        private static HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldCanDrawAddonPrefix", null);
+        private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldCanDrawAddonPrefix");
 
         /// <summary>
         /// Enables/Disables body addons on startup.
@@ -41,7 +42,7 @@ namespace Cutebold_Assemblies
                 raceAddons = new List<AlienPartGenerator.BodyAddon>(Cutebold_Assemblies.AlienRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons);
                 harmonyRef = harmony;
                 CuteboldAddonModifier(settings);
-                harmonyRef.Patch(canDrawAddonRef, cuteboldCanDrawAddonPrefixRef, null, null, null);
+                harmonyRef.Patch(canDrawAddonRef, prefix: cuteboldCanDrawAddonPrefixRef);
                 initialized = true;
             }
         }
@@ -60,7 +61,7 @@ namespace Cutebold_Assemblies
                 var canDrawAddonMethod = typeof(AlienPartGenerator.BodyAddon).GetMethod("CanDrawAddon");
                 bool patched = false;
 
-                if(Harmony.GetPatchInfo(canDrawAddonMethod).Prefixes.Any(patch => patch.owner == Cutebold_Assemblies.HarmonyID))
+                if (initialized && Harmony.GetPatchInfo(canDrawAddonMethod).Prefixes.Any(patch => patch.owner == Cutebold_Assemblies.HarmonyID))
                     patched = true;
 
                 glowEyes = settings.glowEyes;
@@ -153,14 +154,20 @@ namespace Cutebold_Assemblies
             if (pawn.def.defName != Cutebold_Assemblies.RaceName || (__instance.bodyPart != "left eye" && __instance.bodyPart != "right eye")) return true;
 
             __result = true;
-            
-            if (pawn.Dead || 
-                (pawn.CarriedBy == null ? pawn.Map.glowGrid.GameGlowAt(pawn.Position) : pawn.CarriedBy.Map.glowGrid.GameGlowAt(pawn.CarriedBy.Position)) >= 0.3f || 
-                (pawn.CurJob != null && pawn.jobs.curDriver.asleep) || 
-                pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f || 
+
+            if (pawn.Dead ||
+                ((pawn.ParentHolder as Map) != null ? pawn.Map.glowGrid.GameGlowAt(pawn.Position) : (pawn.CarriedBy != null ? pawn.CarriedBy.Map.glowGrid.GameGlowAt(pawn.CarriedBy.Position) : 0.5f)) >= 0.3f ||
+                (pawn.CurJob != null && pawn.jobs.curDriver.asleep) ||
+                pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f ||
                 pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f)
             {
                 __result = false;
+            }
+            else
+            {
+                // Blink Fucntion
+                var offsetTicks = Math.Abs(pawn.HashOffsetTicks());
+                if (Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89))) < 1) __result = false;
             }
 
             return __result;

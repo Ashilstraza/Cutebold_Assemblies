@@ -301,7 +301,6 @@ namespace Cutebold_Assemblies
         /// <summary>
         /// Changes the eye glow to an orange-red color on mimes.
         /// </summary>
-        /// <param name="pawn">The pawn we want to possibly change the eye color of.</param>
         private void CheckdMime()
         {
             if (pawn.health.hediffSet.hediffs.Find((Hediff hediff) => hediff.def.defName == "AA_MimeHediff") != null)
@@ -325,9 +324,9 @@ namespace Cutebold_Assemblies
             {
                 return pawn.CarriedBy.Map.glowGrid.GameGlowAt(pawn.CarriedBy.Position);
             }
-            else if (pawn.ParentHolder != null && pawn.ParentHolder is Caravan)
+            else if (pawn.ParentHolder != null && pawn.ParentHolder is Caravan caravan)
             {
-                var time = GenDate.HourFloat(GenTicks.TicksAbs, Find.WorldGrid.LongLatOf(((Caravan)pawn.ParentHolder).Tile).x);
+                var time = GenDate.HourFloat(GenTicks.TicksAbs, Find.WorldGrid.LongLatOf(caravan.Tile).x);
 
                 if (time > 19 || time < 5) return 0f; // Night
                 else if (time > 18 || time < 6) return 0.5f; // Dusk/Dawn
@@ -377,7 +376,7 @@ namespace Cutebold_Assemblies
                 if (lightLevel > adaptationComp.MaxLightLevel && CurStageIndex != 0)
                 {
                     hediff.Severity = this.Severity;
-                    hediff.resetTicksToDisappear();
+                    hediff.ResetTicksToDisappear();
                 }
             }
         }

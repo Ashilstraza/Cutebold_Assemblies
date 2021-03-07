@@ -165,7 +165,7 @@ namespace Cutebold_Assemblies
             }
             else
             {
-                // Blink Fucntion
+                // Blink Fucntion; somewhat regular blinking, but not exactly even nor completely random.
                 var offsetTicks = Math.Abs(pawn.HashOffsetTicks());
                 if (Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89))) < 1) __result = false;
             }

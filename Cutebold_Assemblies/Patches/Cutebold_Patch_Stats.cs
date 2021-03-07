@@ -256,14 +256,14 @@ namespace Cutebold_Assemblies
         /// <param name="___stat">The StatDef of the StatWorker</param>
         /// <param name="req">The item requesting the stat.</param>
         /// <param name="numberSense">Unused</param>
-        private static void CuteboldGetExplanationUnfinalizedPostfix(ref string __result, StatWorker __instance, StatDef ___stat, StatRequest req, ToStringNumberSense numberSense)
+        private static void CuteboldGetExplanationUnfinalizedPostfix(ref string __result, StatDef ___stat, StatRequest req, ToStringNumberSense numberSense)
         {
             Pawn pawn = req.Pawn ?? (req.Thing is Pawn ? (Pawn)req.Thing : null);
 
             if (pawn?.def != Cutebold_Assemblies.AlienRaceDef || ___stat != StatDefOf.MiningYield) return;
 
             float rawPercent = CuteboldCalculateExtraPercent(___stat, req, false);
-            float multiplier = miningMultiplier(pawn);
+            float multiplier = MiningMultiplier(pawn);
             StringBuilder stringBuilder = new StringBuilder(__result);
 
             stringBuilder.AppendLine("Dark Adaptation");
@@ -331,7 +331,7 @@ namespace Cutebold_Assemblies
                                         if (actor.Faction != Faction.OfPlayer) product.SetForbidden(true, true);
 
                                         Find.QuestManager.Notify_PlantHarvested(actor, product);
-                                        GenPlace.TryPlaceThing(product, actor.Position, map, ThingPlaceMode.Near, null, null, default(Rot4));
+                                        GenPlace.TryPlaceThing(product, actor.Position, map, ThingPlaceMode.Near);
                                         actor.records.Increment(RecordDefOf.PlantsHarvested);
                                     }
                                 }
@@ -368,7 +368,7 @@ namespace Cutebold_Assemblies
 
             //Log.Message("adaptation=" + adaptation + "has hediff="+ pawn?.health.hediffSet.HasHediff(Cutebold_DefOf.CuteboldDarkAdaptation).ToString());
 
-            if (adaptation && useMultiplier && pawn?.health.hediffSet.HasHediff(Cutebold_DefOf.CuteboldDarkAdaptation) == true) multiplier = miningMultiplier(pawn);
+            if (adaptation && useMultiplier && pawn?.health.hediffSet.HasHediff(Cutebold_DefOf.CuteboldDarkAdaptation) == true) multiplier = MiningMultiplier(pawn);
 
             //Log.Message("rawPercent=" + rawPercent + " pawnBasePercent=" + pawnBasePercent + " defaultMaxPercent=" + defaultMaxPercent + "multiplier=" + multiplier);
 
@@ -382,7 +382,7 @@ namespace Cutebold_Assemblies
         /// </summary>
         /// <param name="pawn">The pawn to check dark adaptation on</param>
         /// <returns>multiplier</returns>
-        private static float miningMultiplier(Pawn pawn)
+        private static float MiningMultiplier(Pawn pawn)
         {
             Hediff_CuteboldDarkAdaptation darkAdaptation = (Hediff_CuteboldDarkAdaptation)pawn.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
             var severity = darkAdaptation.Severity;

@@ -13,7 +13,7 @@ namespace Cutebold_Assemblies
         /// <summary>
         /// Resets the number of ticks until the hediff disappears.
         /// </summary>
-        public void resetTicksToDisappear()
+        public void ResetTicksToDisappear()
         {
             foreach (HediffComp comp in comps)
             {

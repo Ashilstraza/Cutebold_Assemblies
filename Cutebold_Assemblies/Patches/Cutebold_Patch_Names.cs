@@ -30,7 +30,7 @@ namespace Cutebold_Assemblies
         /// <summary>List of Underground Cutebold Adult Backstories</summary>
         public static List<Backstory> CuteboldUndergroundAdultBackstories { get; private set; }
 
-        private static List<RulePackDef> cuteboldNamers = new List<RulePackDef>()
+        private static readonly List<RulePackDef> cuteboldNamers = new List<RulePackDef>()
         {
             Cutebold_DefOf.NamerPersonCutebold,
             Cutebold_DefOf.NamerPersonCuteboldOther,
@@ -263,18 +263,17 @@ namespace Cutebold_Assemblies
             //Log.Message("Cutebold Name Checker name=" + name.ToString());
             NameTriple nameTriple = name as NameTriple;
 
-            foreach (Name otherName in NameUseChecker.AllPawnsNamesEverUsed)
+            foreach (NameTriple otherName in NameUseChecker.AllPawnsNamesEverUsed)
             {
-                NameTriple otherNameTriple = otherName as NameTriple;
-                if (otherNameTriple != null)
+                if (otherName != null)
                 {
-                    if (!otherNameTriple.Nick.NullOrEmpty() && !nameTriple.Nick.NullOrEmpty() && otherNameTriple.Nick == nameTriple.Nick)
+                    if (!otherName.Nick.NullOrEmpty() && !nameTriple.Nick.NullOrEmpty() && otherName.Nick == nameTriple.Nick)
                     {
                         //Log.Message("  Nick already in use.");
                         return true;
                     }
-                    if (!otherNameTriple.First.NullOrEmpty() && !nameTriple.First.NullOrEmpty() && otherNameTriple.First == nameTriple.First
-                        && otherNameTriple.Last == nameTriple.Last)
+                    if (!otherName.First.NullOrEmpty() && !nameTriple.First.NullOrEmpty() && otherName.First == nameTriple.First
+                        && otherName.Last == nameTriple.Last)
                     {
                         //Log.Message("  First and last already in use.");
                         return true;

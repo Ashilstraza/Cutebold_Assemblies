@@ -125,6 +125,12 @@ namespace Cutebold_Assemblies
 
                 __instance.health.AddHediff(hediff);
             }
+            else
+            {
+                Hediff_CuteboldDarkAdaptation darkAdaptation = (Hediff_CuteboldDarkAdaptation)__instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
+                darkAdaptation.UpdateGoggles();
+                darkAdaptation.UpdateEyes();
+            }
         }
 
         /// <summary>

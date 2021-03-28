@@ -67,6 +67,8 @@ namespace Cutebold_Assemblies
 #pragma warning disable CS0649 // Ignore not being assigned to warning: lightDarkAdjustment should always be set in the .xml
         /// <summary>List of how the light level affects global work speed.</summary>
         private List<Cutebold_lightDarkAdjustment> lightDarkAdjustment;
+        /// <summary>List of the different eyes that overcome adaptation sickness.</summary>
+        private List<string> specialEyes;
 #pragma warning restore CS0649
 #pragma warning restore IDE0044
 
@@ -78,6 +80,8 @@ namespace Cutebold_Assemblies
         public float MinLightLevel => minLightLevel;
         /// <summary>List of how the light level affects global work speed.</summary>
         public List<Cutebold_lightDarkAdjustment> LightDarkAdjustment => lightDarkAdjustment;
+        /// <summary>List of the different eyes that overcome adaptation sickness.</summary>
+        public List<string> SpecialEyes => specialEyes;
 
         /// <summary>
         /// Adds a reference to the HediffComp on creation.
@@ -130,6 +134,8 @@ namespace Cutebold_Assemblies
         public float MinLightLevel => Props.MinLightLevel;
         /// <summary>List of the adjustment values for each hediff stage.</summary>
         public List<Cutebold_lightDarkAdjustment> LightDarkAdjustment => Props.LightDarkAdjustment;
+        /// <summary>List of the different eyes that overcome adaptation sickness.</summary>
+        public List<string> SpecialEyes => Props.SpecialEyes;
 
         /// <summary>
         /// Sets the severity adjustment amount depending on the pawn's light level.
@@ -167,7 +173,7 @@ namespace Cutebold_Assemblies
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.Append(base.CompDebugString());
 
-            if (!base.Pawn.Dead) stringBuilder.AppendLine("severity/day in current light level: " + SeverityChangePerDay().ToString("F3"));
+            if (!base.Pawn.Dead) stringBuilder.AppendLine($"Severity/day in current light level: {SeverityChangePerDay().ToString("F3")}");
 
             return stringBuilder.ToString().TrimEndNewlines();
         }
@@ -213,6 +219,8 @@ namespace Cutebold_Assemblies
         private bool eyesMissing = false;
         /// <summary>If the glow curve should be updated.</summary>
         private bool updateGlowCurve = true;
+        /// <summary>If the pawn has eyes that overcome adaptation sickness.</summary>
+        private bool ultraEyes = false;
 
         /// <summary>If the current hediff stage should be visible.</summary>
         public override bool Visible => CurStage.becomeVisible;
@@ -239,7 +247,8 @@ namespace Cutebold_Assemblies
             {
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.Append(base.TipStringExtra);
-                stringBuilder.AppendLine("Adaptation: " + this.Severity.ToStringPercent());
+                stringBuilder.AppendLine($"Adaptation: {this.Severity.ToStringPercent()}");
+                if(goggles != null) stringBuilder.AppendLine("Goggles currently worn, no workspeed change.");
                 //stringBuilder.AppendLine("------------------");
 
                 return stringBuilder.ToString();
@@ -256,7 +265,8 @@ namespace Cutebold_Assemblies
             StringBuilder debugString = new StringBuilder();
             debugString.Append(base.DebugString());
 
-            debugString.AppendLine(("lightLevel: " + lightLevel + "\nmaxLightGlobalWorkSpeed: " + MaxLightGlobalWorkSpeed + "\nmaxDarkGlobalWorkSpeed: " + MaxDarkGlobalWorkSpeed).Indented());
+            debugString.AppendLine(($"lightLevel: {lightLevel}\nmaxLightGlobalWorkSpeed: {MaxLightGlobalWorkSpeed}\nmaxDarkGlobalWorkSpeed: {MaxDarkGlobalWorkSpeed}").Indented());
+            debugString.AppendLine($"WearingGoggles: {WearingGoggles}");
 
             return debugString.ToString();
         }
@@ -299,7 +309,7 @@ namespace Cutebold_Assemblies
         }
 
         /// <summary>
-        /// Changes the eye glow to an orange-red color on mimes.
+        /// Changes the eye glow to an orange-red color on mimes from Alpha Animals.
         /// </summary>
         private void CheckdMime()
         {
@@ -341,7 +351,14 @@ namespace Cutebold_Assemblies
         /// </summary>
         private void UpdateCuteboldCompProperties()
         {
-            adaptationComp.LightLevel = this.lightLevel;
+            if (ultraEyes)
+            {
+                adaptationComp.LightLevel = 0.0f;
+            }
+            else
+            {
+                adaptationComp.LightLevel = this.lightLevel;
+            }            
 
             if (WearingGoggles || eyesMissing || pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f)
             {
@@ -363,7 +380,7 @@ namespace Cutebold_Assemblies
         /// </summary>
         private void UpdateLightSickness()
         {
-            if (adaptationComp.CanSee && lightLevel > adaptationComp.MaxLightLevel && CurStageIndex > 0 && !pawn.health.hediffSet.HasHediff(lightSickness))
+            if (adaptationComp.CanSee && !ultraEyes && lightLevel > adaptationComp.MaxLightLevel && CurStageIndex > 0 && !pawn.health.hediffSet.HasHediff(lightSickness))
             {
                 Hediff hediff = HediffMaker.MakeHediff(lightSickness, pawn);
                 hediff.Severity = this.Severity;
@@ -398,6 +415,13 @@ namespace Cutebold_Assemblies
             {
                 GlowCurve = new SimpleCurve(defaultGlowCurve);
             }
+            else if(ultraEyes) {
+                GlowCurve.SetPoints(new List<CurvePoint>()
+                                {
+                                    new CurvePoint(0.0f,MaxDarkGlobalWorkSpeed),
+                                    new CurvePoint(1.0f,MaxDarkGlobalWorkSpeed)
+                                });
+            }
             else
             {
                 GlowCurve.SetPoints(new List<CurvePoint>()
@@ -413,15 +437,33 @@ namespace Cutebold_Assemblies
         /// </summary>
         public void UpdateEyes()
         {
-            if (!pawn.health.hediffSet.GetNotMissingParts().Any(eye => eye.untranslatedCustomLabel == "left eye") &&
-                !pawn.health.hediffSet.GetNotMissingParts().Any(eye => eye.untranslatedCustomLabel == "right eye"))
+            bool leftEyeMissing = !pawn.health.hediffSet.GetNotMissingParts().Any(eye => eye.untranslatedCustomLabel == "left eye");
+            bool rightEyeMissing = !pawn.health.hediffSet.GetNotMissingParts().Any(eye => eye.untranslatedCustomLabel == "right eye");
+            if (leftEyeMissing && rightEyeMissing)
             {
                 eyesMissing = true;
+                ultraEyes = false;
             }
             else
             {
                 eyesMissing = false;
+                
+                bool leftEyeSpecial = pawn.health.hediffSet.hediffs.Any(hediff => hediff.Part?.untranslatedCustomLabel == "left eye"
+                    && adaptationComp.SpecialEyes.Contains(hediff.def.defName));
+                bool rightEyeSpecial = pawn.health.hediffSet.hediffs.Any(hediff => hediff.Part?.untranslatedCustomLabel == "right eye"
+                    && adaptationComp.SpecialEyes.Contains(hediff.def.defName));
+
+                if ((leftEyeSpecial || leftEyeMissing) && (rightEyeSpecial || rightEyeMissing))
+                {
+                    ultraEyes = true;
+                }
+                else
+                {
+                    ultraEyes = false;
+                }
             }
+
+            updateGlowCurve = true;
         }
 
         /// <summary>

@@ -278,17 +278,6 @@ namespace Cutebold_Assemblies
         {
             base.PostTick();
 
-            if (adaptationComp == null)
-            {
-                foreach (HediffComp comp in comps)
-                {
-                    if (comp is HediffComp_CuteboldDarkAdaptation adaptationComp)
-                    {
-                        this.adaptationComp = adaptationComp;
-                    }
-                }
-            }
-
             if (ageTicks == 1) CheckdMime();
 
             if (pawn.IsHashIntervalTick(60))
@@ -305,6 +294,20 @@ namespace Cutebold_Assemblies
                 }
 
                 UpdateLightSickness();
+            }
+        }
+
+        public void CheckHediffComp()
+        {
+            if (adaptationComp == null)
+            {
+                foreach (HediffComp comp in comps)
+                {
+                    if (comp is HediffComp_CuteboldDarkAdaptation adaptationComp)
+                    {
+                        this.adaptationComp = adaptationComp;
+                    }
+                }
             }
         }
 
@@ -437,8 +440,13 @@ namespace Cutebold_Assemblies
         /// </summary>
         public void UpdateEyes()
         {
+            if (pawn.Dead) return;
+
+            CheckHediffComp();
+
             bool leftEyeMissing = !pawn.health.hediffSet.GetNotMissingParts().Any(eye => eye.untranslatedCustomLabel == "left eye");
             bool rightEyeMissing = !pawn.health.hediffSet.GetNotMissingParts().Any(eye => eye.untranslatedCustomLabel == "right eye");
+
             if (leftEyeMissing && rightEyeMissing)
             {
                 eyesMissing = true;

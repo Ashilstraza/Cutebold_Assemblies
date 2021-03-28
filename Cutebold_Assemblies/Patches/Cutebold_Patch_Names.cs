@@ -263,8 +263,10 @@ namespace Cutebold_Assemblies
             //Log.Message("Cutebold Name Checker name=" + name.ToString());
             NameTriple nameTriple = name as NameTriple;
 
-            foreach (NameTriple otherName in NameUseChecker.AllPawnsNamesEverUsed)
+            foreach (Name otherNameTemp in NameUseChecker.AllPawnsNamesEverUsed)
             {
+                var otherName = otherNameTemp as NameTriple;
+
                 if (otherName != null)
                 {
                     if (!otherName.Nick.NullOrEmpty() && !nameTriple.Nick.NullOrEmpty() && otherName.Nick == nameTriple.Nick)

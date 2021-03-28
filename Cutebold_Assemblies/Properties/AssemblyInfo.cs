@@ -29,7 +29,7 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.6")]
 
-// 1.0.6: Added assembly version into settings debug
+// 1.0.6: Added assembly version into settings debug, fix for worn goggles on load, fix cor cast error in name generator
 // 1.0.5: Cutebold Mime Eye Color
 // 1.0.4: Yield Bug Fix
 // 1.0.3: Dark Adaptation + Yield

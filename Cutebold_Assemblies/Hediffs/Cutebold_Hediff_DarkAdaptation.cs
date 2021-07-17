@@ -4,6 +4,7 @@ using RimWorld.Planet;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System;
 using UnityEngine;
 using Verse;
 using static AlienRace.AlienPartGenerator;
@@ -195,6 +196,8 @@ namespace Cutebold_Assemblies
     {
         /// <summary>Light level of the pawn at the current location.</summary>
         private float lightLevel = 0f;
+        /// <summary>Light level of the pawn at the current location on the last update.</summary>
+        private float lastLightLevel = 0f;
         /// <summary>The equiped goggles.</summary>
         private Apparel goggles;
         /// <summary>The defualt glow curve.</summary>
@@ -213,6 +216,16 @@ namespace Cutebold_Assemblies
         private readonly HediffDef lightSickness = Cutebold_DefOf.CuteboldLightSickness;
         /// <summary>Hediff stage index on last update.</summary>
         private int lastIndex = -1;
+        /// <summary>If eyes should blink.</summary>
+        private static bool eyeBlink => Cutebold_Assemblies.CuteboldSettings.blinkEyes;
+        /// <summary>If eyes glow.</summary>
+        private static bool eyeGlowEnabled => Cutebold_Assemblies.CuteboldSettings.glowEyes;
+        /// <summary>Previous blink value in determening eyes being closed or open.</summary>
+        private double blinkLastValue = -1;
+        /// <summary>If cutebold is asleep.</summary>
+        private bool asleep = false;
+        /// <summary>If cutebold is unconscious.</summary>
+        private bool unconscious = false;
         /// <summary>The adaptation component.</summary>
         private HediffComp_CuteboldDarkAdaptation adaptationComp;
         /// <summary>If the pawn's eyes are missing.</summary>
@@ -248,7 +261,7 @@ namespace Cutebold_Assemblies
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.Append(base.TipStringExtra);
                 stringBuilder.AppendLine($"Adaptation: {this.Severity.ToStringPercent()}");
-                if(goggles != null) stringBuilder.AppendLine("Goggles currently worn, no workspeed change.");
+                if (goggles != null) stringBuilder.AppendLine("Goggles currently worn, no workspeed change.");
                 //stringBuilder.AppendLine("------------------");
 
                 return stringBuilder.ToString();
@@ -280,10 +293,39 @@ namespace Cutebold_Assemblies
 
             if (ageTicks == 1) CheckdMime();
 
+            lastLightLevel = lightLevel;
+            lightLevel = CheckLightLevel();
+
+            if ((lastLightLevel >= 30) == (lightLevel < 30))
+            {
+                pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+            }
+
+            if (((pawn.CurJob != null && pawn.jobs.curDriver.asleep) != asleep) ||
+                ((pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f) == !unconscious))
+            {
+                asleep = (pawn.CurJob != null && pawn.jobs.curDriver.asleep);
+                unconscious = pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f;
+
+                pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+            }
+
+            if (eyeGlowEnabled && eyeBlink && lightLevel < 30)
+            {
+                var offsetTicks = Math.Abs(pawn.HashOffsetTicks());
+                var blinkValue = Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89)));
+
+                if ((blinkValue < 1 && blinkLastValue >= 1) || (blinkValue >= 1 && blinkLastValue < 1))
+                {
+                    pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                }
+
+                blinkLastValue = blinkValue;
+            }
+            
             if (pawn.IsHashIntervalTick(60))
             {
-                lightLevel = CheckLightLevel();
-
+                
                 UpdateCuteboldCompProperties();
 
                 if (updateGlowCurve || (lastIndex != CurStageIndex))
@@ -361,7 +403,7 @@ namespace Cutebold_Assemblies
             else
             {
                 adaptationComp.LightLevel = this.lightLevel;
-            }            
+            }
 
             if (WearingGoggles || eyesMissing || pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f)
             {
@@ -418,7 +460,8 @@ namespace Cutebold_Assemblies
             {
                 GlowCurve = new SimpleCurve(defaultGlowCurve);
             }
-            else if(ultraEyes) {
+            else if (ultraEyes)
+            {
                 GlowCurve.SetPoints(new List<CurvePoint>()
                                 {
                                     new CurvePoint(0.0f,MaxDarkGlobalWorkSpeed),
@@ -455,7 +498,7 @@ namespace Cutebold_Assemblies
             else
             {
                 eyesMissing = false;
-                
+
                 bool leftEyeSpecial = pawn.health.hediffSet.hediffs.Any(hediff => hediff.Part?.untranslatedCustomLabel == "left eye"
                     && adaptationComp.SpecialEyes.Contains(hediff.def.defName));
                 bool rightEyeSpecial = pawn.health.hediffSet.hediffs.Any(hediff => hediff.Part?.untranslatedCustomLabel == "right eye"

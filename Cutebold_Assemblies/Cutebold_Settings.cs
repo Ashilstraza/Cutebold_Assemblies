@@ -16,6 +16,8 @@ namespace Cutebold_Assemblies
         public bool eyeAdaptation = true;
         /// <summary>If pawn eyes should glow when 'dark adapted'.</summary>
         public bool glowEyes = true;
+        /// <summary>If cutebold eyes should blink in the dark.</summary>
+        public bool blinkEyes = true;
         /// <summary>If ears/tail can be visually detached.</summary>
         public bool detachableParts = true;
 
@@ -28,6 +30,7 @@ namespace Cutebold_Assemblies
             Scribe_Values.Look(ref altYield, "altYield", false, true);
             Scribe_Values.Look(ref eyeAdaptation, "eyeAdaptation", true, true);
             Scribe_Values.Look(ref glowEyes, "glowEyes", true, true);
+            Scribe_Values.Look(ref blinkEyes, "blinkEyes", true, true);
             Scribe_Values.Look(ref detachableParts, "detachableParts", true, true);
             base.ExposeData();
         }
@@ -52,7 +55,7 @@ namespace Cutebold_Assemblies
         public CuteboldMod(ModContentPack content) : base(content)
         {
             this.settings = GetSettings<Cutebold_Settings>();
-            
+
         }
 
         /// <summary>
@@ -67,19 +70,27 @@ namespace Cutebold_Assemblies
             if (Prefs.DevMode) settingEntries.Label($"Cutebold Assembly Version: {versionNumber}");
 
             settingEntries.CheckboxLabeled($"Cutebolds are able to extract extra resources (requires restart):{(extraYieldDisabled ? " [SYR] Harvest Yield enabled, using that instead." : "")}", ref settings.extraYield, (extraYieldDisabled ? "Humans mis... didn't miss a spot?" : "Human missed a spot!"), extraYieldDisabled);
-            
+
             if (Prefs.DevMode)
             {
                 settingEntries.CheckboxLabeled("    Use alternative yield patching method (requires restart):", ref settings.altYield, "Eeeeeek!", !settings.extraYield);
 
-                if (settingEntries.ButtonTextLabeled("Check for all patches to methods that this mod patches (used for debugging):","Check"))
-                {
-                    Cutebold_Assemblies.CheckPatchedMethods();
-                }
+                
             };
             settingEntries.CheckboxLabeled("Cutebolds can adapt to see in the dark (requires restart):", ref settings.eyeAdaptation, "The sun, it burns!");
             settingEntries.CheckboxLabeled("    Cutebolds eyes glow when dark adapted:", ref settings.glowEyes, "Shiny eyes!", !settings.eyeAdaptation);
+            settingEntries.CheckboxLabeled("        Cutebolds blink in the darkness:", ref settings.blinkEyes, "No dry eyes here!", (!settings.glowEyes || !settings.eyeAdaptation));
             settingEntries.CheckboxLabeled("Cutebold ears and tail will be visually gone when the body part becomes lost:", ref settings.detachableParts, "No ears or tail makes a sadbold.");
+            
+            if (Prefs.DevMode)
+            {
+                settingEntries.Gap(48);                
+                if (settingEntries.AltButtonTextLabeled("Check for all patches to methods that this mod patches (used for debugging):", "Check"))
+                {
+                    Cutebold_Assemblies.CheckPatchedMethods();
+                }
+            }
+
             settingEntries.End();
 
             base.DoSettingsWindowContents(inRect);
@@ -133,6 +144,15 @@ namespace Cutebold_Assemblies
             }
             Widgets.CheckboxLabeled(rect, label, ref checkOn, disabled);
             Gap(verticalSpacing);
+        }
+
+        public bool AltButtonTextLabeled(string label, string buttonLabel)
+        {
+            Rect rect = GetRect(30f);
+            Widgets.Label(rect.LeftPart(0.75f), label);
+            bool result = Widgets.ButtonText(rect.RightPart(0.25f), buttonLabel);
+            Gap(verticalSpacing);
+            return result;
         }
     }
 }

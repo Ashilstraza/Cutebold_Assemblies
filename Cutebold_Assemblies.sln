@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.30225.117
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cutebold_Assemblies", "Cutebold_Assemblies\Cutebold_Assemblies.csproj", "{595E3FE8-C183-4363-83F6-03E75C56D839}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Assembly-CSharp", "..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld 1.2 Copy\RimWorldWin64_Data\Managed\Assembly-CSharp_Source\Assembly-CSharp.csproj", "{5AD4DDA2-46AE-46F1-88A2-C98283530998}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}"
 	ProjectSection(SolutionItems) = preProject
 		2.3.txt = 2.3.txt
@@ -15,47 +13,49 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienRace", "..\AlienRaces\Source\AlienRace\AlienRace\AlienRace.csproj", "{E7AFA757-436C-40A3-AAFD-66351AA01536}"
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Cutebold Race", "..\..\..\Documents\Rimworld Mods\Cutebold Race\", "{54E7CB60-1003-43AE-A434-61EAF95E913B}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Data(2)", "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.3 Debug Copy\Data\", "{FCC47E40-02EB-4B90-BC28-5B2A9ABD2AE9}"
 	ProjectSection(WebsiteProperties) = preProject
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_51018"
-		Debug.AspNetCompiler.PhysicalPath = "..\..\..\Documents\Rimworld Mods\Cutebold Race\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_51018\"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_64078"
+		Debug.AspNetCompiler.PhysicalPath = "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.3 Debug Copy\Data\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_64078\"
 		Debug.AspNetCompiler.Updateable = "true"
 		Debug.AspNetCompiler.ForceOverwrite = "true"
 		Debug.AspNetCompiler.FixedNames = "false"
 		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_51018"
-		Release.AspNetCompiler.PhysicalPath = "..\..\..\Documents\Rimworld Mods\Cutebold Race\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_51018\"
+		Release.AspNetCompiler.VirtualPath = "/localhost_64078"
+		Release.AspNetCompiler.PhysicalPath = "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.3 Debug Copy\Data\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_64078\"
 		Release.AspNetCompiler.Updateable = "true"
 		Release.AspNetCompiler.ForceOverwrite = "true"
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "51018"
-		SlnRelativePath = "..\..\..\Documents\Rimworld Mods\Cutebold Race\"
+		VWDPort = "64078"
+		SlnRelativePath = "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.3 Debug Copy\Data\"
 	EndProjectSection
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Data(1)", "..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld 1.2 Copy\Data\", "{E6985297-D2BF-4BF2-95BA-5D2EF296C480}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Cutebold Race(1)", "..\..\..\Rimworld Mods\Cutebold Race\", "{5A69BEA3-C56E-448C-AD87-B4FE665953F0}"
 	ProjectSection(WebsiteProperties) = preProject
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_63541"
-		Debug.AspNetCompiler.PhysicalPath = "..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld 1.2 Copy\Data\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_63541\"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_64163"
+		Debug.AspNetCompiler.PhysicalPath = "..\..\..\Rimworld Mods\Cutebold Race\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_64163\"
 		Debug.AspNetCompiler.Updateable = "true"
 		Debug.AspNetCompiler.ForceOverwrite = "true"
 		Debug.AspNetCompiler.FixedNames = "false"
 		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_63541"
-		Release.AspNetCompiler.PhysicalPath = "..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld 1.2 Copy\Data\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_63541\"
+		Release.AspNetCompiler.VirtualPath = "/localhost_64163"
+		Release.AspNetCompiler.PhysicalPath = "..\..\..\Rimworld Mods\Cutebold Race\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_64163\"
 		Release.AspNetCompiler.Updateable = "true"
 		Release.AspNetCompiler.ForceOverwrite = "true"
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "63541"
-		SlnRelativePath = "..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\RimWorld 1.2 Copy\Data\"
+		VWDPort = "64163"
+		SlnRelativePath = "..\..\..\Rimworld Mods\Cutebold Race\"
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Assembly-CSharp", "..\Assembly-CSharp\Assembly-CSharp.csproj", "{B8368652-D61F-4441-B9F4-E103C8833B93}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -67,21 +67,21 @@ Global
 		{595E3FE8-C183-4363-83F6-03E75C56D839}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{595E3FE8-C183-4363-83F6-03E75C56D839}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{595E3FE8-C183-4363-83F6-03E75C56D839}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5AD4DDA2-46AE-46F1-88A2-C98283530998}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5AD4DDA2-46AE-46F1-88A2-C98283530998}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E7AFA757-436C-40A3-AAFD-66351AA01536}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E7AFA757-436C-40A3-AAFD-66351AA01536}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{54E7CB60-1003-43AE-A434-61EAF95E913B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{54E7CB60-1003-43AE-A434-61EAF95E913B}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{E6985297-D2BF-4BF2-95BA-5D2EF296C480}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E6985297-D2BF-4BF2-95BA-5D2EF296C480}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCC47E40-02EB-4B90-BC28-5B2A9ABD2AE9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCC47E40-02EB-4B90-BC28-5B2A9ABD2AE9}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A69BEA3-C56E-448C-AD87-B4FE665953F0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A69BEA3-C56E-448C-AD87-B4FE665953F0}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8368652-D61F-4441-B9F4-E103C8833B93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B8368652-D61F-4441-B9F4-E103C8833B93}.Release|Any CPU.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{54E7CB60-1003-43AE-A434-61EAF95E913B} = {0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}
-		{E6985297-D2BF-4BF2-95BA-5D2EF296C480} = {0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}
+		{FCC47E40-02EB-4B90-BC28-5B2A9ABD2AE9} = {0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}
+		{5A69BEA3-C56E-448C-AD87-B4FE665953F0} = {0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F130C33D-7A0B-463F-A4D4-12D5EC8D0BF7}

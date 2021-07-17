@@ -5,7 +5,6 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
-using UnityEngine;
 using Verse;
 using Verse.AI;
 using Verse.Sound;
@@ -23,9 +22,9 @@ namespace Cutebold_Assemblies
         /// Applies harmony patches on startup.
         /// </summary>
         /// <param name="harmony">Our instance of harmony to patch with.</param>
-        /// <param name="settings">Our list of saved settings.</param>
-        public Cutebold_Patch_Stats(Harmony harmony, Cutebold_Settings settings)
+        public Cutebold_Patch_Stats(Harmony harmony)
         {
+            var settings = Cutebold_Assemblies.CuteboldSettings;
             if (settings.extraYield && ModLister.GetActiveModWithIdentifier("syrchalis.harvestyieldpatch") == null)
             {
 
@@ -297,12 +296,12 @@ namespace Cutebold_Assemblies
                         Map map = actor.Map;
                         float xpPerTick = (float)Traverse.Create(__instance).Field("xpPerTick").GetValue();
 
-                        if (actor.skills != null) actor.skills.Learn(SkillDefOf.Plants, xpPerTick, false);
+                        if (actor.skills != null) actor.skills.Learn(SkillDefOf.Plants, xpPerTick);
 
                         float workSpeed = actor.GetStatValue(StatDefOf.PlantWorkSpeed, true);
                         Plant plant = (Plant)__instance.job.targetA.Thing;
 
-                        workSpeed *= Mathf.Lerp(3.3f, 1f, plant.Growth);
+                        workSpeed *= UnityEngine.Mathf.Lerp(3.3f, 1f, plant.Growth);
                         var workDoneVariable = Traverse.Create(__instance).Field("workDone");
                         float workDone = (float)workDoneVariable.GetValue() + workSpeed;
                         workDoneVariable.SetValue(workDone);
@@ -311,13 +310,15 @@ namespace Cutebold_Assemblies
                         {
                             if (plant.def.plant.harvestedThingDef != null)
                             {
-                                if (actor.RaceProps.Humanlike && plant.def.plant.harvestFailable && !plant.Blighted && Rand.Value > actor.GetStatValue(StatDefOf.PlantHarvestYield, true))
+                                StatDef stat = (plant.def.plant.harvestedThingDef.IsDrug ? StatDefOf.DrugHarvestYield : StatDefOf.PlantHarvestYield);
+                                float yieldMultiplier = (1f + CuteboldCalculateExtraPercent(stat, StatRequest.For(actor)));
+                                if (actor.RaceProps.Humanlike && plant.def.plant.harvestFailable && !plant.Blighted && Rand.Value > yieldMultiplier)
                                 {
                                     MoteMaker.ThrowText((__instance.pawn.DrawPos + plant.DrawPos) / 2f, map, "TextMote_HarvestFailed".Translate(), 3.65f);
                                 }
                                 else
                                 {
-                                    int currentYield = GenMath.RoundRandom(plant.YieldNow() * (1f + CuteboldCalculateExtraPercent(StatDefOf.PlantHarvestYield, StatRequest.For(actor))));
+                                    int currentYield = GenMath.RoundRandom(plant.YieldNow() * yieldMultiplier);
 
                                     //Log.Message("  Pawn Additional Harvest Percent=" + calculateExtraPercent(StatDefOf.PlantHarvestYield, StatRequest.For(actor)));
                                     //Log.Message("  Plant Yield Before=" + plant.YieldNow() + " Plant Yield After=" + currentYield);
@@ -328,7 +329,7 @@ namespace Cutebold_Assemblies
 
                                         product.stackCount = currentYield;
 
-                                        if (actor.Faction != Faction.OfPlayer) product.SetForbidden(true, true);
+                                        if (actor.Faction != Faction.OfPlayer) product.SetForbidden(true);
 
                                         Find.QuestManager.Notify_PlantHarvested(actor, product);
                                         GenPlace.TryPlaceThing(product, actor.Position, map, ThingPlaceMode.Near);
@@ -337,7 +338,7 @@ namespace Cutebold_Assemblies
                                 }
                             }
                             plant.def.plant.soundHarvestFinish.PlayOneShot(actor);
-                            plant.PlantCollected();
+                            plant.PlantCollected(__instance.pawn);
                             workDoneVariable.SetValue(0f);
                             __instance.ReadyForNextToil();
                             return;

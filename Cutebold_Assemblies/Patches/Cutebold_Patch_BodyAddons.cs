@@ -30,18 +30,19 @@ namespace Cutebold_Assemblies
         /// <summary>Our prefix to the CanDrawAddon method.</summary>
         private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldCanDrawAddonPrefix");
 
+        private static bool eyeBlink => Cutebold_Assemblies.CuteboldSettings.blinkEyes;
+
         /// <summary>
         /// Enables/Disables body addons on startup.
         /// </summary>
         /// <param name="harmony">Our instance of harmony to patch with.</param>
-        /// <param name="settings">Our list of saved settings.</param>
-        public Cutebold_Patch_BodyAddons(Harmony harmony, Cutebold_Settings settings)
+        public Cutebold_Patch_BodyAddons(Harmony harmony)
         {
             if (!initialized)
             {
                 raceAddons = new List<AlienPartGenerator.BodyAddon>(Cutebold_Assemblies.AlienRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons);
                 harmonyRef = harmony;
-                CuteboldAddonModifier(settings);
+                CuteboldAddonModifier(Cutebold_Assemblies.CuteboldSettings);
                 harmonyRef.Patch(canDrawAddonRef, prefix: cuteboldCanDrawAddonPrefixRef);
                 initialized = true;
             }
@@ -163,7 +164,7 @@ namespace Cutebold_Assemblies
             {
                 __result = false;
             }
-            else
+            else if(eyeBlink)
             {
                 // Blink Fucntion; somewhat regular blinking, but not exactly even nor completely random.
                 var offsetTicks = Math.Abs(pawn.HashOffsetTicks());

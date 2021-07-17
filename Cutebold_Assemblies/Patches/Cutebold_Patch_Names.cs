@@ -146,15 +146,10 @@ namespace Cutebold_Assemblies
             if (pawn.def?.defName != Cutebold_Assemblies.RaceName || style != NameStyle.Full) return true;
 
             //Log.Message("  pawn faction=" + pawn.Faction.ToString() + "  faction name maker="+((pawn.Faction != null && pawn.Faction.def.pawnNameMaker != null) ? pawn.Faction.def.pawnNameMaker.ToString() : ""));
-            RulePackDef rulePack = null;
+            RulePackDef rulePack = pawn.Faction?.ideos?.PrimaryCulture.pawnNameMaker;
 
-            if (pawn.Faction != null && cuteboldNamers.Contains(pawn.Faction.def.pawnNameMaker))
-            {
-                rulePack = pawn.Faction.def.pawnNameMaker;
-            }
-
-            // Cutebolds with no faction name maker
-            if (pawn.Faction?.def.pawnNameMaker == null)
+            // Cutebolds with no faction pawn name maker
+            if (rulePack == null)
             {
                 //Log.Message("  Faction null or pawnNameMaker null");
                 if (pawn.story.childhood == null || (pawn.story.adulthood != null && CuteboldRegularChildBackstories.Contains(pawn.story.childhood) && CuteboldRegularAdultBackstories.Contains(pawn.story.adulthood))) // Cutebold somehow does not have a childhood or is from a cutebold tribe

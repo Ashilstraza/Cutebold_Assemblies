@@ -38,13 +38,15 @@ namespace Cutebold_Assemblies
         /// <summary>Reference to harmony.</summary>
         private static readonly Harmony harmony = new Harmony(HarmonyID);
 
+        public static readonly Cutebold_Settings CuteboldSettings = null;
+
 
         /// <summary>
         /// Main constructor for setting up some values and executing harmony patches.
         /// </summary>
         static Cutebold_Assemblies()
         {
-            var settings = LoadedModManager.GetMod<CuteboldMod>().GetSettings<Cutebold_Settings>();
+            CuteboldSettings = LoadedModManager.GetMod<CuteboldMod>().GetSettings<Cutebold_Settings>();
 
             try { CreateButcherRaceList(); } // Added because of an update to HAR that changed how referencing other races worked.
             catch (MissingFieldException e)
@@ -62,11 +64,11 @@ namespace Cutebold_Assemblies
             // Wearing Humanoid Clothing
             harmony.Patch(AccessTools.Method(typeof(ThoughtWorker_HumanLeatherApparel), "CurrentStateInternal"), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldCurrentStateInternalPostfix"));
 
-            new Cutebold_Patch_BodyAddons(harmony, settings);
+            new Cutebold_Patch_BodyAddons(harmony);
 
-            new Cutebold_Patch_Stats(harmony, settings);
+            new Cutebold_Patch_Stats(harmony);
 
-            new Cutebold_Patch_HediffRelated(harmony, settings);
+            new Cutebold_Patch_HediffRelated(harmony);
         }
 
         /// <summary>

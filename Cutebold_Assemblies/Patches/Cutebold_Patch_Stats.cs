@@ -87,8 +87,8 @@ namespace Cutebold_Assemblies
             if (___yieldPct >= 1f && extraPercent > 0f)
             {
                 Thing minedMaterial = ThingMaker.MakeThing(__instance.def.building.mineableThing);
-// 1.3          minedMaterial.stackCount = GenMath.RoundRandom(__instance.def.building.EffectiveMineableYield * extraPercent);
-                minedMaterial.stackCount = GenMath.RoundRandom(__instance.def.building.mineableYield * extraPercent);
+                minedMaterial.stackCount = GenMath.RoundRandom(__instance.def.building.EffectiveMineableYield * extraPercent);
+// 1.1          minedMaterial.stackCount = GenMath.RoundRandom(__instance.def.building.mineableYield * extraPercent);
                 GenPlace.TryPlaceThing(minedMaterial, __instance.Position, map, ThingPlaceMode.Near, ForbidIfNecessary);
             }
 
@@ -114,15 +114,15 @@ namespace Cutebold_Assemblies
             MethodInfo calculateExtraPercent = AccessTools.Method(typeof(Cutebold_Patch_Stats), nameof(CuteboldCalculateExtraPercent));
             FieldInfo def = AccessTools.Field(typeof(Thing), nameof(Thing.def));
             FieldInfo building = AccessTools.Field(typeof(ThingDef), nameof(ThingDef.building));
-// 1.3      MethodInfo getEffectiveMineableYield = AccessTools.Method(typeof(BuildingProperties), "get_EffectiveMineableYield");
-            FieldInfo mineableYield = AccessTools.Field(typeof(BuildingProperties), "mineableYield");
+            MethodInfo getEffectiveMineableYield = AccessTools.Method(typeof(BuildingProperties), "get_EffectiveMineableYield");
+// 1.1      FieldInfo mineableYield = AccessTools.Field(typeof(BuildingProperties), "mineableYield");
             MethodInfo roundRandom = AccessTools.Method(typeof(GenMath), nameof(GenMath.RoundRandom), new[] { typeof(float) });
             FieldInfo stackCount = AccessTools.Field(typeof(Thing), nameof(Thing.stackCount));
             int pawn = 4;
-// 1.3      OpCode getNum = OpCodes.Ldloc_1;
-// 1.3      OpCode storeNum = OpCodes.Stloc_1;
-            OpCode getNum = OpCodes.Ldloc_0;
-            OpCode storeNum = OpCodes.Stloc_0;
+            OpCode getNum = OpCodes.Ldloc_1;
+            OpCode storeNum = OpCodes.Stloc_1;
+// 1.1      OpCode getNum = OpCodes.Ldloc_0;
+// 1.1      OpCode storeNum = OpCodes.Stloc_0;
 
             List<CodeInstruction> instructionList = instructions.ToList();
             int instructionListCount = instructionList.Count;
@@ -144,8 +144,8 @@ namespace Cutebold_Assemblies
                 new CodeInstruction(OpCodes.Ldarg_0), // Load this
                 new CodeInstruction(OpCodes.Ldfld, def), // Load def
                 new CodeInstruction(OpCodes.Ldfld, building), // Load building
-// 1.3          new CodeInstruction(OpCodes.Callvirt, getEffectiveMineableYield), // Call virtual get_EffectiveMineableYield()
-                new CodeInstruction(OpCodes.Ldfld, mineableYield), // Load mineableYield
+                new CodeInstruction(OpCodes.Callvirt, getEffectiveMineableYield), // Call virtual get_EffectiveMineableYield()
+// 1.1          new CodeInstruction(OpCodes.Ldfld, mineableYield), // Load mineableYield
                 new CodeInstruction(OpCodes.Conv_R4), // Converts result of get_EffectiveMineableYield to a float
                 new CodeInstruction(OpCodes.Mul), // Multiplies effective yield and extra percent together
                 new CodeInstruction(OpCodes.Call, roundRandom), // Call RoundRandom(float)
@@ -318,8 +318,8 @@ namespace Cutebold_Assemblies
                         {
                             if (plant.def.plant.harvestedThingDef != null)
                             {
-// 1.3                          StatDef stat = (plant.def.plant.harvestedThingDef.IsDrug ? StatDefOf.DrugHarvestYield : StatDefOf.PlantHarvestYield);
-                                StatDef stat = StatDefOf.PlantHarvestYield;
+                                StatDef stat = (plant.def.plant.harvestedThingDef.IsDrug ? StatDefOf.DrugHarvestYield : StatDefOf.PlantHarvestYield);
+// 1.1                          StatDef stat = StatDefOf.PlantHarvestYield;
                                 float yieldMultiplier = (1f + CuteboldCalculateExtraPercent(stat, StatRequest.For(actor)));
                                 if (actor.RaceProps.Humanlike && plant.def.plant.harvestFailable && !plant.Blighted && Rand.Value > yieldMultiplier)
                                 {
@@ -347,8 +347,8 @@ namespace Cutebold_Assemblies
                                 }
                             }
                             plant.def.plant.soundHarvestFinish.PlayOneShot(actor);
-// 1.3                      plant.PlantCollected(__instance.pawn);
-                            plant.PlantCollected();
+                            plant.PlantCollected(__instance.pawn);
+// 1.1                      plant.PlantCollected();
                             workDoneVariable.SetValue(0f);
                             __instance.ReadyForNextToil();
                             return;

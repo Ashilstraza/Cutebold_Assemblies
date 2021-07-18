@@ -293,7 +293,7 @@ namespace Cutebold_Assemblies
 
             if (ageTicks == 1) CheckdMime();
 
-/* 1.3      lastLightLevel = lightLevel;
+            lastLightLevel = lightLevel;
             lightLevel = CheckLightLevel();
 
             if ((lastLightLevel >= 30) == (lightLevel < 30))
@@ -321,11 +321,11 @@ namespace Cutebold_Assemblies
                 }
 
                 blinkLastValue = blinkValue;
-            }*/
+            }
             
             if (pawn.IsHashIntervalTick(60))
             {
-                lightLevel = CheckLightLevel();
+// 1.1          lightLevel = CheckLightLevel();
 
                 UpdateCuteboldCompProperties();
 

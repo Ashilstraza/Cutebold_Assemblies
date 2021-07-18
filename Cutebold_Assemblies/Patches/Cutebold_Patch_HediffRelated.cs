@@ -22,9 +22,9 @@ namespace Cutebold_Assemblies
                 // Update dark adaptation eye references.
                 harmony.Patch(AccessTools.Method(typeof(HediffSet), "DirtyCache"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldHediffSetDirtyCachePostfix"));
                 // Update dark adaptation goggle references.
-                // 1.3          harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "Notify_ApparelChanged"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
-                harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "Notify_ApparelAdded"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
-                harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "Notify_ApparelRemoved"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
+                harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "Notify_ApparelChanged"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
+// 1.1          harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "Notify_ApparelAdded"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
+// 1.1          harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "Notify_ApparelRemoved"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
             }
             else
             {
@@ -38,9 +38,9 @@ namespace Cutebold_Assemblies
                 // Adjust layer offset for cutebold goggles.
                 //Harmony.DEBUG = true;
                 //Hat rendering was moved to a local function to make things even more fun to patch!
-// 1.3          MethodInfo toBePatched = AccessTools.GetDeclaredMethods(typeof(PawnRenderer)).ElementAt(29);
-// 1.3          harmony.Patch(toBePatched, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
-                harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
+                MethodInfo toBePatched = AccessTools.GetDeclaredMethods(typeof(PawnRenderer)).ElementAt(29);
+                harmony.Patch(toBePatched, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
+/* 1.1          harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
                     typeof(Vector3),
                     typeof(float),
                     typeof(bool),
@@ -50,7 +50,7 @@ namespace Cutebold_Assemblies
                     typeof(bool),
                     typeof(bool),
                     typeof(bool)
-                }), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldRenderPawnInternalTranspiler"));
+                }), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldRenderPawnInternalTranspiler"));*/
                 //Harmony.DEBUG = false;
             }
         }
@@ -186,7 +186,7 @@ namespace Cutebold_Assemblies
         /// <param name="instructions">The instructions we are messing with.</param>
         /// <param name="ilGenerator">The IDGenerator that allows us to create local variables and labels.</param>
         /// <returns>All the code!</returns>
-        private static IEnumerable<CodeInstruction> CuteboldRenderPawnInternalTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
+/* 1.1  private static IEnumerable<CodeInstruction> CuteboldRenderPawnInternalTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
         {
             FieldInfo hatInFront = AccessTools.Field(typeof(ApparelProperties), "hatRenderedFrontOfFace");
             MethodInfo drawMeshNowOrLater = AccessTools.Method(typeof(GenDraw), "DrawMeshNowOrLater");
@@ -198,19 +198,19 @@ namespace Cutebold_Assemblies
 
             List<CodeInstruction> instructionList = instructions.ToList();
 
-            /*
-             * See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
-             * 
-             * Adjusts the y offset to put goggles below other headgear.
-             * 
-             * modified = false;
-             * 
-             * if (apparelGraphics[j].sourceApparel.def == Cutebold_DefOf.Cutebold_Goggles)
-             * {
-             *     loc2.y -= offset;
-             *     modified = true;
-             * }
-             */
+            //
+            // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
+            // 
+            // Adjusts the y offset to put goggles below other headgear.
+            // 
+            // modified = false;
+            // 
+            // if (apparelGraphics[j].sourceApparel.def == Cutebold_DefOf.Cutebold_Goggles)
+            // {
+            //     loc2.y -= offset;
+            //     modified = true;
+            // }
+            //
             List<CodeInstruction> checkForGoggles = new List<CodeInstruction>() {
                 new CodeInstruction(OpCodes.Ldc_I4_0), // Load zero
                 new CodeInstruction(OpCodes.Stloc_S, modified), // Set modified to zero (false)
@@ -239,16 +239,16 @@ namespace Cutebold_Assemblies
 
             };
 
-            /*
-             * See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
-             * 
-             * Reverts the y offset for other headgear.
-             * 
-             * if(modified)
-             * {
-             *     loc2.y += offset;
-             * }
-             */
+            //
+            // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
+            // 
+            // Reverts the y offset for other headgear.
+            // 
+            // if(modified)
+            // {
+            //     loc2.y += offset;
+            // }
+            //
             List<CodeInstruction> revertChange = new List<CodeInstruction>()
             {
                 new CodeInstruction(OpCodes.Ldloc_S, modified), // Load modified
@@ -304,7 +304,7 @@ namespace Cutebold_Assemblies
 
                 yield return instruction;
             }
-        }
+        }*/
 
         /// <summary>
         /// Adjusts the layer offset for cutebold goggles so that they are drawn under other headgear.

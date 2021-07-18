@@ -292,7 +292,6 @@ namespace Cutebold_Assemblies
             base.PostTick();
 
             if (ageTicks == 1) CheckdMime();
-
 /* 1.3      lastLightLevel = lightLevel;
             lightLevel = CheckLightLevel();
 

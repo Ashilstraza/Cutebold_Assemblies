@@ -38,9 +38,9 @@ namespace Cutebold_Assemblies
                 // Adjust layer offset for cutebold goggles.
                 //Harmony.DEBUG = true;
                 //Hat rendering was moved to a local function to make things even more fun to patch!
-// 1.3          MethodInfo toBePatched = AccessTools.GetDeclaredMethods(typeof(PawnRenderer)).ElementAt(29);
-// 1.3          harmony.Patch(toBePatched, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
-                harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
+                MethodInfo toBePatched = AccessTools.GetDeclaredMethods(typeof(PawnRenderer)).ElementAt(29);
+                harmony.Patch(toBePatched, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
+/* 1.1          harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
                     typeof(Vector3),
                     typeof(float),
                     typeof(bool),
@@ -50,7 +50,7 @@ namespace Cutebold_Assemblies
                     typeof(bool),
                     typeof(bool),
                     typeof(bool)
-                }), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldRenderPawnInternalTranspiler"));
+                }), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldRenderPawnInternalTranspiler"));*/
                 //Harmony.DEBUG = false;
             }
         }
@@ -263,7 +263,7 @@ namespace Cutebold_Assemblies
                     new CodeInstruction(OpCodes.Stind_R4) // Store new value at address of loc2.y
             };
 
-            int x = -1;
+            //int x = -1;
 
             for (int i = 0; i < instructionList.Count; i++)
             {
@@ -271,11 +271,11 @@ namespace Cutebold_Assemblies
 
                 if (i > 4 && instructionList[i - 4].OperandIs(hatInFront))
                 {
-                    x = 30;
+                    //x = 30;
 
                     foreach (CodeInstruction codeInstruction in checkForGoggles)
                     {
-                        Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
+                        //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
                         yield return codeInstruction;
                     }
 
@@ -289,18 +289,18 @@ namespace Cutebold_Assemblies
 
                     foreach (CodeInstruction codeInstruction in revertChange)
                     {
-                       Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
+                        //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
                         yield return codeInstruction;
                     }
 
                     nextDraw = false;
                 }
 
-                if (x > 0)
+                /*if (x > 0)
                 {
                     Log.Message("    "+instruction.ToString() + (instruction.labels.Count > 0 ? instruction.labels[0].ToString() : ""));
                     x--;
-                }
+                }*/
 
                 yield return instruction;
             }

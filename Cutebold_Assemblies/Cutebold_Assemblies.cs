@@ -74,7 +74,7 @@ namespace Cutebold_Assemblies
         /// <summary>
         /// Creates a list of races that give bad butcher thoughts.
         /// </summary>
-        private static void CreateButcherRaceList()
+        /*private static void CreateButcherRaceList()
         {
             //Log.Message("Create Butcher Race List");
             List<string> butcherList = new List<string>();
@@ -83,6 +83,22 @@ namespace Cutebold_Assemblies
             {
                 //Log.Message("  Race: " + race.defName);
                 butcherList.Add(race.defName);
+            }
+            butcherRaceList = butcherList;
+        }*/
+        private static void CreateButcherRaceList()
+        {
+            Log.Message("Create Butcher Race List");
+            List<string> butcherList = new List<string>();
+
+// 1.3      foreach (ThingDef race in AlienRaceDef.alienRace.thoughtSettings.butcherThoughtSpecific.FirstOrDefault().raceList)
+            foreach (String race in AlienRaceDef.alienRace.thoughtSettings.butcherThoughtSpecific.FirstOrDefault().raceList)
+            {
+// 1.3          Log.Message("  Race: " + race.defName);
+// 1.3          butcherList.Add(race.defName);
+
+                Log.Message("  Race: " + race);
+                butcherList.Add(race);
             }
             butcherRaceList = butcherList;
         }

@@ -87,7 +87,8 @@ namespace Cutebold_Assemblies
             if (___yieldPct >= 1f && extraPercent > 0f)
             {
                 Thing minedMaterial = ThingMaker.MakeThing(__instance.def.building.mineableThing);
-                minedMaterial.stackCount = GenMath.RoundRandom(__instance.def.building.EffectiveMineableYield * extraPercent);
+// 1.3          minedMaterial.stackCount = GenMath.RoundRandom(__instance.def.building.EffectiveMineableYield * extraPercent);
+                minedMaterial.stackCount = GenMath.RoundRandom(__instance.def.building.mineableYield * extraPercent);
                 GenPlace.TryPlaceThing(minedMaterial, __instance.Position, map, ThingPlaceMode.Near, ForbidIfNecessary);
             }
 
@@ -113,9 +114,15 @@ namespace Cutebold_Assemblies
             MethodInfo calculateExtraPercent = AccessTools.Method(typeof(Cutebold_Patch_Stats), nameof(CuteboldCalculateExtraPercent));
             FieldInfo def = AccessTools.Field(typeof(Thing), nameof(Thing.def));
             FieldInfo building = AccessTools.Field(typeof(ThingDef), nameof(ThingDef.building));
-            MethodInfo getEffectiveMineableYield = AccessTools.Method(typeof(BuildingProperties), "get_EffectiveMineableYield");
+// 1.3      MethodInfo getEffectiveMineableYield = AccessTools.Method(typeof(BuildingProperties), "get_EffectiveMineableYield");
+            FieldInfo mineableYield = AccessTools.Field(typeof(BuildingProperties), "mineableYield");
             MethodInfo roundRandom = AccessTools.Method(typeof(GenMath), nameof(GenMath.RoundRandom), new[] { typeof(float) });
             FieldInfo stackCount = AccessTools.Field(typeof(Thing), nameof(Thing.stackCount));
+            int pawn = 4;
+// 1.3      OpCode getNum = OpCodes.Ldloc_1;
+// 1.3      OpCode storeNum = OpCodes.Stloc_1;
+            OpCode getNum = OpCodes.Ldloc_0;
+            OpCode storeNum = OpCodes.Stloc_0;
 
             List<CodeInstruction> instructionList = instructions.ToList();
             int instructionListCount = instructionList.Count;
@@ -130,20 +137,21 @@ namespace Cutebold_Assemblies
             List<CodeInstruction> extraYield = new List<CodeInstruction>()
             {
                 new CodeInstruction(OpCodes.Ldsfld, miningYield), // Load StatDefOf.MiningYield
-                new CodeInstruction(OpCodes.Ldarg_S, 4), // Load pawn
+                new CodeInstruction(OpCodes.Ldarg_S, pawn), // Load pawn
                 new CodeInstruction(OpCodes.Call, statRequest), // Calls StatRequest.For on pawn
                 new CodeInstruction(OpCodes.Ldc_I4_1), // Load 1 onto the stack
                 new CodeInstruction(OpCodes.Call, calculateExtraPercent), // Call CuteboldCalculateExtraPercent(StatDefOf.MiningYield, StatRequest.For(pawn), true)
                 new CodeInstruction(OpCodes.Ldarg_0), // Load this
                 new CodeInstruction(OpCodes.Ldfld, def), // Load def
                 new CodeInstruction(OpCodes.Ldfld, building), // Load building
-                new CodeInstruction(OpCodes.Callvirt, getEffectiveMineableYield), // Call virtual get_EffectiveMineableYield()
+// 1.3          new CodeInstruction(OpCodes.Callvirt, getEffectiveMineableYield), // Call virtual get_EffectiveMineableYield()
+                new CodeInstruction(OpCodes.Ldfld, mineableYield), // Load mineableYield
                 new CodeInstruction(OpCodes.Conv_R4), // Converts result of get_EffectiveMineableYield to a float
                 new CodeInstruction(OpCodes.Mul), // Multiplies effective yield and extra percent together
                 new CodeInstruction(OpCodes.Call, roundRandom), // Call RoundRandom(float)
-                new CodeInstruction(OpCodes.Ldloc_1), // Load num
+                new CodeInstruction(getNum), // Load num
                 new CodeInstruction(OpCodes.Add), // Add num and the extra yield together
-                new CodeInstruction(OpCodes.Stloc_1), // Stores the new yield in num
+                new CodeInstruction(storeNum), // Stores the new yield in num
             };
 
             for (int i = 0; i < instructionListCount; i++)
@@ -310,7 +318,8 @@ namespace Cutebold_Assemblies
                         {
                             if (plant.def.plant.harvestedThingDef != null)
                             {
-                                StatDef stat = (plant.def.plant.harvestedThingDef.IsDrug ? StatDefOf.DrugHarvestYield : StatDefOf.PlantHarvestYield);
+// 1.3                          StatDef stat = (plant.def.plant.harvestedThingDef.IsDrug ? StatDefOf.DrugHarvestYield : StatDefOf.PlantHarvestYield);
+                                StatDef stat = StatDefOf.PlantHarvestYield;
                                 float yieldMultiplier = (1f + CuteboldCalculateExtraPercent(stat, StatRequest.For(actor)));
                                 if (actor.RaceProps.Humanlike && plant.def.plant.harvestFailable && !plant.Blighted && Rand.Value > yieldMultiplier)
                                 {
@@ -338,7 +347,8 @@ namespace Cutebold_Assemblies
                                 }
                             }
                             plant.def.plant.soundHarvestFinish.PlayOneShot(actor);
-                            plant.PlantCollected(__instance.pawn);
+// 1.3                      plant.PlantCollected(__instance.pawn);
+                            plant.PlantCollected();
                             workDoneVariable.SetValue(0f);
                             __instance.ReadyForNextToil();
                             return;

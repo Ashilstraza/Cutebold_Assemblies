@@ -146,7 +146,8 @@ namespace Cutebold_Assemblies
             if (pawn.def?.defName != Cutebold_Assemblies.RaceName || style != NameStyle.Full) return true;
 
             //Log.Message("  pawn faction=" + pawn.Faction.ToString() + "  faction name maker="+((pawn.Faction != null && pawn.Faction.def.pawnNameMaker != null) ? pawn.Faction.def.pawnNameMaker.ToString() : ""));
-            RulePackDef rulePack = pawn.Faction?.ideos?.PrimaryCulture.pawnNameMaker;
+// 1.3      RulePackDef rulePack = pawn.Faction?.ideos?.PrimaryCulture.pawnNameMaker;
+            RulePackDef rulePack = pawn.Faction?.def.pawnNameMaker;
 
             // Cutebolds with no faction pawn name maker
             if (rulePack == null)

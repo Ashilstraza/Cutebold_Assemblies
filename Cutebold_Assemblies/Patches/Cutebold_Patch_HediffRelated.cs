@@ -22,7 +22,7 @@ namespace Cutebold_Assemblies
                 // Update dark adaptation eye references.
                 harmony.Patch(AccessTools.Method(typeof(HediffSet), "DirtyCache"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldHediffSetDirtyCachePostfix"));
                 // Update dark adaptation goggle references.
-                // 1.3          harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "Notify_ApparelChanged"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
+// 1.3                harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "Notify_ApparelChanged"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
                 harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "Notify_ApparelAdded"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
                 harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "Notify_ApparelRemoved"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
             }
@@ -38,9 +38,9 @@ namespace Cutebold_Assemblies
                 // Adjust layer offset for cutebold goggles.
                 //Harmony.DEBUG = true;
                 //Hat rendering was moved to a local function to make things even more fun to patch!
-                MethodInfo toBePatched = AccessTools.GetDeclaredMethods(typeof(PawnRenderer)).ElementAt(29);
-                harmony.Patch(toBePatched, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
-/* 1.1          harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
+// 1.3                MethodInfo toBePatched = AccessTools.GetDeclaredMethods(typeof(PawnRenderer)).ElementAt(29);
+// 1.3                harmony.Patch(toBePatched, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
+                harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
                     typeof(Vector3),
                     typeof(float),
                     typeof(bool),
@@ -50,7 +50,7 @@ namespace Cutebold_Assemblies
                     typeof(bool),
                     typeof(bool),
                     typeof(bool)
-                }), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldRenderPawnInternalTranspiler"));*/
+                }), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldRenderPawnInternalTranspiler"));
                 //Harmony.DEBUG = false;
             }
         }
@@ -312,7 +312,7 @@ namespace Cutebold_Assemblies
         /// <param name="instructions">The instructions we are messing with.</param>
         /// <param name="ilGenerator">The IDGenerator that allows us to create local variables and labels.</param>
         /// <returns>All the code!</returns>
-        private static IEnumerable<CodeInstruction> CuteboldGogglesFixTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
+/*        private static IEnumerable<CodeInstruction> CuteboldGogglesFixTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
         {
             MethodInfo drawMeshNowOrLater = AccessTools.Method(typeof(GenDraw), "DrawMeshNowOrLater", new[] {
                 typeof(Mesh),
@@ -335,19 +335,19 @@ namespace Cutebold_Assemblies
 
             List<CodeInstruction> instructionList = instructions.ToList();
 
-            /*
-             * See drSpy decompile of PawnRenderer.<DrawHeadHair>g__DrawApparel|39_0() for variable references
-             * 
-             * Adjusts the y offset to put goggles below other headgear.
-             * 
-             * modified = false;
-             * 
-             * if (apparelGraphics[i].sourceApparel.def == Cutebold_DefOf.Cutebold_Goggles)
-             * {
-             *     loc.y -= offset;
-             *     modified = true;
-             * }
-             */
+            //
+            // See drSpy decompile of PawnRenderer.<DrawHeadHair>g__DrawApparel|39_0() for variable references
+            // 
+            // Adjusts the y offset to put goggles below other headgear.
+            // 
+            // modified = false;
+            // 
+            // if (apparelGraphics[i].sourceApparel.def == Cutebold_DefOf.Cutebold_Goggles)
+            // {
+            //     loc.y -= offset;
+            //     modified = true;
+            // }
+            //
             List<CodeInstruction> checkForGoggles = new List<CodeInstruction>() {
                 new CodeInstruction(OpCodes.Ldc_I4_0), // Load zero
                 new CodeInstruction(OpCodes.Stloc_S, modified), // Set modified to zero (false)
@@ -359,7 +359,7 @@ namespace Cutebold_Assemblies
                 new CodeInstruction(OpCodes.Ldsfld, gogglesDef), // Load the def for cutebold goggles
 
                 new CodeInstruction(OpCodes.Ceq), // Checks if the apparel are cutebold goggles
-                new CodeInstruction(OpCodes.Brfalse, notGoggles), // If not, jump to regular execution*/
+                new CodeInstruction(OpCodes.Brfalse, notGoggles), // If not, jump to regular execution
                 
                     new CodeInstruction(OpCodes.Ldarg_2), // Loads reference to parent method
                     new CodeInstruction(OpCodes.Ldflda, null), // Loads the address to onHeadLoc field (TO BE REPLACED ON RUNTIME)
@@ -376,16 +376,16 @@ namespace Cutebold_Assemblies
                 new CodeInstruction(OpCodes.Nop) {labels = new List<Label> {notGoggles}} // Jump Target
             };
 
-            /*
-             * See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
-             * 
-             * Reverts the y offset for other headgear.
-             * 
-             * if(modified)
-             * {
-             *     loc.y += offset;
-             * }
-             */
+            //
+            // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
+            // 
+            // Reverts the y offset for other headgear.
+            // 
+            // if(modified)
+            // {
+            //     loc.y += offset;
+            // }
+            //
             List<CodeInstruction> revertChange = new List<CodeInstruction>()
             {
                 new CodeInstruction(OpCodes.Ldloc_S, modified), // Load modified
@@ -447,6 +447,6 @@ namespace Cutebold_Assemblies
 
                 yield return instruction;
             }
-        }
+        }*/
     }
 }

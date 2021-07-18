@@ -88,7 +88,7 @@ namespace Cutebold_Assemblies
         }*/
         private static void CreateButcherRaceList()
         {
-            Log.Message("Create Butcher Race List");
+            //Log.Message("Create Butcher Race List");
             List<string> butcherList = new List<string>();
 
 // 1.3      foreach (ThingDef race in AlienRaceDef.alienRace.thoughtSettings.butcherThoughtSpecific.FirstOrDefault().raceList)
@@ -97,7 +97,7 @@ namespace Cutebold_Assemblies
 // 1.3          Log.Message("  Race: " + race.defName);
 // 1.3          butcherList.Add(race.defName);
 
-                Log.Message("  Race: " + race);
+                //Log.Message("  Race: " + race);
                 butcherList.Add(race);
             }
             butcherRaceList = butcherList;

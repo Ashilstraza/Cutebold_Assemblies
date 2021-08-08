@@ -31,26 +31,6 @@ namespace Cutebold_Assemblies
         public float Light => light;
         /// <summary>Multiplier for the difference between the default global work speed values.</summary>
         public float Multiplier => multiplier;
-
-        /// <summary>
-        /// Checks the given fields and returns any issues with the configuration.
-        /// </summary>
-        /// <returns>Any issues found.</returns>
-        public virtual IEnumerable<string> ConfigErrors()
-        {
-            if (dark == -1.0f && light == -1.0f && multiplier == float.MaxValue)
-            {
-                yield return "A lightDarkAdjustment is empty in .xml.";
-            }
-            if ((dark == -1.0f && light != -1.0f) || (dark != -1.0f && light == -1.0f))
-            {
-                yield return "A lightDarkAdjustment has only a single light or dark value.";
-            }
-            if ((dark != -1.0f || light != -1.0f) && multiplier != float.MaxValue)
-            {
-                yield return "A lightDarkAdjustment has both a light and/or dark value along with a multiplier, the light and/or dark value will be used instead of the multiplier.";
-            }
-        }
     }
 
     /// <summary>
@@ -96,11 +76,34 @@ namespace Cutebold_Assemblies
         /// Checks the given fields and returns any issues with the configuration.
         /// </summary>
         /// <returns>Any issues found.</returns>
-        public virtual IEnumerable<string> ConfigErrors()
+        public override IEnumerable<string> ConfigErrors(HediffDef parentDef)
         {
+            foreach (string item in base.ConfigErrors(parentDef))
+            {
+                yield return item;
+            }
+            foreach (var adjustment in lightDarkAdjustment)
+            {
+                if (adjustment.Dark == -1.0f && adjustment.Light == -1.0f && adjustment.Multiplier == float.MaxValue)
+                {
+                    yield return "A lightDarkAdjustment is empty in .xml.";
+                }
+                if ((adjustment.Dark == -1.0f && adjustment.Light != -1.0f) || (adjustment.Dark != -1.0f && adjustment.Light == -1.0f))
+                {
+                    yield return "A lightDarkAdjustment has only a single light or dark value.";
+                }
+                if ((adjustment.Dark != -1.0f || adjustment.Light != -1.0f) && adjustment.Multiplier != float.MaxValue)
+                {
+                    yield return "A lightDarkAdjustment has both a light and/or dark value along with a multiplier, the light and/or dark value will be used instead of the multiplier.";
+                }
+            }
             if (maxSeverityPerDay == 0.0f)
             {
                 yield return "HediffCompProperties_CuteboldDarkAdaptation maxSeverityPerDay is 0.";
+            }
+            else if (Prefs.DevMode && maxSeverityPerDay != 0.1f)
+            {
+                Log.Error("You are either debugging or forgot to switch max severity back. Don't upload.");
             }
             if (minLightLevel > maxLightLevel)
             {
@@ -110,6 +113,7 @@ namespace Cutebold_Assemblies
             {
                 yield return "HediffCompProperties_CuteboldDarkAdaptation lightDarkAdjustment is null.";
             }
+            
         }
     }
 

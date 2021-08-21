@@ -133,6 +133,8 @@ namespace Cutebold_Assemblies
         public float LightLevel = 0f;
         /// <summary>If the pawn can see.</summary>
         public bool CanSee = true;
+        /// <summary>If the pawn should ignore the light level.</summary>
+        public bool IgnoreLightLevel = false;
         /// <summary>The maximum light level before adaptation starts to decrease.</summary>
         public float MaxLightLevel => Props.MaxLightLevel;
         /// <summary>The minimum light level before adaptation starts to increase.</summary>
@@ -164,7 +166,7 @@ namespace Cutebold_Assemblies
         protected virtual float SeverityChangePerDay()
         {
             if (!CanSee) return 0f;
-            if (LightLevel < MinLightLevel) return Props.MaxSeverityPerDay;
+            if (IgnoreLightLevel || LightLevel < MinLightLevel) return Props.MaxSeverityPerDay;
             else if (LightLevel > MaxLightLevel) return -Props.MaxSeverityPerDay * 2;
             else return 0f;
         }
@@ -198,12 +200,33 @@ namespace Cutebold_Assemblies
     /// </summary>
     public class Hediff_CuteboldDarkAdaptation : HediffWithComps
     {
+        /// <summary>The adaptation component.</summary>
+        private HediffComp_CuteboldDarkAdaptation adaptationComp;
+
         /// <summary>Light level of the pawn at the current location.</summary>
-        private float lightLevel = 0f;
+        private float LightLevel => adaptationComp.LightLevel;
+        /// <summary>If the pawn has eyes that overcome adaptation sickness.</summary>
+        private bool IgnoreLightLevel => adaptationComp.IgnoreLightLevel;
+
         /// <summary>Light level of the pawn at the current location on the last update.</summary>
         private float lastLightLevel = 0f;
         /// <summary>The equiped goggles.</summary>
         private Apparel goggles;
+        /// <summary>Reference to the lightSickness Hediff</summary>
+        private readonly HediffDef lightSickness = Cutebold_DefOf.CuteboldLightSickness;
+        /// <summary>Hediff stage index on last update.</summary>
+        private int lastIndex = -1;
+        /// <summary>Previous blink value in determening eyes being closed or open.</summary>
+        private double blinkLastValue = -1;
+        /// <summary>If cutebold is asleep.</summary>
+        private bool asleep = false;
+        /// <summary>If cutebold is unconscious.</summary>
+        private bool unconscious = false;
+        /// <summary>If the pawn's eyes are missing.</summary>
+        private bool eyesMissing = false;
+        /// <summary>If the glow curve should be updated.</summary>
+        private bool updateGlowCurve = true;
+
         /// <summary>The defualt glow curve.</summary>
         private static readonly SimpleCurve defaultGlowCurve = new SimpleCurve(new List<CurvePoint>()
         {
@@ -216,28 +239,16 @@ namespace Cutebold_Assemblies
         private static readonly float defaultDarkglobalWorkSpeed = 0.8f;
         /// <summary>Difference between the two global work speed extremes.</summary>
         private static readonly float globalWorkSpeedDifference = defaultLightglobalWorkSpeed - defaultDarkglobalWorkSpeed;
-        /// <summary>Reference to the lightSickness Hediff</summary>
-        private readonly HediffDef lightSickness = Cutebold_DefOf.CuteboldLightSickness;
-        /// <summary>Hediff stage index on last update.</summary>
-        private int lastIndex = -1;
         /// <summary>If eyes should blink.</summary>
-        private static bool eyeBlink => Cutebold_Assemblies.CuteboldSettings.blinkEyes;
+        private static bool EyeBlink => Cutebold_Assemblies.CuteboldSettings.blinkEyes;
         /// <summary>If eyes glow.</summary>
-        private static bool eyeGlowEnabled => Cutebold_Assemblies.CuteboldSettings.glowEyes;
-        /// <summary>Previous blink value in determening eyes being closed or open.</summary>
-        private double blinkLastValue = -1;
-        /// <summary>If cutebold is asleep.</summary>
-        private bool asleep = false;
-        /// <summary>If cutebold is unconscious.</summary>
-        private bool unconscious = false;
-        /// <summary>The adaptation component.</summary>
-        private HediffComp_CuteboldDarkAdaptation adaptationComp;
-        /// <summary>If the pawn's eyes are missing.</summary>
-        private bool eyesMissing = false;
-        /// <summary>If the glow curve should be updated.</summary>
-        private bool updateGlowCurve = true;
-        /// <summary>If the pawn has eyes that overcome adaptation sickness.</summary>
-        private bool ultraEyes = false;
+        private static bool EyeGlowEnabled => Cutebold_Assemblies.CuteboldSettings.glowEyes;
+        /// <summary>If we should ignore sun sickness.</summary>
+        private static bool ignoreSickness = Cutebold_Assemblies.CuteboldSettings.ignoreSickness;
+        /// <summary>Minimum work speed in bright light.</summary>
+        private static readonly float minimumLightWorkSpeed = Cutebold_Assemblies.CuteboldSettings.darknessOptions == Cutebold_DarknessOptions.Hybrid ? 1.0f : 0.5f;
+        /// <summary>Minimum work speed in the darkness.</summary>
+        private static readonly float minimumDarkWorkSpeed = 0.5f;
 
         /// <summary>If the current hediff stage should be visible.</summary>
         public override bool Visible => CurStage.becomeVisible;
@@ -258,6 +269,9 @@ namespace Cutebold_Assemblies
             }
         }
 
+        /// <summary>
+        /// Additional tooltip information.
+        /// </summary>
         public override string TipStringExtra
         {
             get
@@ -282,7 +296,7 @@ namespace Cutebold_Assemblies
             StringBuilder debugString = new StringBuilder();
             debugString.Append(base.DebugString());
 
-            debugString.AppendLine(($"lightLevel: {lightLevel}\nmaxLightGlobalWorkSpeed: {MaxLightGlobalWorkSpeed}\nmaxDarkGlobalWorkSpeed: {MaxDarkGlobalWorkSpeed}").Indented());
+            debugString.AppendLine(($"LightLevel: {LightLevel}\nmaxLightGlobalWorkSpeed: {MaxLightGlobalWorkSpeed}\nmaxDarkGlobalWorkSpeed: {MaxDarkGlobalWorkSpeed}").Indented());
             debugString.AppendLine($"WearingGoggles: {WearingGoggles}");
 
             return debugString.ToString();
@@ -297,10 +311,10 @@ namespace Cutebold_Assemblies
 
             if (ageTicks == 1) CheckdMime();
 
-            lastLightLevel = lightLevel;
-            lightLevel = CheckLightLevel();
+            lastLightLevel = LightLevel;
+            adaptationComp.LightLevel = CheckLightLevel();
 
-            if ((lastLightLevel >= 30) == (lightLevel < 30))
+            if ((lastLightLevel >= 30) == (LightLevel < 30))
             {
                 pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
             }
@@ -314,7 +328,7 @@ namespace Cutebold_Assemblies
                 pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
             }
 
-            if (eyeGlowEnabled && eyeBlink && lightLevel < 30)
+            if (EyeGlowEnabled && EyeBlink && LightLevel < 30)
             {
                 var offsetTicks = Math.Abs(pawn.HashOffsetTicks());
                 var blinkValue = Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89)));
@@ -326,10 +340,10 @@ namespace Cutebold_Assemblies
 
                 blinkLastValue = blinkValue;
             }
-            
+
             if (pawn.IsHashIntervalTick(60))
             {
-// 1.1          lightLevel = CheckLightLevel();
+                // 1.1          lightLevel = CheckLightLevel();
 
                 UpdateCuteboldCompProperties();
 
@@ -340,10 +354,13 @@ namespace Cutebold_Assemblies
                     UpdateGlowCurve();
                 }
 
-                UpdateLightSickness();
+                if (!ignoreSickness) UpdateLightSickness();
             }
         }
 
+        /// <summary>
+        /// Grabs the adaptation hediff comp.
+        /// </summary>
         public void CheckHediffComp()
         {
             if (adaptationComp == null)
@@ -401,15 +418,6 @@ namespace Cutebold_Assemblies
         /// </summary>
         private void UpdateCuteboldCompProperties()
         {
-            if (ultraEyes)
-            {
-                adaptationComp.LightLevel = 0.0f;
-            }
-            else
-            {
-                adaptationComp.LightLevel = this.lightLevel;
-            }
-
             if (WearingGoggles || eyesMissing || pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f)
             {
                 adaptationComp.CanSee = false;
@@ -430,7 +438,7 @@ namespace Cutebold_Assemblies
         /// </summary>
         private void UpdateLightSickness()
         {
-            if (adaptationComp.CanSee && !ultraEyes && lightLevel > adaptationComp.MaxLightLevel && CurStageIndex > 0 && !pawn.health.hediffSet.HasHediff(lightSickness))
+            if (adaptationComp.CanSee && !IgnoreLightLevel && LightLevel > adaptationComp.MaxLightLevel && CurStageIndex > 0 && !pawn.health.hediffSet.HasHediff(lightSickness))
             {
                 Hediff hediff = HediffMaker.MakeHediff(lightSickness, pawn);
                 hediff.Severity = this.Severity;
@@ -440,7 +448,7 @@ namespace Cutebold_Assemblies
             else if (pawn.IsHashIntervalTick(480) && pawn.health.hediffSet.HasHediff(lightSickness)) // Check to see if we want to adjust lightSickness far less often than adding it.
             {
                 Hediff_CuteboldLightSickness hediff = (Hediff_CuteboldLightSickness)pawn.health.hediffSet.GetFirstHediffOfDef(lightSickness);
-                if (lightLevel > adaptationComp.MaxLightLevel && CurStageIndex != 0)
+                if (LightLevel > adaptationComp.MaxLightLevel && CurStageIndex != 0)
                 {
                     hediff.Severity = this.Severity;
                     hediff.ResetTicksToDisappear();
@@ -458,14 +466,14 @@ namespace Cutebold_Assemblies
             MaxLightGlobalWorkSpeed = lightDarkAdjustment.Light == -1.0f ? defaultLightglobalWorkSpeed - globalWorkSpeedDifference * lightDarkAdjustment.Multiplier : lightDarkAdjustment.Light;
             MaxDarkGlobalWorkSpeed = lightDarkAdjustment.Dark == -1.0f ? defaultDarkglobalWorkSpeed + globalWorkSpeedDifference * lightDarkAdjustment.Multiplier : lightDarkAdjustment.Dark;
 
-            if (MaxLightGlobalWorkSpeed < 0.5f) MaxLightGlobalWorkSpeed = 0.5f;
-            if (MaxDarkGlobalWorkSpeed < 0.5f) MaxDarkGlobalWorkSpeed = 0.5f;
+            if (MaxLightGlobalWorkSpeed < minimumLightWorkSpeed) MaxLightGlobalWorkSpeed = minimumLightWorkSpeed;
+            if (MaxDarkGlobalWorkSpeed < minimumDarkWorkSpeed) MaxDarkGlobalWorkSpeed = minimumDarkWorkSpeed;
 
             if (WearingGoggles || (MaxLightGlobalWorkSpeed == defaultLightglobalWorkSpeed && MaxDarkGlobalWorkSpeed == defaultDarkglobalWorkSpeed))
             {
                 GlowCurve = new SimpleCurve(defaultGlowCurve);
             }
-            else if (ultraEyes)
+            else if (IgnoreLightLevel)
             {
                 GlowCurve.SetPoints(new List<CurvePoint>()
                                 {
@@ -498,7 +506,7 @@ namespace Cutebold_Assemblies
             if (leftEyeMissing && rightEyeMissing)
             {
                 eyesMissing = true;
-                ultraEyes = false;
+                adaptationComp.IgnoreLightLevel = false;
             }
             else
             {
@@ -511,11 +519,11 @@ namespace Cutebold_Assemblies
 
                 if ((leftEyeSpecial || leftEyeMissing) && (rightEyeSpecial || rightEyeMissing))
                 {
-                    ultraEyes = true;
+                    adaptationComp.IgnoreLightLevel = true;
                 }
                 else
                 {
-                    ultraEyes = false;
+                    adaptationComp.IgnoreLightLevel = false;
                 }
             }
 
@@ -539,6 +547,14 @@ namespace Cutebold_Assemblies
 
             goggles = null;
             updateGlowCurve = true;
+        }
+
+        /// <summary>
+        /// Updates the ignore sun sickness flag.
+        /// </summary>
+        public static void UpdateIgnoreSickness()
+        {
+            ignoreSickness = Cutebold_Assemblies.CuteboldSettings.ignoreSickness;
         }
     }
 }

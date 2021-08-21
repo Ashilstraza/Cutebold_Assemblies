@@ -29,19 +29,7 @@ namespace Cutebold_Assemblies
         public static List<Backstory> CuteboldServantAdultBackstories { get; private set; }
         /// <summary>List of Underground Cutebold Adult Backstories</summary>
         public static List<Backstory> CuteboldUndergroundAdultBackstories { get; private set; }
-
-        private static readonly List<RulePackDef> cuteboldNamers = new List<RulePackDef>()
-        {
-            Cutebold_DefOf.NamerPersonCutebold,
-            Cutebold_DefOf.NamerPersonCuteboldOther,
-            Cutebold_DefOf.NamerPersonCuteboldOtherFemale,
-            Cutebold_DefOf.NamerPersonCuteboldOutsider,
-            Cutebold_DefOf.NamerPersonCuteboldOutsiderFemale,
-            Cutebold_DefOf.NamerPersonCuteboldSlave
-        };
-        public static List<RulePackDef> CuteboldNamers { get; }
-
-
+        
         /// <summary>
         /// Applies harmony patches on startup.
         /// </summary>
@@ -186,7 +174,7 @@ namespace Cutebold_Assemblies
             {
                 //Log.Message("  Cutebold with faction and pawnNameMaker");
                 //Log.Message("    Servant Cutebold");
-                rulePack = pawn.gender == Verse.Gender.Female ? Cutebold_DefOf.NamerPersonCuteboldOutsiderFemale : Cutebold_DefOf.NamerPersonCuteboldOutsider;
+                rulePack = pawn.gender == Gender.Female ? Cutebold_DefOf.NamerPersonCuteboldOutsiderFemale : Cutebold_DefOf.NamerPersonCuteboldOutsider;
             }
             else if (pawn.story.childhood != null && CuteboldSlaveChildBackstories.Contains(pawn.story.childhood)) // Cutebold child slaves get a simple name
             {

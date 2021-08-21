@@ -37,7 +37,7 @@ namespace Cutebold_Assemblies
         public static readonly string HarmonyID = "rimworld.ashilstraza.races.cute.main";
         /// <summary>Reference to harmony.</summary>
         private static readonly Harmony harmony = new Harmony(HarmonyID);
-
+        /// <summary>Reference to the settings.</summary>
         public static readonly Cutebold_Settings CuteboldSettings = null;
 
 
@@ -74,18 +74,6 @@ namespace Cutebold_Assemblies
         /// <summary>
         /// Creates a list of races that give bad butcher thoughts.
         /// </summary>
-        /*private static void CreateButcherRaceList()
-        {
-            //Log.Message("Create Butcher Race List");
-            List<string> butcherList = new List<string>();
-
-            foreach (ThingDef race in AlienRaceDef.alienRace.thoughtSettings.butcherThoughtSpecific.FirstOrDefault().raceList)
-            {
-                //Log.Message("  Race: " + race.defName);
-                butcherList.Add(race.defName);
-            }
-            butcherRaceList = butcherList;
-        }*/
         private static void CreateButcherRaceList()
         {
             //Log.Message("Create Butcher Race List");

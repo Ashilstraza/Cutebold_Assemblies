@@ -9,14 +9,26 @@ using Verse;
 
 namespace Cutebold_Assemblies
 {
+    /// <summary>
+    /// Conatins various harmony patches that the various cutebold hediffs touch. 
+    /// </summary>
     class Cutebold_Patch_HediffRelated
     {
+        /// <summary>
+        /// Enables patches depending on various options or other mods.
+        /// </summary>
+        /// <param name="harmony">Our harmony instance.</param>
         public Cutebold_Patch_HediffRelated(Harmony harmony)
         {
             if (Cutebold_Assemblies.CuteboldSettings.eyeAdaptation)
             {
                 // Allows for dark adaptation, obviously not cave adaptation since that is a different game with cute kobolds.
                 harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "FactorFromGlow"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldFactorFromGlowPostfix"));
+                if (Cutebold_Assemblies.CuteboldSettings.darknessOptions != Cutebold_DarknessOptions.IdeologyDefault)
+                {
+                    // Ignores the ignoreIfPrefersDarkness flag.
+                    harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "ActiveFor"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGlowActiveForPostfix"));
+                }
                 // Applies dark adaptation to all cutebolds as they spawn.               
                 harmony.Patch(AccessTools.Method(typeof(Pawn), "SpawnSetup"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldAdaptationSpawnSetupPostfix"));
                 // Update dark adaptation eye references.
@@ -66,6 +78,19 @@ namespace Cutebold_Assemblies
             {
                 Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)((Pawn)t).health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
                 if (hediff != null) __result = hediff.GlowCurve.Evaluate(t.Map.glowGrid.GameGlowAt(t.Position));
+            }
+        }
+
+        /// <summary>
+        /// Overrides if cutebolds ignore darkness ignores.
+        /// </summary>
+        /// <param name="__result">If the glow curve should be ignored.</param>
+        /// <param name="t">The thing that is being evaluated.</param>
+        private static void CuteboldGlowActiveForPostfix(ref bool __result, Thing t)
+        {
+            if (t.def.defName == Cutebold_Assemblies.RaceName)
+            {
+                __result = t.Spawned;
             }
         }
 

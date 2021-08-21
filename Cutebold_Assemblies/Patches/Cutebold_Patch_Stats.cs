@@ -16,6 +16,7 @@ namespace Cutebold_Assemblies
     /// </summary>
     class Cutebold_Patch_Stats
     {
+        /// <summary>If eye adaptation is enabled.</summary>
         private static bool adaptation = false;
 
         /// <summary>

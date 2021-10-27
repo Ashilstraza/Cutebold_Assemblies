@@ -7,7 +7,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cutebold_Assemblies", "Cute
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}"
 	ProjectSection(SolutionItems) = preProject
-		2.3.txt = 2.3.txt
 		2.4+.txt = 2.4+.txt
 	EndProjectSection
 EndProject
@@ -57,7 +56,7 @@ Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Cutebold Race(1)", "..\..\.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "1.1 Assembly-CSharp", "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.1 Debug Copy\Source\Assembly-CSharp\1.1 Assembly-CSharp.csproj", "{6819003D-3A62-4127-AF84-AA7CB7AA4D87}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "1.3 Assembly-CSharp", "..\Assembly-CSharp\1.3 Assembly-CSharp.csproj", "{D7C02C22-3B93-4F9B-9664-1ED5F00C1ED3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "1.3 Assembly-CSharp", "..\Assembly-CSharp\1.3 Assembly-CSharp.csproj", "{437440F4-7361-4E9E-A184-CE0FE6EDE860}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -107,12 +106,18 @@ Global
 		{6819003D-3A62-4127-AF84-AA7CB7AA4D87}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6819003D-3A62-4127-AF84-AA7CB7AA4D87}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6819003D-3A62-4127-AF84-AA7CB7AA4D87}.Release|Any CPU.Build.0 = Release|Any CPU
-		{D7C02C22-3B93-4F9B-9664-1ED5F00C1ED3}.1.1 Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D7C02C22-3B93-4F9B-9664-1ED5F00C1ED3}.1.1 Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D7C02C22-3B93-4F9B-9664-1ED5F00C1ED3}.1.3 Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D7C02C22-3B93-4F9B-9664-1ED5F00C1ED3}.1.3 Release|Any CPU.ActiveCfg = Release|Any CPU
-		{D7C02C22-3B93-4F9B-9664-1ED5F00C1ED3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D7C02C22-3B93-4F9B-9664-1ED5F00C1ED3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{437440F4-7361-4E9E-A184-CE0FE6EDE860}.1.1 Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{437440F4-7361-4E9E-A184-CE0FE6EDE860}.1.1 Debug|Any CPU.Build.0 = Debug|Any CPU
+		{437440F4-7361-4E9E-A184-CE0FE6EDE860}.1.1 Release|Any CPU.ActiveCfg = Release|Any CPU
+		{437440F4-7361-4E9E-A184-CE0FE6EDE860}.1.1 Release|Any CPU.Build.0 = Release|Any CPU
+		{437440F4-7361-4E9E-A184-CE0FE6EDE860}.1.3 Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{437440F4-7361-4E9E-A184-CE0FE6EDE860}.1.3 Debug|Any CPU.Build.0 = Debug|Any CPU
+		{437440F4-7361-4E9E-A184-CE0FE6EDE860}.1.3 Release|Any CPU.ActiveCfg = Release|Any CPU
+		{437440F4-7361-4E9E-A184-CE0FE6EDE860}.1.3 Release|Any CPU.Build.0 = Release|Any CPU
+		{437440F4-7361-4E9E-A184-CE0FE6EDE860}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{437440F4-7361-4E9E-A184-CE0FE6EDE860}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{437440F4-7361-4E9E-A184-CE0FE6EDE860}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{437440F4-7361-4E9E-A184-CE0FE6EDE860}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -72,12 +72,22 @@ namespace Cutebold_Assemblies
         /// </summary>
         /// <param name="__result">The previous glow curve result.</param>
         /// <param name="t">The thing that is being evaluated.</param>
-        private static void CuteboldFactorFromGlowPostfix(ref float __result, Thing t)
+        private static void CuteboldFactorFromGlowPostfix(StatPart_Glow __instance, ref float __result, Thing t)
         {
             if (t.def.defName == Cutebold_Assemblies.RaceName)
             {
-                Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)((Pawn)t).health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
-                if (hediff != null) __result = hediff.GlowCurve.Evaluate(t.Map.glowGrid.GameGlowAt(t.Position));
+
+                switch (__instance.parentStat.defName)
+                {
+                    case "MoveSpeed":
+                    case "SurgerySuccessChanceFactor":
+                    case "WorkSpeedGlobal":
+                        Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)((Pawn)t).health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
+                        if (hediff != null) __result = hediff.GlowCurve.Evaluate(t.Map.glowGrid.GameGlowAt(t.Position));
+                        break;
+                    default:
+                        break;
+                }
             }
         }
 

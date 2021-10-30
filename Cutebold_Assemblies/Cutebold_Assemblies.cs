@@ -238,6 +238,7 @@ namespace Cutebold_Assemblies
             foreach (var method in patchedMethods)
             {
                 var patches = Harmony.GetPatchInfo(method);
+                string patchText = "";
 
                 Log.Warning($"    {method.Name}");
 
@@ -247,33 +248,25 @@ namespace Cutebold_Assemblies
                     {
                         Log.Warning($"        Prefixes:");
                         foreach (var patch in patches.Prefixes)
-                        {
-                            Log.Warning($"            index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
-                        }
+                            patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
                     }
                     if (patches.Postfixes.Count > 0)
                     {
                         Log.Warning($"        Postfixes:");
                         foreach (var patch in patches.Postfixes)
-                        {
-                            Log.Warning($"            index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
-                        }
+                            patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
                     }
                     if (patches.Transpilers.Count > 0)
                     {
                         Log.Warning($"        Transpilers:");
                         foreach (var patch in patches.Transpilers)
-                        {
-                            Log.Warning($"            index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
-                        }
+                            patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
                     }
                     if (patches.Finalizers.Count > 0)
                     {
                         Log.Warning($"        Finalziers:");
                         foreach (var patch in patches.Finalizers)
-                        {
-                            Log.Warning($"            index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
-                        }
+                            patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
                     }
                 }
                 else
@@ -283,6 +276,37 @@ namespace Cutebold_Assemblies
             }
 
             Log.Warning($"    End of Check");
+
+            void patchOutput(Patch patch, string patchText)
+            {
+                if (patch.owner == HarmonyID) Log.Message("            " + patchText);
+                else Log.Warning("            " + patchText);
+            }
+        }
+
+        /// <summary>
+        /// Attempts to repair messed up hediffs due to adding tongues.
+        /// </summary>
+        public static void FixTonguedHediffs()
+        {
+            List<string> ids = new List<string>();
+            foreach (Pawn pawn in PawnsFinder.All_AliveOrDead)
+            {
+                if (pawn.def.defName == Cutebold_Assemblies.RaceName)
+                {
+                    if (!ids.Contains(pawn.ThingID))
+                    {
+                        foreach (var hediff in pawn.health.hediffSet.hediffs)
+                        {
+                            if (hediff.Part?.Index > 21)
+                            {
+                                hediff.Part = hediff.Part.body.GetPartAtIndex(hediff.Part.Index + 1);
+                            }
+                        }
+                        ids.Add(pawn.ThingID);
+                    }
+                }
+            }
         }
     }
 }

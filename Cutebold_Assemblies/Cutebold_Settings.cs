@@ -171,6 +171,11 @@ namespace Cutebold_Assemblies
                 {
                     Cutebold_Assemblies.CheckPatchedMethods();
                 }
+                if (settingEntries.AltButtonTextLabeled("Fix body hediffs after tongue is added. Save and reload game to finish fixing.\nOnly run this once per save game!", "Fix Hediffs", height: Text.LineHeight*2, tooltip: "Arms don't belong on tongues!"/*, disabled: (Current.ProgramState != ProgramState.Playing)*/))
+                {
+                    Cutebold_Assemblies.FixTonguedHediffs();
+                }
+
             }
             settingEntries.End();
 
@@ -237,9 +242,9 @@ namespace Cutebold_Assemblies
         /// <param name="tooltip">What the tooltio should be when hovered.</param>
         /// <param name="disabled">If the button should be disabled.</param>
         /// <returns>If the button has been released.</returns>
-        public bool AltButtonTextLabeled(string label, string buttonLabel, float buttonWidthPercent = 0.25f, string tooltip = null, bool disabled = false)
+        public bool AltButtonTextLabeled(string label, string buttonLabel, float buttonWidthPercent = 0.25f, float height = 30f, string tooltip = null, bool disabled = false)
         {
-            Rect rect = GetRect(30f);
+            Rect rect = GetRect(height);
             Widgets.Label(rect.LeftPart(1f - buttonWidthPercent), label);
             Color color = GUI.color;
             if (disabled) GUI.color = Color.gray;

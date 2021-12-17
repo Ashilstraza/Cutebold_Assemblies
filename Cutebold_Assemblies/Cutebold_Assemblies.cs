@@ -228,7 +228,7 @@ namespace Cutebold_Assemblies
         }
 
         /// <summary>
-        /// Runs a check on all the methods we patch and outputs all the patches for those methods.
+        /// Runs a check on all the methods we patch and outputs all the patches for those methods regardless of which mod it came from.
         /// </summary>
         public static void CheckPatchedMethods()
         {
@@ -238,7 +238,6 @@ namespace Cutebold_Assemblies
             foreach (var method in patchedMethods)
             {
                 var patches = Harmony.GetPatchInfo(method);
-                string patchText = "";
 
                 Log.Warning($"    {method.Name}");
 

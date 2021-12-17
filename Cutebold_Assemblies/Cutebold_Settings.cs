@@ -33,9 +33,9 @@ namespace Cutebold_Assemblies
         {
             return option switch
             {
-                Cutebold_DarknessOptions.CuteboldDefault => "Adaptation Method",
-                Cutebold_DarknessOptions.IdeologyDefault => "Ideology Method",
-                Cutebold_DarknessOptions.Hybrid => "Hybrid Method",
+                Cutebold_DarknessOptions.CuteboldDefault => "Cutebold_Settings_Ideology_Darkness_CuteboldMethod".Translate(),
+                Cutebold_DarknessOptions.IdeologyDefault => "Cutebold_Settings_Ideology_Darkness_IdeologyMethod".Translate(),
+                Cutebold_DarknessOptions.Hybrid => "Cutebold_Settings_Ideology_Darkness_HybridMethod".Translate(),
                 _ => throw new NotImplementedException(),
             };
         }
@@ -49,9 +49,9 @@ namespace Cutebold_Assemblies
         {
             return option switch
             {
-                Cutebold_DarknessOptions.CuteboldDefault => "Cutebolds become adapted to the darkness.",
-                Cutebold_DarknessOptions.IdeologyDefault => "Cutebolds use Darkness Ideology Meme",
-                Cutebold_DarknessOptions.Hybrid => "Cutebolds become adapted to the darkness, but don't go below 100% workspeed in bright light.",
+                Cutebold_DarknessOptions.CuteboldDefault => "Cutebold_Settings_Ideology_Darkness_CuteboldMethod_ToolTip".Translate(),
+                Cutebold_DarknessOptions.IdeologyDefault => "Cutebold_Settings_Ideology_Darkness_IdeologyMethod_ToolTip".Translate(),
+                Cutebold_DarknessOptions.Hybrid => "Cutebold_Settings_Ideology_Darkness_HybridMethod_ToolTip".Translate(),
                 _ => throw new NotImplementedException(),
             };
         }
@@ -129,23 +129,23 @@ namespace Cutebold_Assemblies
             Cutebold_Listing settingEntries = new Cutebold_Listing();
 
             settingEntries.Begin(inRect);
-            settingEntries.SectionLabel("General Settings");
-            settingEntries.CheckboxLabeled($"Cutebolds are able to extract extra resources (requires restart):{(extraYieldDisabled ? " [SYR] Harvest Yield enabled, using that instead." : "")}", ref settings.extraYield, (extraYieldDisabled ? "Humans mis... didn't miss a spot?" : "Human missed a spot!"), extraYieldDisabled);
+            settingEntries.SectionLabel("Cutebold_Settings_GeneralLabel".Translate());
+            settingEntries.CheckboxLabeled("Cutebold_Settings_ResourceCheckbox".Translate().ToString() + (extraYieldDisabled ? "Cutebold_Settings_ResourceCheckbox_SYR_HarvestYield".Translate().ToString() : ""), ref settings.extraYield, (extraYieldDisabled ? "Cutebold_Settings_ResourceCheckbox_ToolTip_Disabled".Translate() : "Cutebold_Settings_ResourceCheckbox_ToolTip_Enabled".Translate()), extraYieldDisabled);
             if (Prefs.DevMode)
             {
-                settingEntries.CheckboxLabeled($"{tab}Use alternative yield patching method (requires restart):", ref settings.altYield, "Eeeeeek!", !settings.extraYield);
+                settingEntries.CheckboxLabeled("Cutebold_Settings_AltYield".Translate(tab), ref settings.altYield, "Cutebold_Settings_AltYield_ToolTip".Translate(), !settings.extraYield);
             };
-            settingEntries.CheckboxLabeled("Cutebolds can adapt to see in the dark (requires restart):", ref settings.eyeAdaptation, "Hot sun, it burns eyes!");
-            settingEntries.CheckboxLabeled("Cutebold ears and tail will be visually gone when the body part becomes lost:", ref settings.detachableParts, "No ears or tail make a sadbold.");
+            settingEntries.CheckboxLabeled("Cutebold_Settings_DarkAdaptation".Translate(), ref settings.eyeAdaptation, "Cutebold_Settings_DarkAdaptation_ToolTip".Translate());
+            settingEntries.CheckboxLabeled("Cutebold_Settings_DetachableParts".Translate(), ref settings.detachableParts, "Cutebold_Settings_DetachableParts_ToolTip".Translate());
 
             if (settings.eyeAdaptation)
             {
                 settingEntries.Gap(36);
-                settingEntries.SectionLabel("Dark Adaptation Settings");
-                settingEntries.CheckboxLabeled("Cutebolds don't get sun sickness:", ref settings.ignoreSickness, "Cutebolds stronger than sun!");
-                settingEntries.CheckboxLabeled("Cutebolds eyes glow when dark adapted:", ref settings.glowEyes, "Shiny eyes~");
-                settingEntries.CheckboxLabeled($"{tab}Cutebolds blink in the darkness:", ref settings.blinkEyes, "No dry eyes here!", !settings.glowEyes);
-                if (settingEntries.AltButtonTextLabeled("Cutebold adaptation when darkness ideology is used: (requires restart)", settings.darknessOptions.ToStringHuman(), tooltip: (ModLister.IdeologyInstalled ? "Worship darkness!" : "Cutebold says:\nRequires Ideology DLC!"), disabled: !ModLister.IdeologyInstalled))
+                settingEntries.SectionLabel("Cutebold_Settings_DarkAdaptation_Label".Translate());
+                settingEntries.CheckboxLabeled("Cutebold_Settings_SunSickness".Translate(), ref settings.ignoreSickness, "Cutebold_Settings_SunSickness_Tooltip".Translate());
+                settingEntries.CheckboxLabeled("Cutebold_Settings_EyeGlow".Translate(), ref settings.glowEyes, "Cutebold_Settings_EyeGlow_ToolTip".Translate());
+                settingEntries.CheckboxLabeled("Cutebold_Settings_EyeGlowBlink".Translate(tab), ref settings.blinkEyes, "Cutebold_Settings_EyeGlowBlink_ToolTip".Translate(), !settings.glowEyes);
+                if (settingEntries.AltButtonTextLabeled("Cutebold_Settings_Ideology_Darkness".Translate(), settings.darknessOptions.ToStringHuman(), tooltip: (ModLister.IdeologyInstalled ? "Cutebold_Settings_Ideology_Darkness_ToolTip".Translate() : "Cutebold_Settings_Ideology_Darkness_ToolTip_NoIdeology".Translate()), disabled: !ModLister.IdeologyInstalled))
                 {
                     List<FloatMenuOption> options = new List<FloatMenuOption>();
                     foreach (Cutebold_DarknessOptions option in Enum.GetValues(typeof(Cutebold_DarknessOptions)))
@@ -165,13 +165,13 @@ namespace Cutebold_Assemblies
             if (Prefs.DevMode)
             {
                 settingEntries.Gap(36);
-                settingEntries.SectionLabel("Debug Stuff");
-                settingEntries.Label($"Cutebold Assembly Version: {versionNumber}");
-                if (settingEntries.AltButtonTextLabeled("Check for all patches to methods that this mod patches (used for debugging):", "Check", tooltip: "Stick fingers in all places..."))
+                settingEntries.SectionLabel("Cutebold_Settings_DebugLabel".Translate());
+                settingEntries.Label("Cutebold_Settings_AssemblyVersion".Translate() + versionNumber);
+                if (settingEntries.AltButtonTextLabeled("Cutebold_Settings_CheckPatches".Translate(), "Cutebold_Settings_CheckPatches_Button".Translate(), tooltip: "Cutebold_Settings_CheckPatches_ToolTip".Translate()))
                 {
                     Cutebold_Assemblies.CheckPatchedMethods();
                 }
-                if (settingEntries.AltButtonTextLabeled("Fix body hediffs after tongue is added. Save and reload game to finish fixing.\nOnly run this once per save game!", "Fix Hediffs", height: Text.LineHeight*2, tooltip: "Arms don't belong on tongues!"/*, disabled: (Current.ProgramState != ProgramState.Playing)*/))
+                if (settingEntries.AltButtonTextLabeled("Cutebold_Settings_FixTongues".Translate(), "Cutebold_Settings_FixTongues_Button".Translate(), height: Text.LineHeight*2, tooltip: "Cutebold_Settings_FixTongues_ToolTip".Translate()))
                 {
                     Cutebold_Assemblies.FixTonguedHediffs();
                 }
@@ -201,7 +201,7 @@ namespace Cutebold_Assemblies
         /// <returns>Our mod name.</returns>
         public override string SettingsCategory()
         {
-            return "Cutebold Race";
+            return "Cutebold_RaceName".Translate();
         }
     }
 

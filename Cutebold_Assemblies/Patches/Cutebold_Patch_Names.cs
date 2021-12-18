@@ -185,7 +185,13 @@ namespace Cutebold_Assemblies
 
             if (rulePack != null)
             {
-                __result = CuteboldNameGenerator(rulePack, forcedLastName);
+                NameTriple tempName = CuteboldNameGenerator(rulePack, forcedLastName);
+                
+                if (tempName.Nick.EndsWith("za") && pawn.gender != Gender.Female)
+                {
+                    __result = new NameTriple(tempName.First, tempName.Nick.TrimEnd('a'), tempName.Last);
+                }
+                else __result = tempName;
 
                 return false;
             }
@@ -202,7 +208,7 @@ namespace Cutebold_Assemblies
         /// <param name="rulePack">The given name rules.</param>
         /// <param name="forcedLastName">The forced last name.</param>
         /// <returns>Returns a new cutebold name.</returns>
-        private static Name CuteboldNameGenerator(RulePackDef rulePack, string forcedLastName)
+        private static NameTriple CuteboldNameGenerator(RulePackDef rulePack, string forcedLastName)
         {
             var name = CuteboldNameResolver(rulePack, forcedLastName);
 
@@ -229,11 +235,12 @@ namespace Cutebold_Assemblies
         /// <param name="nameMaker">The given name rules.</param>
         /// <param name="forcedLastName">The forced last name.</param>
         /// <returns>Returns a new cutebold name.</returns>
-        private static Name CuteboldNameResolver(RulePackDef nameMaker, string forcedLastName)
+        private static NameTriple CuteboldNameResolver(RulePackDef nameMaker, string forcedLastName)
         {
             NameTriple name = NameTriple.FromString(NameGenerator.GenerateName(nameMaker, null, false, null, null));
             name.CapitalizeNick();
             name.ResolveMissingPieces(forcedLastName);
+
             return name;
         }
 

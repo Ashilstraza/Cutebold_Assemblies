@@ -241,7 +241,7 @@ namespace Cutebold_Assemblies
                     {
                         var req = StatRequest.For(thing);
                         var extraPercent = CuteboldCalculateExtraPercent(stat, req);
-                        if (extraPercent > 0f) yield return new StatDrawEntry(statEntry.category, stat, 1f + extraPercent, req);
+                        if (extraPercent > 0f) yield return new StatDrawEntry(statEntry.category, stat, stat.maxValue + extraPercent, req);
                         else yield return statEntry;
                     }
                     else
@@ -272,10 +272,11 @@ namespace Cutebold_Assemblies
 
             float rawPercent = CuteboldCalculateExtraPercent(___stat, req, false);
             float multiplier = MiningMultiplier(pawn);
+            float extraPercentMax = StatUtility.GetStatValueFromList(req.StatBases, ___stat, 1f) - 1f;
             StringBuilder stringBuilder = new StringBuilder(__result);
 
             stringBuilder.AppendLine("Cutebold_DarkAdaptation_StatString".Translate());
-            stringBuilder.AppendLine("Cutebold_DarkAdaptation_StatPercentString".Translate(rawPercent.ToStringPercent(), multiplier.ToStringPercent(), (rawPercent * multiplier).ToStringPercent()));
+            stringBuilder.AppendLine("Cutebold_DarkAdaptation_StatPercentString".Translate(rawPercent.ToStringPercent(), multiplier.ToStringPercent(), (rawPercent * multiplier).ToStringPercent(), extraPercentMax.ToStringPercent()));
 
             __result = stringBuilder.ToString();
         }
@@ -376,15 +377,10 @@ namespace Cutebold_Assemblies
             float rawPercent = stat.Worker.GetValueUnfinalized(req, false);
             float pawnBasePercent = StatUtility.GetStatValueFromList(req.StatBases, stat, 1f);
             float defaultMaxPercent = stat.maxValue;
-            float multiplier = 1f;
+            float maxPercent = pawnBasePercent - 1f + defaultMaxPercent;
+            float adaptationMultiplier = MiningMultiplier(pawn, useMultiplier);
 
-            //Log.Message("adaptation=" + adaptation + "has hediff="+ pawn?.health.hediffSet.HasHediff(Cutebold_DefOf.CuteboldDarkAdaptation).ToString());
-
-            if (adaptation && useMultiplier && pawn?.health.hediffSet.HasHediff(Cutebold_DefOf.CuteboldDarkAdaptation) == true) multiplier = MiningMultiplier(pawn);
-
-            //Log.Message("rawPercent=" + rawPercent + " pawnBasePercent=" + pawnBasePercent + " defaultMaxPercent=" + defaultMaxPercent + "multiplier=" + multiplier);
-
-            float extraPercent = (rawPercent > pawnBasePercent) ? (pawnBasePercent - defaultMaxPercent) * multiplier : ((rawPercent < defaultMaxPercent) ? 0f : (rawPercent - defaultMaxPercent) * multiplier);
+            float extraPercent = (rawPercent > maxPercent) ? (maxPercent - defaultMaxPercent) * adaptationMultiplier : ((rawPercent < defaultMaxPercent) ? 0f : (rawPercent - defaultMaxPercent) * adaptationMultiplier);
 
             return (extraPercent > 0f) ? extraPercent : 0f;
         }
@@ -394,11 +390,16 @@ namespace Cutebold_Assemblies
         /// </summary>
         /// <param name="pawn">The pawn to check dark adaptation on</param>
         /// <returns>multiplier</returns>
-        private static float MiningMultiplier(Pawn pawn)
+        private static float MiningMultiplier(Pawn pawn, bool useMultiplier = true)
         {
-            Hediff_CuteboldDarkAdaptation darkAdaptation = (Hediff_CuteboldDarkAdaptation)pawn.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
-            var severity = darkAdaptation.Severity;
-            return darkAdaptation.WearingGoggles ? 0.25f : (severity < 0.25f) ? 0.25f : (severity < 0.5f) ? 0.5f : (severity < 0.75f) ? 0.75f : 1f;
+            if (adaptation && useMultiplier && pawn?.health.hediffSet.HasHediff(Cutebold_DefOf.CuteboldDarkAdaptation) == true)
+            {
+                Hediff_CuteboldDarkAdaptation darkAdaptation = (Hediff_CuteboldDarkAdaptation)pawn.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
+                var severity = darkAdaptation.Severity;
+                return darkAdaptation.WearingGoggles ? 0.25f : (severity < 0.25f) ? 0.25f : (severity < 0.5f) ? 0.5f : (severity < 0.75f) ? 0.75f : 1f;
+            }
+
+            return 1f;
         }
     }
 }

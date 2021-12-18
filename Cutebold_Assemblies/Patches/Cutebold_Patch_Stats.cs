@@ -274,8 +274,8 @@ namespace Cutebold_Assemblies
             float multiplier = MiningMultiplier(pawn);
             StringBuilder stringBuilder = new StringBuilder(__result);
 
-            stringBuilder.AppendLine("Dark Adaptation");
-            stringBuilder.AppendLine($"    Extra Percentage: {rawPercent.ToStringPercent()} (base, 15% max) x {multiplier.ToStringPercent()} (adaptation, 100% max) => +{(rawPercent * multiplier).ToStringPercent()}");
+            stringBuilder.AppendLine("Cutebold_DarkAdaptation_StatString".Translate());
+            stringBuilder.AppendLine("Cutebold_DarkAdaptation_StatPercentString".Translate(rawPercent.ToStringPercent(), multiplier.ToStringPercent(), (rawPercent * multiplier).ToStringPercent()));
 
             __result = stringBuilder.ToString();
         }

@@ -278,8 +278,8 @@ namespace Cutebold_Assemblies
             {
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.Append(base.TipStringExtra);
-                stringBuilder.AppendLine($"Adaptation: {this.Severity.ToStringPercent()}");
-                if (goggles != null) stringBuilder.AppendLine("Goggles currently worn, no workspeed change.");
+                stringBuilder.AppendLine("Cutebold_Adaptation_String".Translate() + this.Severity.ToStringPercent());
+                if (goggles != null) stringBuilder.AppendLine("Cutebold_Adaptation_WearingGoggles".Translate());
                 //stringBuilder.AppendLine("------------------");
 
                 return stringBuilder.ToString();

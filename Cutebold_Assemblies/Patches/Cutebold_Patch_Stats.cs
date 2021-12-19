@@ -272,11 +272,10 @@ namespace Cutebold_Assemblies
 
             float rawPercent = CuteboldCalculateExtraPercent(___stat, req, false);
             float multiplier = MiningMultiplier(pawn);
-            float extraPercentMax = StatUtility.GetStatValueFromList(req.StatBases, ___stat, 1f) - 1f;
             StringBuilder stringBuilder = new StringBuilder(__result);
 
             stringBuilder.AppendLine("Cutebold_DarkAdaptation_StatString".Translate());
-            stringBuilder.AppendLine("Cutebold_DarkAdaptation_StatPercentString".Translate(rawPercent.ToStringPercent(), multiplier.ToStringPercent(), (rawPercent * multiplier).ToStringPercent(), extraPercentMax.ToStringPercent()));
+            stringBuilder.AppendLine("Cutebold_DarkAdaptation_StatPercentString".Translate(rawPercent.ToStringPercent(), multiplier.ToStringPercent(), (rawPercent * multiplier).ToStringPercent()));
 
             __result = stringBuilder.ToString();
         }
@@ -377,10 +376,9 @@ namespace Cutebold_Assemblies
             float rawPercent = stat.Worker.GetValueUnfinalized(req, false);
             float pawnBasePercent = StatUtility.GetStatValueFromList(req.StatBases, stat, 1f);
             float defaultMaxPercent = stat.maxValue;
-            float maxPercent = pawnBasePercent - 1f + defaultMaxPercent;
             float adaptationMultiplier = MiningMultiplier(pawn, useMultiplier);
 
-            float extraPercent = (rawPercent > maxPercent) ? (maxPercent - defaultMaxPercent) * adaptationMultiplier : ((rawPercent < defaultMaxPercent) ? 0f : (rawPercent - defaultMaxPercent) * adaptationMultiplier);
+            float extraPercent = (rawPercent < defaultMaxPercent) ? 0f : (rawPercent - defaultMaxPercent) * adaptationMultiplier;
 
             return (extraPercent > 0f) ? extraPercent : 0f;
         }

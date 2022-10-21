@@ -12,7 +12,7 @@ using System.Runtime.InteropServices;
 // Setting ComVisible to false makes the types in this assembly not visible
 // to COM components.  If you need to access a type in this assembly from
 // COM, set the ComVisible attribute to true on that type.
-[assembly: ComVisible(false)]
+[assembly: ComVisible(true)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("595e3fe8-c183-4363-83f6-03e75c56d839")]
@@ -27,8 +27,9 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.11")]
+[assembly: AssemblyVersion("1.0.12")]
 
+// 1.0.12 Rimworld 1.4 compatability
 // 1.0.11 Changed settings UI to be able to be translated.
 // 1.0.10 Added fixer button for hediffs that get tongued.
 // 1.0.9: Limit GlowFactor to just the three main stats.

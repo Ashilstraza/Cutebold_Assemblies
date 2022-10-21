@@ -26,7 +26,14 @@ namespace Cutebold_Assemblies
         /// <summary>Reference to our harmony instance.</summary>
         private static Harmony harmonyRef;
         /// <summary>Reference to the CanDrawAddon method.</summary>
+#if RWPre1_4
         private static readonly System.Reflection.MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), "CanDrawAddon");
+#else
+        private static readonly System.Reflection.MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), "CanDrawAddon", new[] {
+            typeof(Pawn)
+        });
+#endif
+
         /// <summary>Our prefix to the CanDrawAddon method.</summary>
         private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldCanDrawAddonPrefix");
         /// <summary>If eye blinking is enabled.</summary>
@@ -44,6 +51,7 @@ namespace Cutebold_Assemblies
                 harmonyRef = harmony;
                 CuteboldAddonModifier(Cutebold_Assemblies.CuteboldSettings);
                 harmonyRef.Patch(canDrawAddonRef, prefix: cuteboldCanDrawAddonPrefixRef);
+
                 initialized = true;
             }
         }
@@ -57,10 +65,12 @@ namespace Cutebold_Assemblies
             bool dirty = false;
             var currentAddons = Cutebold_Assemblies.AlienRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons;
 
+
             if (settings.glowEyes != glowEyes || settings.eyeAdaptation != eyeAdaptation)
             {
                 var canDrawAddonMethod = typeof(AlienPartGenerator.BodyAddon).GetMethod("CanDrawAddon");
                 bool patched = false;
+
 
                 if (initialized && Harmony.GetPatchInfo(canDrawAddonMethod).Prefixes.Any(patch => patch.owner == Cutebold_Assemblies.HarmonyID))
                     patched = true;
@@ -75,8 +85,13 @@ namespace Cutebold_Assemblies
 
                     foreach (var bodyAddon in raceAddons)
                     {
+#if RWPre1_4
                         if ((bodyAddon.bodyPart == "left eye" || bodyAddon.bodyPart == "right eye") && !currentAddons.Contains(bodyAddon))
                             currentAddons.Add(bodyAddon);
+#else
+                        if (bodyAddon.bodyPart.defName != "Eye" && !currentAddons.Contains(bodyAddon))
+                            currentAddons.Add(bodyAddon);
+#endif
                     }
 
                 }
@@ -87,14 +102,19 @@ namespace Cutebold_Assemblies
 
                     foreach (var bodyAddon in raceAddons)
                     {
+#if RWPre1_4
                         if ((bodyAddon.bodyPart == "left eye" || bodyAddon.bodyPart == "right eye") && currentAddons.Contains(bodyAddon))
                             currentAddons.Remove(bodyAddon);
+#else
+                        if (bodyAddon.bodyPart.defName != "Eye" && !currentAddons.Contains(bodyAddon))
+                            currentAddons.Add(bodyAddon);
+#endif
                     }
                 }
 
                 dirty = true;
             }
-
+#if RWPre1_4
             if (settings.detachableParts != detachableParts)
             {
                 detachableParts = settings.detachableParts;
@@ -126,14 +146,68 @@ namespace Cutebold_Assemblies
 
                 dirty = true;
             }
+#else
+            var graphicsPaths = Cutebold_Assemblies.AlienRaceDef.alienRace.graphicPaths;
 
+            if (settings.detachableParts != detachableParts)
+            {
+                detachableParts = settings.detachableParts;
+
+                if (detachableParts && initialized)
+                {
+                    graphicsPaths.head.path = "Cutebold/Heads/";
+                    graphicsPaths.body.path = "Cutebold/Bodies/";
+
+                    foreach (var bodyAddon in raceAddons)
+                    {
+                        if (bodyAddon.bodyPart.defName != "Eye" && !currentAddons.Contains(bodyAddon))
+                            currentAddons.Add(bodyAddon);
+                    }
+                }
+                else if (!detachableParts)
+                {
+                    graphicsPaths.head.path = "Cutebold/Heads/Simple/";
+                    graphicsPaths.body.path = "Cutebold/Bodies/Simple/";
+
+                    foreach (var bodyAddon in raceAddons)
+                    {
+                        if (bodyAddon.bodyPart.defName != "Eye" && currentAddons.Contains(bodyAddon))
+                            currentAddons.Remove(bodyAddon);
+                    }
+                }
+
+                // Mimics the way AlienRace builds the body and head graphic paths
+
+                foreach (var body in graphicsPaths.body.bodytypeGraphics)
+                {
+                    body.path = $"{graphicsPaths.body.path}Naked_{body.bodytype}";
+
+                    foreach(var genderedBody in body.genderGraphics)
+                    {
+                        genderedBody.path = $"{graphicsPaths.body.path}{genderedBody.gender}Naked_{body.bodytype}";
+                    }
+                }
+
+                foreach (var head in graphicsPaths.head.headtypeGraphics)
+                {
+                    var headTypePath = System.IO.Path.GetFileName(head.headType.graphicPath);
+                    head.path = graphicsPaths.head.path + headTypePath.Substring(headTypePath.IndexOf('_') + 1);
+
+                    foreach(var generedHead in head.genderGraphics)
+                    {
+                        generedHead.path = graphicsPaths.head.path + headTypePath;
+                    }
+                }
+
+                dirty = true;
+            }
+#endif
             if (dirty)
             {
                 foreach (Pawn pawn in PawnsFinder.All_AliveOrDead)
                 {
                     if (pawn.def.defName == Cutebold_Assemblies.RaceName)
                     {
-
                         pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
                     }
                 }
@@ -152,8 +226,11 @@ namespace Cutebold_Assemblies
         /// <returns>Returns true if we want to continue checking the addon in the regular method, false if we don't want to draw this addon.</returns>
         private static bool CuteboldCanDrawAddonPrefix(Pawn pawn, ref bool __result, AlienPartGenerator.BodyAddon __instance)
         {
+#if RWPre1_4
             if (pawn.def.defName != Cutebold_Assemblies.RaceName || (__instance.bodyPart != "left eye" && __instance.bodyPart != "right eye")) return true;
-
+#else
+            if (pawn.def.defName != Cutebold_Assemblies.RaceName || __instance.bodyPart.defName != "Eye") return true;
+#endif
             __result = true;
 
             if (pawn.Dead ||
@@ -164,13 +241,13 @@ namespace Cutebold_Assemblies
             {
                 __result = false;
             }
-            else if(eyeBlink)
+            else if (eyeBlink)
             {
                 // Blink Fucntion; somewhat regular blinking, but not exactly even nor completely random.
                 var offsetTicks = Math.Abs(pawn.HashOffsetTicks());
                 if (Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89))) < 1) __result = false;
             }
-
+            
             return __result;
         }
     }

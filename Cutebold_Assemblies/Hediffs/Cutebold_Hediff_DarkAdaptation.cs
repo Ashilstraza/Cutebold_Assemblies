@@ -1,10 +1,10 @@
 ﻿
 using RimWorld;
 using RimWorld.Planet;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System;
 using UnityEngine;
 using Verse;
 using static AlienRace.AlienPartGenerator;
@@ -39,8 +39,10 @@ namespace Cutebold_Assemblies
     public class HediffCompProperties_CuteboldDarkAdaptation : HediffCompProperties
     {
 #pragma warning disable IDE0044 // Ignore add readonly modifier: these should always be set in the .xml
-        /// <summary>How much we should gain/lose per day max.</summary>
-        private float maxSeverityPerDay = 0.1f;
+        /// <summary>How much we should gain per day max.</summary>
+        private float maxSeverityGainPerDay = 0.1f;
+        /// <summary>How much we should lose per day max.</summary>
+        private float maxSeverityLossPerDay = -0.25f;
         /// <summary>The maximum light level before losing severity.</summary>
         private float maxLightLevel = 0.5f;
         /// <summary>The minimum light level before gaining severity.</summary>
@@ -53,8 +55,10 @@ namespace Cutebold_Assemblies
 #pragma warning restore CS0649
 #pragma warning restore IDE0044
 
-        /// <summary>How much we should gain/lose per day max.</summary>
-        public float MaxSeverityPerDay => maxSeverityPerDay;
+        /// <summary>How much we should gain per day max.</summary>
+        public float MaxSeverityGainPerDay => maxSeverityGainPerDay;
+        /// <summary>How much we should gain per day max.</summary>
+        public float MaxSeverityLossPerDay => maxSeverityLossPerDay;
         /// <summary>The maximum light level before losing severity.</summary>
         public float MaxLightLevel => maxLightLevel;
         /// <summary>The minimum light level before gaining severity.</summary>
@@ -97,13 +101,17 @@ namespace Cutebold_Assemblies
                     yield return "A lightDarkAdjustment has both a light and/or dark value along with a multiplier, the light and/or dark value will be used instead of the multiplier.";
                 }
             }
-            if (maxSeverityPerDay == 0.0f)
+            if (maxSeverityGainPerDay == 0.0f)
             {
-                yield return "HediffCompProperties_CuteboldDarkAdaptation maxSeverityPerDay is 0.";
+                yield return "HediffCompProperties_CuteboldDarkAdaptation maxSeverityGainPerDay is 0.";
             }
-            else if (Prefs.DevMode && maxSeverityPerDay != 0.1f)
+            else if (maxSeverityLossPerDay == 0.0f)
             {
-                Log.Error("You are either debugging or forgot to switch max severity back. Don't upload.");
+                yield return "HediffCompProperties_CuteboldDarkAdaptation maxSeverityLossPerDay is 0.";
+            }
+            else if (Prefs.DevMode && (maxSeverityGainPerDay != 0.1f || maxSeverityLossPerDay != -0.25f))
+            {
+                Log.Error("You are either debugging, modifying cutebold adaptation, or forgot to switch max severity back. Don't upload.");
             }
             if (minLightLevel > maxLightLevel)
             {
@@ -113,7 +121,7 @@ namespace Cutebold_Assemblies
             {
                 yield return "HediffCompProperties_CuteboldDarkAdaptation lightDarkAdjustment is null.";
             }
-            
+
         }
     }
 
@@ -166,8 +174,8 @@ namespace Cutebold_Assemblies
         protected virtual float SeverityChangePerDay()
         {
             if (!CanSee) return 0f;
-            if (IgnoreLightLevel || LightLevel < MinLightLevel) return Props.MaxSeverityPerDay;
-            else if (LightLevel > MaxLightLevel) return -Props.MaxSeverityPerDay * 2;
+            if (IgnoreLightLevel || LightLevel < MinLightLevel) return Props.MaxSeverityGainPerDay;
+            else if (LightLevel > MaxLightLevel) return Props.MaxSeverityLossPerDay;
             else return 0f;
         }
 
@@ -343,8 +351,6 @@ namespace Cutebold_Assemblies
 
             if (pawn.IsHashIntervalTick(60))
             {
-                // 1.1          lightLevel = CheckLightLevel();
-
                 UpdateCuteboldCompProperties();
 
                 if (updateGlowCurve || (lastIndex != CurStageIndex))

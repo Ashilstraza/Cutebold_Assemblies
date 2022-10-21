@@ -145,6 +145,7 @@ namespace Cutebold_Assemblies
                 settingEntries.CheckboxLabeled("Cutebold_Settings_SunSickness".Translate(), ref settings.ignoreSickness, "Cutebold_Settings_SunSickness_Tooltip".Translate());
                 settingEntries.CheckboxLabeled("Cutebold_Settings_EyeGlow".Translate(), ref settings.glowEyes, "Cutebold_Settings_EyeGlow_ToolTip".Translate());
                 settingEntries.CheckboxLabeled("Cutebold_Settings_EyeGlowBlink".Translate(tab), ref settings.blinkEyes, "Cutebold_Settings_EyeGlowBlink_ToolTip".Translate(), !settings.glowEyes);
+#if !RW1_1 && !RW1_2
                 if (settingEntries.AltButtonTextLabeled("Cutebold_Settings_Ideology_Darkness".Translate(), settings.darknessOptions.ToStringHuman(), tooltip: (ModLister.IdeologyInstalled ? "Cutebold_Settings_Ideology_Darkness_ToolTip".Translate() : "Cutebold_Settings_Ideology_Darkness_ToolTip_NoIdeology".Translate()), disabled: !ModLister.IdeologyInstalled))
                 {
                     List<FloatMenuOption> options = new List<FloatMenuOption>();
@@ -155,13 +156,14 @@ namespace Cutebold_Assemblies
                             settings.darknessOptions = option;
                         });
                         floatOption.tooltip = option.GetTooltip();
-                        
+
                         options.Add(floatOption);
                     }
                     Find.WindowStack.Add(new FloatMenu(options));
                 }
+#endif
             }
-            
+
             if (Prefs.DevMode)
             {
                 settingEntries.Gap(36);
@@ -171,7 +173,7 @@ namespace Cutebold_Assemblies
                 {
                     Cutebold_Assemblies.CheckPatchedMethods();
                 }
-                if (settingEntries.AltButtonTextLabeled("Cutebold_Settings_FixTongues".Translate(), "Cutebold_Settings_FixTongues_Button".Translate(), height: Text.LineHeight*2, tooltip: "Cutebold_Settings_FixTongues_ToolTip".Translate()))
+                if (settingEntries.AltButtonTextLabeled("Cutebold_Settings_FixTongues".Translate(), "Cutebold_Settings_FixTongues_Button".Translate(), height: Text.LineHeight * 2, tooltip: "Cutebold_Settings_FixTongues_ToolTip".Translate()))
                 {
                     Cutebold_Assemblies.FixTonguedHediffs();
                 }

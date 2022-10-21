@@ -29,30 +29,30 @@ namespace Cutebold_Assemblies
             if (settings.extraYield && ModLister.GetActiveModWithIdentifier("syrchalis.harvestyieldpatch") == null)
             {
 
-                if (settings.eyeAdaptation)
-                {
-                    adaptation = true;
-
-                    // Insert Dark Adaptation bonus yield explination
-                    harmony.Patch(AccessTools.Method(typeof(StatWorker), "GetExplanationUnfinalized"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldGetExplanationUnfinalizedPostfix"));
-                }
+                if (settings.eyeAdaptation) adaptation = true;
 
                 if (settings.altYield) // Use Postfixes
                 {
                     // Tweaks Mining Yield for Cutebolds
                     harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldTrySpawnYieldMiningPostfix"));
                     // Tweaks Harvist Yield for Cutebolds
+#if RWPre1_3
                     harmony.Patch(AccessTools.Method(typeof(JobDriver_PlantWork), "MakeNewToils"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkPostfix"));
+#endif
                 }
                 else // Use Transpilers
                 {
                     // Tweaks Mining Yield for Cutebolds
                     harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldTrySpawnYieldMiningTranspiler"));
                     // Tweaks Harvist Yield for Cutebolds
+#if RWPre1_3
                     var plantWorkToilMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_PlantWork).GetNestedTypes(AccessTools.all).First()).ElementAt(1);
                     harmony.Patch(plantWorkToilMethod, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkTranspiler"));
+#endif
                 }
 
+                // Insert bonus yield explination
+                harmony.Patch(AccessTools.Method(typeof(StatWorker), "GetExplanationUnfinalized"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldGetExplanationUnfinalizedPostfix"));
                 // Edits the stats in the stat bio window to be the correct value.
                 harmony.Patch(AccessTools.Method(typeof(StatsReportUtility), "StatsToDraw", new[] { typeof(Thing) }), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldStatsToDrawPostfix"));
 
@@ -88,8 +88,11 @@ namespace Cutebold_Assemblies
             if (___yieldPct >= 1f && extraPercent > 0f)
             {
                 Thing minedMaterial = ThingMaker.MakeThing(__instance.def.building.mineableThing);
+#if RW1_1
+                minedMaterial.stackCount = GenMath.RoundRandom(__instance.def.building.mineableYield * extraPercent);
+#else
                 minedMaterial.stackCount = GenMath.RoundRandom(__instance.def.building.EffectiveMineableYield * extraPercent);
-// 1.1          minedMaterial.stackCount = GenMath.RoundRandom(__instance.def.building.mineableYield * extraPercent);
+#endif
                 GenPlace.TryPlaceThing(minedMaterial, __instance.Position, map, ThingPlaceMode.Near, ForbidIfNecessary);
             }
 
@@ -115,15 +118,19 @@ namespace Cutebold_Assemblies
             MethodInfo calculateExtraPercent = AccessTools.Method(typeof(Cutebold_Patch_Stats), nameof(CuteboldCalculateExtraPercent));
             FieldInfo def = AccessTools.Field(typeof(Thing), nameof(Thing.def));
             FieldInfo building = AccessTools.Field(typeof(ThingDef), nameof(ThingDef.building));
-            MethodInfo getEffectiveMineableYield = AccessTools.Method(typeof(BuildingProperties), "get_EffectiveMineableYield");
-// 1.1      FieldInfo mineableYield = AccessTools.Field(typeof(BuildingProperties), "mineableYield");
             MethodInfo roundRandom = AccessTools.Method(typeof(GenMath), nameof(GenMath.RoundRandom), new[] { typeof(float) });
             FieldInfo stackCount = AccessTools.Field(typeof(Thing), nameof(Thing.stackCount));
             int pawn = 4;
+
+#if RW1_1
+            FieldInfo mineableYield = AccessTools.Field(typeof(BuildingProperties), "mineableYield");
+            OpCode getNum = OpCodes.Ldloc_0;
+            OpCode storeNum = OpCodes.Stloc_0;
+#else
+            MethodInfo getEffectiveMineableYield = AccessTools.Method(typeof(BuildingProperties), "get_EffectiveMineableYield");
             OpCode getNum = OpCodes.Ldloc_1;
             OpCode storeNum = OpCodes.Stloc_1;
-// 1.1      OpCode getNum = OpCodes.Ldloc_0;
-// 1.1      OpCode storeNum = OpCodes.Stloc_0;
+#endif
 
             List<CodeInstruction> instructionList = instructions.ToList();
             int instructionListCount = instructionList.Count;
@@ -145,8 +152,11 @@ namespace Cutebold_Assemblies
                 new CodeInstruction(OpCodes.Ldarg_0), // Load this
                 new CodeInstruction(OpCodes.Ldfld, def), // Load def
                 new CodeInstruction(OpCodes.Ldfld, building), // Load building
+#if RW1_1
+                new CodeInstruction(OpCodes.Ldfld, mineableYield), // Load mineableYield
+#else
                 new CodeInstruction(OpCodes.Callvirt, getEffectiveMineableYield), // Call virtual get_EffectiveMineableYield()
-// 1.1          new CodeInstruction(OpCodes.Ldfld, mineableYield), // Load mineableYield
+#endif
                 new CodeInstruction(OpCodes.Conv_R4), // Converts result of get_EffectiveMineableYield to a float
                 new CodeInstruction(OpCodes.Mul), // Multiplies effective yield and extra percent together
                 new CodeInstruction(OpCodes.Call, roundRandom), // Call RoundRandom(float)
@@ -171,6 +181,96 @@ namespace Cutebold_Assemblies
             }
         }
 
+        /// Changed into a transpiler.
+        /// <summary>
+        /// Replaces the plant harvest toil of a cutebold to allow them to harvest over 100%.
+        /// </summary>
+        /// <param name="__result">The previous output from the original toil generator.</param>
+        /// <param name="__instance">The plant job.</param>
+        /// <returns>A headache. (The new toils)</returns>
+        private static IEnumerable<Toil> CuteboldMakeNewToilsPlantWorkPostfix(IEnumerable<Toil> __result, JobDriver_PlantWork __instance)
+        {
+            //Log.Message("CuteboldMakeNewToilsPlantWorkPostfix");
+
+            foreach (Toil toil in __result)
+            {
+                if (toil.tickAction != null && __instance.pawn?.def.defName == Cutebold_Assemblies.RaceName)
+                {
+                    //Log.Message("  Edit Toil");
+
+                    // Shamelessly taken from the base code and modified to allow cutebolds to harvest just that little bit more with their small, delicate hands.
+                    // Two Traverses are used to access protected methods that are overwritten by classes that overwrite the defaults.
+                    toil.tickAction = delegate ()
+                    {
+                        Pawn actor = toil.actor;
+                        Map map = actor.Map;
+                        float xpPerTick = (float)Traverse.Create(__instance).Field("xpPerTick").GetValue();
+
+                        if (actor.skills != null) actor.skills.Learn(SkillDefOf.Plants, xpPerTick);
+
+                        float workSpeed = actor.GetStatValue(StatDefOf.PlantWorkSpeed, true);
+                        Plant plant = (Plant)__instance.job.targetA.Thing;
+
+                        workSpeed *= UnityEngine.Mathf.Lerp(3.3f, 1f, plant.Growth);
+                        var workDoneVariable = Traverse.Create(__instance).Field("workDone");
+                        float workDone = (float)workDoneVariable.GetValue() + workSpeed;
+                        workDoneVariable.SetValue(workDone);
+
+                        if ((workDone) >= plant.def.plant.harvestWork)
+                        {
+                            if (plant.def.plant.harvestedThingDef != null)
+                            {
+#if RWPre1_3
+                                StatDef stat = StatDefOf.PlantHarvestYield;
+#else
+                                StatDef stat = (plant.def.plant.harvestedThingDef.IsDrug ? StatDefOf.DrugHarvestYield : StatDefOf.PlantHarvestYield);
+#endif
+                                var req = StatRequest.For(actor);
+
+                                float yieldMultiplier = (StatUtility.GetStatValueFromList(req.StatBases, stat, 1f) + CuteboldCalculateExtraPercent(stat, req));
+                                if (actor.RaceProps.Humanlike && plant.def.plant.harvestFailable && !plant.Blighted && Rand.Value > yieldMultiplier)
+                                {
+                                    MoteMaker.ThrowText((__instance.pawn.DrawPos + plant.DrawPos) / 2f, map, "TextMote_HarvestFailed".Translate(), 3.65f);
+                                }
+                                else
+                                {
+                                    int currentYield = GenMath.RoundRandom(plant.YieldNow() * yieldMultiplier);
+
+                                    //Log.Message("  Pawn Additional Harvest Percent=" + calculateExtraPercent(StatDefOf.PlantHarvestYield, StatRequest.For(actor)));
+                                    //Log.Message("  Plant Yield Before=" + plant.YieldNow() + " Plant Yield After=" + currentYield);
+
+                                    if (currentYield > 0)
+                                    {
+                                        Thing product = ThingMaker.MakeThing(plant.def.plant.harvestedThingDef, null);
+
+                                        product.stackCount = currentYield;
+
+                                        if (actor.Faction != Faction.OfPlayer) product.SetForbidden(true);
+
+                                        Find.QuestManager.Notify_PlantHarvested(actor, product);
+                                        GenPlace.TryPlaceThing(product, actor.Position, map, ThingPlaceMode.Near);
+                                        actor.records.Increment(RecordDefOf.PlantsHarvested);
+                                    }
+                                }
+                            }
+                            plant.def.plant.soundHarvestFinish.PlayOneShot(actor);
+#if RWPre1_3
+                            plant.PlantCollected();
+#elif RW1_3
+                            plant.PlantCollected(__instance.pawn);
+#else
+                            plant.PlantCollected(__instance.pawn, PlantDestructionMode.Smash);
+#endif
+                            workDoneVariable.SetValue(0f);
+                            __instance.ReadyForNextToil();
+                            return;
+                        }
+                    };
+                }
+                yield return toil;
+            }
+        }
+
         /// <summary>
         /// Allows for cutebolds to exceed the max harvesting yield.
         /// </summary>
@@ -185,13 +285,18 @@ namespace Cutebold_Assemblies
             MethodInfo calculateExtraPercent = AccessTools.Method(typeof(Cutebold_Patch_Stats), nameof(CuteboldCalculateExtraPercent));
             MethodInfo roundRandom = AccessTools.Method(typeof(GenMath), nameof(GenMath.RoundRandom), new[] { typeof(float) });
 
+            LocalBuilder statRequestVar = ilGenerator.DeclareLocal(typeof(StatRequest));
+
             List<CodeInstruction> instructionList = instructions.ToList();
             int instructionListCount = instructionList.Count;
 
             /*
              * See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
              * 
-             * int num2 = GenMath.RoundRandom((float)plant.YieldNow() * (1f + Cutebold_Patch_Stats.CuteboldCalculateExtraPercent(StatDefOf.PlantHarvestYield, StatRequest.For(actor), true)));
+             * StatRequest statRequestVar = 
+             * int num2 = GenMath.RoundRandom((float)plant.YieldNow() * (StatUtility.GetStatValueFromList(statRequestVar.StatBases, StatDefOf.PlantHarvestYield, 1f) + Cutebold_Patch_Stats.CuteboldCalculateExtraPercent(StatDefOf.PlantHarvestYield, StatRequest.For(actor), true)));
+             * 
+             * int num2 = GenMath.RoundRandom((float)plant.YieldNow() * (1f + Cutebold_Patch_Stats.CuteboldCalculateExtraPercent(StatDefOf.PlantHarvestYield, statRequestVar, true)));
              * 
              */
             List<CodeInstruction> extraYield = new List<CodeInstruction>()
@@ -268,96 +373,17 @@ namespace Cutebold_Assemblies
         {
             Pawn pawn = req.Pawn ?? (req.Thing is Pawn ? (Pawn)req.Thing : null);
 
-            if (pawn?.def != Cutebold_Assemblies.AlienRaceDef || ___stat != StatDefOf.MiningYield) return;
+            if (!adaptation || pawn?.def != Cutebold_Assemblies.AlienRaceDef || ___stat != StatDefOf.MiningYield) return;
 
-            float rawPercent = CuteboldCalculateExtraPercent(___stat, req, false);
+            float extraPercent = CuteboldCalculateExtraPercent(___stat, req, false)- CuteboldGetIdeoStatOffset(pawn, ___stat);
             float multiplier = MiningMultiplier(pawn);
             StringBuilder stringBuilder = new StringBuilder(__result);
 
+            stringBuilder.AppendLine("");
             stringBuilder.AppendLine("Cutebold_DarkAdaptation_StatString".Translate());
-            stringBuilder.AppendLine("Cutebold_DarkAdaptation_StatPercentString".Translate(rawPercent.ToStringPercent(), multiplier.ToStringPercent(), (rawPercent * multiplier).ToStringPercent()));
-
+            stringBuilder.AppendLine("Cutebold_DarkAdaptation_StatPercentString".Translate(extraPercent.ToStringPercent(), (extraPercent/multiplier).ToStringPercent(), multiplier.ToStringPercent()));
+                
             __result = stringBuilder.ToString();
-        }
-
-        /// Changed into a transpiler.
-        /// <summary>
-        /// Replaces the plant harvest toil of a cutebold to allow them to harvest over 100%.
-        /// </summary>
-        /// <param name="__result">The previous output from the original toil generator.</param>
-        /// <param name="__instance">The plant job.</param>
-        /// <returns>A headache. (The new toils)</returns>
-        private static IEnumerable<Toil> CuteboldMakeNewToilsPlantWorkPostfix(IEnumerable<Toil> __result, JobDriver_PlantWork __instance)
-        {
-            //Log.Message("CuteboldMakeNewToilsPlantWorkPostfix");
-
-            foreach (Toil toil in __result)
-            {
-                if (toil.tickAction != null && __instance.pawn?.def.defName == Cutebold_Assemblies.RaceName)
-                {
-                    //Log.Message("  Edit Toil");
-
-                    // Shamelessly taken from the base code and modified to allow cutebolds to harvest just that little bit more with their small, delicate hands.
-                    // Two Traverses are used to access protected methods that are overwritten by classes that overwrite the defaults.
-                    toil.tickAction = delegate ()
-                    {
-                        Pawn actor = toil.actor;
-                        Map map = actor.Map;
-                        float xpPerTick = (float)Traverse.Create(__instance).Field("xpPerTick").GetValue();
-
-                        if (actor.skills != null) actor.skills.Learn(SkillDefOf.Plants, xpPerTick);
-
-                        float workSpeed = actor.GetStatValue(StatDefOf.PlantWorkSpeed, true);
-                        Plant plant = (Plant)__instance.job.targetA.Thing;
-
-                        workSpeed *= UnityEngine.Mathf.Lerp(3.3f, 1f, plant.Growth);
-                        var workDoneVariable = Traverse.Create(__instance).Field("workDone");
-                        float workDone = (float)workDoneVariable.GetValue() + workSpeed;
-                        workDoneVariable.SetValue(workDone);
-
-                        if ((workDone) >= plant.def.plant.harvestWork)
-                        {
-                            if (plant.def.plant.harvestedThingDef != null)
-                            {
-                                StatDef stat = (plant.def.plant.harvestedThingDef.IsDrug ? StatDefOf.DrugHarvestYield : StatDefOf.PlantHarvestYield);
-// 1.1                          StatDef stat = StatDefOf.PlantHarvestYield;
-                                float yieldMultiplier = (1f + CuteboldCalculateExtraPercent(stat, StatRequest.For(actor)));
-                                if (actor.RaceProps.Humanlike && plant.def.plant.harvestFailable && !plant.Blighted && Rand.Value > yieldMultiplier)
-                                {
-                                    MoteMaker.ThrowText((__instance.pawn.DrawPos + plant.DrawPos) / 2f, map, "TextMote_HarvestFailed".Translate(), 3.65f);
-                                }
-                                else
-                                {
-                                    int currentYield = GenMath.RoundRandom(plant.YieldNow() * yieldMultiplier);
-
-                                    //Log.Message("  Pawn Additional Harvest Percent=" + calculateExtraPercent(StatDefOf.PlantHarvestYield, StatRequest.For(actor)));
-                                    //Log.Message("  Plant Yield Before=" + plant.YieldNow() + " Plant Yield After=" + currentYield);
-
-                                    if (currentYield > 0)
-                                    {
-                                        Thing product = ThingMaker.MakeThing(plant.def.plant.harvestedThingDef, null);
-
-                                        product.stackCount = currentYield;
-
-                                        if (actor.Faction != Faction.OfPlayer) product.SetForbidden(true);
-
-                                        Find.QuestManager.Notify_PlantHarvested(actor, product);
-                                        GenPlace.TryPlaceThing(product, actor.Position, map, ThingPlaceMode.Near);
-                                        actor.records.Increment(RecordDefOf.PlantsHarvested);
-                                    }
-                                }
-                            }
-                            plant.def.plant.soundHarvestFinish.PlayOneShot(actor);
-                            plant.PlantCollected(__instance.pawn);
-// 1.1                      plant.PlantCollected();
-                            workDoneVariable.SetValue(0f);
-                            __instance.ReadyForNextToil();
-                            return;
-                        }
-                    };
-                }
-                yield return toil;
-            }
         }
 
         /// <summary>
@@ -375,12 +401,53 @@ namespace Cutebold_Assemblies
 
             float rawPercent = stat.Worker.GetValueUnfinalized(req, false);
             float pawnBasePercent = StatUtility.GetStatValueFromList(req.StatBases, stat, 1f);
-            float defaultMaxPercent = stat.maxValue;
+            //float maxPercent = stat.maxValue;
             float adaptationMultiplier = MiningMultiplier(pawn, useMultiplier);
 
-            float extraPercent = (rawPercent < defaultMaxPercent) ? 0f : (rawPercent - defaultMaxPercent) * adaptationMultiplier;
+            float ideoOffset = CuteboldGetIdeoStatOffset(pawn, stat);
+
+            float extraPercent = (rawPercent < pawnBasePercent) ? 0f : (rawPercent - pawnBasePercent - ideoOffset) * adaptationMultiplier + ideoOffset;
 
             return (extraPercent > 0f) ? extraPercent : 0f;
+        }
+
+        /// <summary>
+        /// Returns the sum of any ideo stat offsets that modify the given stat.
+        /// </summary>
+        /// <param name="req">Request containing the pawn to test</param>
+        /// <param name="stat">The stat to look for</param>
+        /// <returns>Sum of all ideo stat offsets with the given stat</returns>
+        private static float CuteboldGetIdeoStatOffset(StatRequest req, StatDef stat)
+        {
+            Pawn pawn = req.Pawn ?? (req.Thing is Pawn ? (Pawn)req.Thing : null);
+
+            return CuteboldGetIdeoStatOffset(pawn, stat);
+        }
+
+        /// <summary>
+        /// Returns the sum of any ideo stat offsets that modify the given stat.
+        /// </summary>
+        /// <param name="pawn">Pawn to test</param>
+        /// <param name="stat">The stat to look for</param>
+        /// <returns>Sum of all ideo stat offsets with the given stat</returns>
+        private static float CuteboldGetIdeoStatOffset(Pawn pawn, StatDef stat)
+        {
+            float finalOffset = 0f;
+#if !RWPre1_3
+            if (pawn?.Ideo != null)
+            {
+
+                List<Precept> precepts = pawn.Ideo.PreceptsListForReading;
+
+                foreach (Precept p in precepts)
+                {
+                    float offset = p.def.statOffsets.GetStatOffsetFromList(stat);
+
+                    if (offset != 0f) finalOffset += offset;
+                }
+            }
+#endif
+            return finalOffset;
         }
 
         /// <summary>

@@ -513,6 +513,7 @@ namespace Cutebold_Assemblies
             FieldInfo vectorY = AccessTools.Field(typeof(Vector3), "y");
             object onHeadLoc = null;
 
+            int stlocCount = 0;
             bool found = false;
             bool nextDraw = false;
             float offset = 0.0005f;
@@ -596,11 +597,18 @@ namespace Cutebold_Assemblies
             {
                 CodeInstruction instruction = instructionList[i];
 
-                if (!found && instructionList[i + 10].OperandIs(drawMeshNowOrLater))
+                if(instruction.opcode == OpCodes.Stloc_1)
+                {
+                    stlocCount++;
+                    if(stlocCount == 2)
+                    {
+                        onHeadLoc = instructionList[i + 3].operand;
+                    }
+                }
+
+                if(!found && instructionList[i + 2].opcode == OpCodes.Ldfld && instructionList[i + 2].operand == onHeadLoc)
                 {
                     found = true;
-
-                    onHeadLoc = instructionList[i + 2].operand;
 
                     foreach (CodeInstruction codeInstruction in checkForGoggles)
                     {

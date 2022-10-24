@@ -98,6 +98,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Hediffs\Cutebold_Hediff_LightSickness.cs" />
+    <Compile Include="Patches\TestCode.cs" />
     <Compile Include="Patches\Cutebold_Patch_BodyAddons.cs" />
     <Compile Include="Patches\Cutebold_Patch_HediffRelated.cs" />
     <Compile Include="Patches\Cutebold_Patch_Names.cs" />

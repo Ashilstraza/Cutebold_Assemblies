@@ -69,6 +69,10 @@ namespace Cutebold_Assemblies
             new Cutebold_Patch_Stats(harmony);
 
             new Cutebold_Patch_HediffRelated(harmony);
+
+#if !RWPre1_4
+            new Patches.TestCode(harmony); // Patches for allowing custom LifeStageDefs
+#endif
         }
 
         /// <summary>

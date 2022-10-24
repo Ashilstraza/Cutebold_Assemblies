@@ -173,13 +173,13 @@ namespace Cutebold_Assemblies
             var adulthood = pawn.story.adulthood;
 #else
             RulePackDef rulePack = pawn.Faction?.ideos?.PrimaryCulture.pawnNameMaker;
-    #if RW1_3
+#if RW1_3
             var childhood = pawn.story.childhood;
             var adulthood = pawn.story.adulthood;
-    #else
+#else
             var childhood = pawn.story.Childhood;
             var adulthood = pawn.story.Adulthood;
-    #endif
+#endif
 #endif
             // Cutebolds with no faction pawn name maker
             if (rulePack == null)
@@ -228,10 +228,10 @@ namespace Cutebold_Assemblies
             }
             else if (childhood != null && !childhood.ToString().StartsWith("Cutebold")) // Non-Cutebold backstory, sometimes generate with a cutebold outsider name
             {
-                if(rulePack == Cutebold_DefOf.NamerPersonCutebold || Rand.Range(1, 100) <= 50)
+                if (rulePack == Cutebold_DefOf.NamerPersonCutebold || Rand.Range(1, 100) <= 50)
                 {
                     rulePack = pawn.gender == Verse.Gender.Female ? Cutebold_DefOf.NamerPersonCuteboldOutsiderFemale : Cutebold_DefOf.NamerPersonCuteboldOutsider;
-                }                
+                }
             }
 
             if (rulePack != null)

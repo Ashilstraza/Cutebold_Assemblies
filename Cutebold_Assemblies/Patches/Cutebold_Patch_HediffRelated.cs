@@ -756,7 +756,7 @@ namespace Cutebold_Assemblies
                     onHeadLoc = instructionList[i - 1].operand;
                 }
 
-                if (i>2 && instructionList[i - 2].OperandIs(forceRenderUnderHair)) hit++;
+                if (i > 2 && instructionList[i - 2].OperandIs(forceRenderUnderHair)) hit++;
 
                 if (hit == 2 && instructionList[i - 1].opcode == OpCodes.Callvirt) callVirt++;
 
@@ -764,7 +764,7 @@ namespace Cutebold_Assemblies
                 {
                     for (int j = 0; j < 15; j++)
                     {
-                        if(instructionList[i+j].opcode == localVariable)
+                        if (instructionList[i + j].opcode == localVariable)
                         {
                             localVariableValue = instructionList[i + j].operand;
                             break;
@@ -778,7 +778,7 @@ namespace Cutebold_Assemblies
                             codeInstruction.operand = onHeadLoc;
                         }
 
-                        if(codeInstruction.opcode == localVariable && codeInstruction.operand == null)
+                        if (codeInstruction.opcode == localVariable && codeInstruction.operand == null)
                         {
                             codeInstruction.operand = localVariableValue;
                         }

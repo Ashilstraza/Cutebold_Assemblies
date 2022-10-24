@@ -182,7 +182,7 @@ namespace Cutebold_Assemblies
                 {
                     body.path = $"{graphicsPaths.body.path}Naked_{body.bodytype}";
 
-                    foreach(var genderedBody in body.genderGraphics)
+                    foreach (var genderedBody in body.genderGraphics)
                     {
                         genderedBody.path = $"{graphicsPaths.body.path}{genderedBody.gender}Naked_{body.bodytype}";
                     }
@@ -193,7 +193,7 @@ namespace Cutebold_Assemblies
                     var headTypePath = System.IO.Path.GetFileName(head.headType.graphicPath);
                     head.path = graphicsPaths.head.path + headTypePath.Substring(headTypePath.IndexOf('_') + 1);
 
-                    foreach(var generedHead in head.genderGraphics)
+                    foreach (var generedHead in head.genderGraphics)
                     {
                         generedHead.path = graphicsPaths.head.path + headTypePath;
                     }
@@ -247,7 +247,7 @@ namespace Cutebold_Assemblies
                 var offsetTicks = Math.Abs(pawn.HashOffsetTicks());
                 if (Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89))) < 1) __result = false;
             }
-            
+
             return __result;
         }
     }

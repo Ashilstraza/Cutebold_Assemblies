@@ -375,14 +375,14 @@ namespace Cutebold_Assemblies
 
             if (!adaptation || pawn?.def != Cutebold_Assemblies.AlienRaceDef || ___stat != StatDefOf.MiningYield) return;
 
-            float extraPercent = CuteboldCalculateExtraPercent(___stat, req, false)- CuteboldGetIdeoStatOffset(pawn, ___stat);
+            float extraPercent = CuteboldCalculateExtraPercent(___stat, req, false) - CuteboldGetIdeoStatOffset(pawn, ___stat);
             float multiplier = MiningMultiplier(pawn);
             StringBuilder stringBuilder = new StringBuilder(__result);
 
             stringBuilder.AppendLine("");
             stringBuilder.AppendLine("Cutebold_DarkAdaptation_StatString".Translate());
-            stringBuilder.AppendLine("Cutebold_DarkAdaptation_StatPercentString".Translate(extraPercent.ToStringPercent(), (extraPercent/multiplier).ToStringPercent(), multiplier.ToStringPercent()));
-                
+            stringBuilder.AppendLine("Cutebold_DarkAdaptation_StatPercentString".Translate(extraPercent.ToStringPercent(), (extraPercent / multiplier).ToStringPercent(), multiplier.ToStringPercent()));
+
             __result = stringBuilder.ToString();
         }
 

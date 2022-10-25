@@ -48,7 +48,7 @@ namespace Cutebold_Assemblies
             }
 
             // Don't patch if CE is running, we will use that to put goggles below headgear.
-            if (ModLister.GetActiveModWithIdentifier("CETeam.CombatExtended") == null)
+            if (ModLister.GetActiveModWithIdentifier("CETeam.CombatExtended") == null && ModLister.GetActiveModWithIdentifier("OskarPotocki.VanillaFactionsExpanded.Core") == null)
             {
                 // Adjust layer offset for cutebold goggles.
                 //Harmony.DEBUG = true;

@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RimWorld;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -26,30 +27,58 @@ namespace Cutebold_Assemblies
         public Cutebold_Patch_Stats(Harmony harmony)
         {
             var settings = Cutebold_Assemblies.CuteboldSettings;
+
             if (settings.extraYield && ModLister.GetActiveModWithIdentifier("syrchalis.harvestyieldpatch") == null)
             {
 
                 if (settings.eyeAdaptation) adaptation = true;
 
-                if (settings.altYield) // Use Postfixes
+                bool miningAltYield = true;
+
+                try
                 {
-                    // Tweaks Mining Yield for Cutebolds
-                    harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldTrySpawnYieldMiningPostfix"));
-                    // Tweaks Harvist Yield for Cutebolds
-#if RWPre1_3
-                    harmony.Patch(AccessTools.Method(typeof(JobDriver_PlantWork), "MakeNewToils"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkPostfix"));
-#endif
+                    if (!settings.altYield)
+                    {
+                        harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldTrySpawnYieldMiningTranspiler"));
+                        miningAltYield = false;
+                    }
                 }
-                else // Use Transpilers
+                catch (Exception e)
                 {
-                    // Tweaks Mining Yield for Cutebolds
-                    harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldTrySpawnYieldMiningTranspiler"));
-                    // Tweaks Harvist Yield for Cutebolds
-#if RWPre1_3
-                    var plantWorkToilMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_PlantWork).GetNestedTypes(AccessTools.all).First()).ElementAt(1);
-                    harmony.Patch(plantWorkToilMethod, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkTranspiler"));
-#endif
+                    Log.Error($"{Cutebold_Assemblies.ModName}: Exception when trying to apply CuteboldTrySpawnYieldMiningTranspiler, falling back to postfix. Please notify the author for the cutebold mod with the logs. Thanks!\n{e}");
                 }
+                finally
+                {
+                    if(miningAltYield || settings.altYield)
+                    {
+                        harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldTrySpawnYieldMiningPostfix"));
+                    }
+                }
+
+#if RWPre1_3
+                bool plantAltYield = true;
+
+                try
+                {
+                    if (!settings.altYield)
+                    {
+                        var plantWorkToilMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_PlantWork).GetNestedTypes(AccessTools.all).First()).ElementAt(1);
+                        harmony.Patch(plantWorkToilMethod, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkTranspiler"));
+                        miningAltYield = false;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"{Cutebold_Assemblies.ModName}: Exception when trying to apply CuteboldMakeNewToilsPlantWorkTranspiler, falling back to postfix. Please notify the author for the cutebold mod with the logs. Thanks!\n{e}");
+                }
+                finally
+                {
+                    if (miningAltYield || settings.altYield)
+                    {
+                        harmony.Patch(AccessTools.Method(typeof(JobDriver_PlantWork), "MakeNewToils"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkPostfix"));
+                    }
+                }
+#endif
 
                 // Insert bonus yield explination
                 harmony.Patch(AccessTools.Method(typeof(StatWorker), "GetExplanationUnfinalized"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldGetExplanationUnfinalizedPostfix"));
@@ -57,6 +86,11 @@ namespace Cutebold_Assemblies
                 harmony.Patch(AccessTools.Method(typeof(StatsReportUtility), "StatsToDraw", new[] { typeof(Thing) }), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldStatsToDrawPostfix"));
 
             }
+        }
+
+        private void YieldTranspilers()
+        {
+
         }
 
         /// Convered into a transpiler.

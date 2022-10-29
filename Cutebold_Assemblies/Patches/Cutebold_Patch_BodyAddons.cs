@@ -4,6 +4,7 @@ using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 using Verse;
 
 namespace Cutebold_Assemblies
@@ -26,13 +27,9 @@ namespace Cutebold_Assemblies
         /// <summary>Reference to our harmony instance.</summary>
         private static Harmony harmonyRef;
         /// <summary>Reference to the CanDrawAddon method.</summary>
-#if RWPre1_4
-        private static readonly System.Reflection.MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), "CanDrawAddon");
-#else
         private static readonly System.Reflection.MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), "CanDrawAddon", new[] {
             typeof(Pawn)
         });
-#endif
 
         /// <summary>Our prefix to the CanDrawAddon method.</summary>
         private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldCanDrawAddonPrefix");
@@ -51,6 +48,8 @@ namespace Cutebold_Assemblies
                 harmonyRef = harmony;
                 CuteboldAddonModifier(Cutebold_Assemblies.CuteboldSettings);
                 harmonyRef.Patch(canDrawAddonRef, prefix: cuteboldCanDrawAddonPrefixRef);
+
+                //harmonyRef.Patch(AccessTools.Method(typeof(HarmonyPatches), "DrawAddonsFinalHook"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldDrawAddonsFinalHookPostfix"));
 
                 initialized = true;
             }
@@ -249,6 +248,41 @@ namespace Cutebold_Assemblies
             }
 
             return __result;
+        }
+
+        /// <summary>
+        /// Custom fixes for body addons
+        /// </summary>
+        /// <param name="pawn"></param>
+        /// <param name="ba"></param>
+        /// <param name="rot"></param>
+        /// <param name="addonGraphic"></param>
+        /// <param name="offsetVector"></param>
+        /// <param name="angle"></param>
+        /// <param name="mat"></param>
+        private static void CuteboldDrawAddonsFinalHookPostfix(Pawn pawn, AlienPartGenerator.BodyAddon ba, Rot4 rot, ref Graphic addonGraphic, ref Vector3 offsetVector, ref float angle, ref Material mat)
+        {
+            /*AlienPartGenerator.AlienComp alienComp = pawn.GetComp<AlienPartGenerator.AlienComp>();
+            bool isPortrait = false;
+
+            addonGraphic.drawSize = (isPortrait && ba.drawSizePortrait != Vector2.zero ? 
+                                        ba.drawSizePortrait : 
+                                        ba.drawSize
+                                        ) * (ba.scaleWithPawnDrawsize ?
+                                            ba.alignWithHead ?
+                                                (isPortrait ?
+                                                    alienComp.customPortraitHeadDrawSize :
+                                                    alienComp.customHeadDrawSize
+                                                ) * (ModsConfig.BiotechActive ?
+                                                    (pawn.ageTracker.CurLifeStage.headSizeFactor ?? 1f) * 1.5f :
+                                                    1.5f) :
+                                                (isPortrait ?
+                                                    alienComp.customPortraitDrawSize :
+                                                    alienComp.customDrawSize
+                                                ) * (ModsConfig.BiotechActive ?
+                                                    pawn.ageTracker.CurLifeStage.bodySizeFactor :
+                                                    1) * 1.5f :
+                                        Vector2.one * 1.5f);*/
         }
     }
 }

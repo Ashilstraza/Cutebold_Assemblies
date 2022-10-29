@@ -1,5 +1,6 @@
 ﻿using HarmonyLib;
 using RimWorld;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -47,37 +48,45 @@ namespace Cutebold_Assemblies
                 harmony.Patch(AccessTools.Method(typeof(Pawn), "SpawnSetup"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldNoAdaptationSpawnSetupPostfix"));
             }
 
-            // Don't patch if CE is running, we will use that to put goggles below headgear.
-            if (ModLister.GetActiveModWithIdentifier("CETeam.CombatExtended") == null && ModLister.GetActiveModWithIdentifier("OskarPotocki.VanillaFactionsExpanded.Core") == null)
+            try
             {
-                // Adjust layer offset for cutebold goggles.
-                //Harmony.DEBUG = true;
+                // Don't patch if CE is running, we will use that to put goggles below headgear.
+                if (ModLister.GetActiveModWithIdentifier("CETeam.CombatExtended") == null/* && ModLister.GetActiveModWithIdentifier("OskarPotocki.VanillaFactionsExpanded.Core") == null*/)
+                {
+                    // Adjust layer offset for cutebold goggles.
+                    //Harmony.DEBUG = true;
 
 #if RWPre1_3
-                harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
-                                    typeof(Vector3),
-                                    typeof(float),
-                                    typeof(bool),
-                                    typeof(Rot4),
-                                    typeof(Rot4),
-                                    typeof(RotDrawMode),
-                                    typeof(bool),
-                                    typeof(bool),
-                                    typeof(bool)
-                                }), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
+                    harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
+                                        typeof(Vector3),
+                                        typeof(float),
+                                        typeof(bool),
+                                        typeof(Rot4),
+                                        typeof(Rot4),
+                                        typeof(RotDrawMode),
+                                        typeof(bool),
+                                        typeof(bool),
+                                        typeof(bool)
+                                    }), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
 #elif RW1_3
-                //Hat rendering was moved to a local function to make things even more fun to patch!
-                MethodInfo toBePatched = AccessTools.GetDeclaredMethods(typeof(PawnRenderer)).ElementAt(29);
-                harmony.Patch(toBePatched, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
+                    //Hat rendering was moved to a local function to make things even more fun to patch!
+
+                    // VFE uses typeof(PawnRenderer).GetMethods(AccessTools.all).FirstOrDefault((MethodInfo x) => x.Name.Contains("<DrawHeadHair>") && x.Name.Contains("DrawApparel"));
+                    MethodInfo toBePatched = AccessTools.GetDeclaredMethods(typeof(PawnRenderer)).ElementAt(29);
+                    harmony.Patch(toBePatched, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
 #elif RW1_4
-                // Can access a point outside of the local function
-                MethodInfo toBePatched = AccessTools.Method(typeof(PawnRenderer), "DrawHeadHair");
-                harmony.Patch(toBePatched, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
+                    // Can access a point outside of the local function
+                    MethodInfo toBePatched = AccessTools.Method(typeof(PawnRenderer), "DrawHeadHair");
+                    harmony.Patch(toBePatched, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
 #else
 #warning Goggle patch disabled.
 #endif
-
-                //Harmony.DEBUG = false;
+                    //Harmony.DEBUG = false;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error($"{Cutebold_Assemblies.ModName}: Exception when trying to apply CuteboldGogglesFixTranspiler. Please notify the author for the cutebold mod with the logs. Thanks!\n{e}");
             }
         }
 
@@ -499,6 +508,7 @@ namespace Cutebold_Assemblies
         /// <param name="instructions">The instructions we are messing with.</param>
         /// <param name="ilGenerator">The IDGenerator that allows us to create local variables and labels.</param>
         /// <returns>All the code!</returns>
+        [HarmonyPriority(Priority.HigherThanNormal)]
         private static IEnumerable<CodeInstruction> CuteboldGogglesFixTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
         {
             MethodInfo drawMeshNowOrLater = AccessTools.Method(typeof(GenDraw), "DrawMeshNowOrLater", new[] {
@@ -511,9 +521,9 @@ namespace Cutebold_Assemblies
             FieldInfo apparelDef = AccessTools.Field(typeof(Thing), "def");
             FieldInfo gogglesDef = AccessTools.Field(typeof(Cutebold_DefOf), "Cutebold_Goggles");
             FieldInfo vectorY = AccessTools.Field(typeof(Vector3), "y");
-            object onHeadLoc = null;
+            FieldInfo graphic = AccessTools.Field(typeof(ApparelGraphicRecord), "graphic");
+            object onHeadLoc = AccessTools.Field(typeof(PawnRenderer).GetNestedTypes(AccessTools.all).First<Type>(), "onHeadLoc");
 
-            int stlocCount = 0;
             bool found = false;
             bool nextDraw = false;
             float offset = 0.0005f;
@@ -550,9 +560,9 @@ namespace Cutebold_Assemblies
                 new CodeInstruction(OpCodes.Brfalse, notGoggles), // If not, jump to regular execution*
                 
                     new CodeInstruction(OpCodes.Ldarg_2), // Loads reference to parent method
-                    new CodeInstruction(OpCodes.Ldflda, null), // Loads the address to onHeadLoc field (TO BE REPLACED ON RUNTIME)
+                    new CodeInstruction(OpCodes.Ldflda, onHeadLoc), // Loads the address to onHeadLoc field
                     new CodeInstruction(OpCodes.Ldarg_2), // Loads reference to parent method
-                    new CodeInstruction(OpCodes.Ldflda, null), // Loads the address to onHeadLoc field (TO BE REPLACED ON RUNTIME)
+                    new CodeInstruction(OpCodes.Ldflda, onHeadLoc), // Loads the address to onHeadLoc field
                     new CodeInstruction(OpCodes.Ldfld, vectorY), // Gets the onHeadLoc.y
                     new CodeInstruction(OpCodes.Ldc_R4, offset), // Loads the offset
                     new CodeInstruction(OpCodes.Sub), // Subtract offset from onHeadLoc.y
@@ -580,9 +590,9 @@ namespace Cutebold_Assemblies
                 new CodeInstruction(OpCodes.Brfalse, done), // Check if modified is false and if it is, jump done)
 
                     new CodeInstruction(OpCodes.Ldarg_2), // Loads reference to parent method
-                    new CodeInstruction(OpCodes.Ldflda, null), // Loads the address to onHeadLoc field (TO BE REPLACED ON RUNTIME)
+                    new CodeInstruction(OpCodes.Ldflda, onHeadLoc), // Loads the address to onHeadLoc field
                     new CodeInstruction(OpCodes.Ldarg_2), // Loads reference to parent method
-                    new CodeInstruction(OpCodes.Ldflda, null), // Loads the address to onHeadLoc field (TO BE REPLACED ON RUNTIME)
+                    new CodeInstruction(OpCodes.Ldflda, onHeadLoc), // Loads the address to onHeadLoc field
                     new CodeInstruction(OpCodes.Ldfld, vectorY), // Gets the onHeadLoc.y
                     new CodeInstruction(OpCodes.Ldc_R4, offset), // Loads the offset
                     new CodeInstruction(OpCodes.Add), // Subtract offset from onHeadLoc.y
@@ -597,25 +607,12 @@ namespace Cutebold_Assemblies
             {
                 CodeInstruction instruction = instructionList[i];
 
-                if(instruction.opcode == OpCodes.Stloc_1)
-                {
-                    stlocCount++;
-                    if(stlocCount == 2)
-                    {
-                        onHeadLoc = instructionList[i + 3].operand;
-                    }
-                }
-
-                if(!found && instructionList[i + 2].opcode == OpCodes.Ldfld && instructionList[i + 2].operand == onHeadLoc)
+                if(!found && i+1 < instructionList.Count && instructionList[i+1].OperandIs(graphic))
                 {
                     found = true;
 
                     foreach (CodeInstruction codeInstruction in checkForGoggles)
                     {
-                        if (codeInstruction.opcode == OpCodes.Ldflda && codeInstruction.operand == null)
-                        {
-                            codeInstruction.operand = onHeadLoc;
-                        }
                         //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
                         yield return codeInstruction;
                     }
@@ -626,10 +623,6 @@ namespace Cutebold_Assemblies
                 {
                     foreach (CodeInstruction codeInstruction in revertChange)
                     {
-                        if (codeInstruction.opcode == OpCodes.Ldflda && codeInstruction.operand == null)
-                        {
-                            codeInstruction.operand = onHeadLoc;
-                        }
                         //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
                         yield return codeInstruction;
                     }
@@ -642,6 +635,8 @@ namespace Cutebold_Assemblies
 
                 yield return instruction;
             }
+
+            if (!found) Log.Error($"{Cutebold_Assemblies.ModName}: Goggle transpiler failed. Please notify the author for the cutebold mod. Thanks!");
         }
 #elif RW1_4
         /// <summary>

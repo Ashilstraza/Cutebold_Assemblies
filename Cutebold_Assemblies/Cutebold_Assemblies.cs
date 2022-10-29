@@ -4,6 +4,7 @@ using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Verse;
 
 namespace Cutebold_Assemblies
@@ -71,7 +72,7 @@ namespace Cutebold_Assemblies
             new Cutebold_Patch_HediffRelated(harmony);
 
 #if !RWPre1_4
-            new Patches.TestCode(harmony); // Patches for allowing custom LifeStageDefs
+            new Patches.Alien_Patches(harmony); // Patches for allowing custom LifeStageDefs
 #endif
         }
 
@@ -239,57 +240,60 @@ namespace Cutebold_Assemblies
         /// <summary>
         /// Runs a check on all the methods we patch and outputs all the patches for those methods regardless of which mod it came from.
         /// </summary>
-        public static void CheckPatchedMethods()
+        public static void CheckPatchedMethods(bool allMethods = false)
         {
-            Log.Warning($"{ModName}: Checking Patched Methods...");
+            StringBuilder stringBuilder = new StringBuilder($"{ModName}: Checking Patched Methods...\n");
             var patchedMethods = harmony.GetPatchedMethods();
+            if (allMethods) patchedMethods = Harmony.GetAllPatchedMethods();
 
             foreach (var method in patchedMethods)
             {
                 var patches = Harmony.GetPatchInfo(method);
 
-                Log.Warning($"    {method.Name}");
+                stringBuilder.AppendLine($"    {method.Name}");
 
                 if (patches != null)
                 {
                     if (patches.Prefixes.Count > 0)
                     {
-                        Log.Warning($"        Prefixes:");
+                        stringBuilder.AppendLine($"        Prefixes:");
                         foreach (var patch in patches.Prefixes)
-                            patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
+                            stringBuilder.AppendLine(patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}"));
                     }
                     if (patches.Postfixes.Count > 0)
                     {
-                        Log.Warning($"        Postfixes:");
+                        stringBuilder.AppendLine($"        Postfixes:");
                         foreach (var patch in patches.Postfixes)
-                            patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
+                            stringBuilder.AppendLine(patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}"));
                     }
                     if (patches.Transpilers.Count > 0)
                     {
-                        Log.Warning($"        Transpilers:");
+                        stringBuilder.AppendLine($"        Transpilers:");
                         foreach (var patch in patches.Transpilers)
-                            patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
+                            stringBuilder.AppendLine(patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}"));
                     }
                     if (patches.Finalizers.Count > 0)
                     {
-                        Log.Warning($"        Finalziers:");
+                        stringBuilder.AppendLine($"        Finalziers:");
                         foreach (var patch in patches.Finalizers)
-                            patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}");
+                            stringBuilder.AppendLine(patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}"));
                     }
                 }
                 else
                 {
-                    Log.Warning($"        Patches is null");
+                    stringBuilder.AppendLine($"Error: Patches is null");
                 }
             }
 
-            Log.Warning($"    End of Check");
+            stringBuilder.AppendLine($"    End of Check");
 
-            void patchOutput(Patch patch, string patchText)
+            string patchOutput(Patch patch, string patchText)
             {
-                if (patch.owner == HarmonyID) Log.Message("            " + patchText);
-                else Log.Warning("            " + patchText);
+                if (patch.owner == HarmonyID) return "Cb        " + patchText;
+                else return "            " + patchText;
             }
+
+            Log.Message(stringBuilder.ToString().TrimEndNewlines());
         }
 
         /// <summary>

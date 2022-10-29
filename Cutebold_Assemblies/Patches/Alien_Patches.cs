@@ -5,30 +5,32 @@ using System.Linq;
 using System.Text;
 using Verse;
 
+#if !RWPre1_4
 namespace Cutebold_Assemblies.Patches
 {
-    public class TestCode
+    public class Alien_Patches
     {
-        public TestCode(Harmony harmony)
-        {
-            var testCodeMethodType = typeof(TestCode);
+        public static List<string> RaceList { get; private set; } = new List<string>();
 
-            //var Building_Bed_ForHumanBabies = AccessTools.Method(typeof(Building_Bed), "get_ForHumanBabies"); Only for checking beds to see if it is the size of a human baby crib
+        public Alien_Patches(Harmony harmony)
+        {
+            var thisClass = typeof(Alien_Patches);
+
             var incidentWorker_Disease_CanAddHediffToAnyPartOfDef = AccessTools.Method(typeof(IncidentWorker_Disease), "CanAddHediffToAnyPartOfDef");
             var iTab_Pawn_Gear_IsVisible = AccessTools.Method(typeof(ITab_Pawn_Gear), "get_IsVisible");
             var pawn_IdeoTracker_CertaintyChangeFactor = AccessTools.Method(typeof(Pawn_IdeoTracker), "get_CertaintyChangeFactor");
-            //var roomRoleWorker_Nursery_GetScore = AccessTools.Method(typeof(RoomRoleWorker_Nursery), "GetScore"); Only for checking bed sizes 
-            //var socialCardUtility_IdeoligionChooseAge = AccessTools.Method(typeof(SocialCardUtility), "get_IdeoligionChooseAge"); Appears to only be for debug purposes on humans?
             var hediffGiver_TryApply = AccessTools.Method(typeof(HediffGiver), "TryApply");
 
+            Alien_AddRaceToPatch(Cutebold_Assemblies.RaceName);
+
             string alienRaceID = "rimworld.erdelf.alien_race.main";
-            StringBuilder stringBuilder = new StringBuilder("Temporary patches to allow for custom racial life stages, provided by the Cutebold Mod.\n");
+            StringBuilder stringBuilder = new StringBuilder("Temporary patches to allow for custom racial life stages, provided by the Cutebold Mod.\nIf you want your race to use these patches, call Cutebold_Assemblies.Patches.Alien_Patches.Alien_AddRaceToPatch() with the string of your race def to add them!\n");
             bool patches = false;
 
             if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(IncidentWorker_Disease), "CanAddHediffToAnyPartOfDef"))?.Prefixes?.Any(patch => patch.owner == alienRaceID) ?? true)
             {
                 stringBuilder.AppendLine("  Patching IncidentWorker_Disease.CanAddHediffToAnyPartOfDef");
-                harmony.Patch(incidentWorker_Disease_CanAddHediffToAnyPartOfDef, prefix: new HarmonyMethod(testCodeMethodType, "Alien_CanAddHediffToAnyPartOfDef_Prefix"));
+                harmony.Patch(incidentWorker_Disease_CanAddHediffToAnyPartOfDef, prefix: new HarmonyMethod(thisClass, "Alien_CanAddHediffToAnyPartOfDef_Prefix"));
                 patches = true;
             }
 
@@ -36,21 +38,21 @@ namespace Cutebold_Assemblies.Patches
             if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(ITab_Pawn_Gear), "get_IsVisible"))?.Prefixes?.Any(patch => patch.owner == alienRaceID) ?? true)
             {
                 stringBuilder.AppendLine("  Patching ITab_Pawn_Gear.get_IsVisible");
-                harmony.Patch(iTab_Pawn_Gear_IsVisible, prefix: new HarmonyMethod(testCodeMethodType, "Alien_get_IsVisible_Prefix"));
+                harmony.Patch(iTab_Pawn_Gear_IsVisible, prefix: new HarmonyMethod(thisClass, "Alien_get_IsVisible_Prefix"));
                 patches = true;
             }
 
             if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(Pawn_IdeoTracker), "get_CertaintyChangeFactor"))?.Prefixes?.Any(patch => patch.owner == alienRaceID) ?? true)
             {
                 stringBuilder.AppendLine("  Patching Pawn_IdeoTracker.get_CertaintyChangeFactor");
-                harmony.Patch(pawn_IdeoTracker_CertaintyChangeFactor, prefix: new HarmonyMethod(testCodeMethodType, "Alien_CertaintyChangeFactor_Prefix"));
+                harmony.Patch(pawn_IdeoTracker_CertaintyChangeFactor, prefix: new HarmonyMethod(thisClass, "Alien_CertaintyChangeFactor_Prefix"));
                 patches = true;
             }
 
             if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(HediffGiver), "TryApply"))?.Prefixes?.Any(patch => patch.owner == alienRaceID) ?? true)
             {
                 stringBuilder.AppendLine("  Patching HediffGiver.TryApply");
-                harmony.Patch(hediffGiver_TryApply, prefix: new HarmonyMethod(testCodeMethodType, "Alien_TryApply_Prefix"));
+                harmony.Patch(hediffGiver_TryApply, prefix: new HarmonyMethod(thisClass, "Alien_TryApply_Prefix"));
                 patches = true;
             }
 
@@ -58,11 +60,27 @@ namespace Cutebold_Assemblies.Patches
         }
 
         /// <summary>
+        /// Adds a given alien race to the list of races to allow for the racial life stage patches.
+        /// </summary>
+        /// <param name="alienRace">String name of the alien race defName</param>
+        /// <returns>Returns true if the race was added to the list, false if it was not.</returns>
+        public static bool Alien_AddRaceToPatch(string alienRace)
+        {
+            if (!RaceList.Contains(alienRace) && DefDatabase<ThingDef>.AllDefs.Where(thingDef => thingDef.race != null && thingDef.race.Humanlike && thingDef.defName == alienRace).Count() > 0)
+            {
+                RaceList.Add(alienRace);
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
         /// Patch is for when the "Babies always healthy" Storyteller option is enabled.
         /// </summary>
         public static bool Alien_CanAddHediffToAnyPartOfDef_Prefix(ref bool __result, Pawn pawn)
         {
-            if (pawn.ageTracker.CurLifeStage.developmentalStage.Baby() && Find.Storyteller.difficulty.babiesAreHealthy)
+            if (RaceList.Contains(pawn.def.defName) && pawn.ageTracker.CurLifeStage.developmentalStage.Baby() && Find.Storyteller.difficulty.babiesAreHealthy)
             {
                 __result = false;
                 return false;
@@ -76,9 +94,9 @@ namespace Cutebold_Assemblies.Patches
         /// </summary>
         public static bool Alien_get_IsVisible_Prefix(ITab_Pawn_Gear __instance, ref bool __result)
         {
-            var selPawnForGear = Traverse.Create(__instance).Method("get_SelPawnForGear").GetValue<Pawn>();
+            var pawn = Traverse.Create(__instance).Method("get_SelPawnForGear").GetValue<Pawn>();
 
-            if (selPawnForGear.ageTracker.CurLifeStage.developmentalStage.Baby())
+            if (RaceList.Contains(pawn.def.defName) && pawn.ageTracker.CurLifeStage.developmentalStage.Baby())
             {
                 __result = false;
                 return false;
@@ -94,8 +112,12 @@ namespace Cutebold_Assemblies.Patches
         {
             var pawn = Traverse.Create(__instance).Field("pawn").GetValue<Pawn>();
 
-            __result = CertaintyCurve(pawn);
-            return false;
+            if (RaceList.Contains(pawn.def.defName))
+            {
+                __result = CertaintyCurve(pawn);
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -142,7 +164,7 @@ namespace Cutebold_Assemblies.Patches
         /// </summary>
         public static bool Alien_TryApply_Prefix(HediffGiver __instance, ref bool __result, Pawn pawn)
         {
-            if (pawn.ageTracker.CurLifeStage.developmentalStage.Baby() && Find.Storyteller.difficulty.babiesAreHealthy)
+            if (RaceList.Contains(pawn.def.defName) && pawn.ageTracker.CurLifeStage.developmentalStage.Baby() && Find.Storyteller.difficulty.babiesAreHealthy)
             {
                 __result = false;
                 return false;
@@ -152,3 +174,4 @@ namespace Cutebold_Assemblies.Patches
         }
     }
 }
+#endif

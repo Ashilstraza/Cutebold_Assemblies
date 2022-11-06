@@ -24,7 +24,8 @@ namespace Cutebold_Assemblies.Patches
             Alien_AddRaceToPatch(Cutebold_Assemblies.RaceName);
 
             string alienRaceID = "rimworld.erdelf.alien_race.main";
-            StringBuilder stringBuilder = new StringBuilder("Temporary patches to allow for custom racial life stages, provided by the Cutebold Mod.\nIf you want your race to use these patches, call Cutebold_Assemblies.Patches.Alien_Patches.Alien_AddRaceToPatch() with the string of your race def to add them!\n\n(This may disappear when HAR adds this ability.)");
+            //StringBuilder stringBuilder = new StringBuilder("Temporary patches to allow for custom racial life stages, provided by the Cutebold Mod.\nIf you want your race to use these patches, call Cutebold_Assemblies.Patches.Alien_Patches.Alien_AddRaceToPatch() with the string of your race def to add them!\n\n(This may disappear when HAR adds this ability.)");
+            StringBuilder stringBuilder = new StringBuilder();
             bool patches = false;
 
             if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(IncidentWorker_Disease), "CanAddHediffToAnyPartOfDef"))?.Prefixes?.Any(patch => patch.owner == alienRaceID) ?? true)

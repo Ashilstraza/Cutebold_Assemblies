@@ -48,8 +48,9 @@ namespace Cutebold_Assemblies
                 harmonyRef = harmony;
                 CuteboldAddonModifier(Cutebold_Assemblies.CuteboldSettings);
                 harmonyRef.Patch(canDrawAddonRef, prefix: cuteboldCanDrawAddonPrefixRef);
-
-                //harmonyRef.Patch(AccessTools.Method(typeof(HarmonyPatches), "DrawAddonsFinalHook"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldDrawAddonsFinalHookPostfix"));
+#if RW1_4
+                harmonyRef.Patch(AccessTools.Method(typeof(HarmonyPatches), "DrawAddonsFinalHook"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldDrawAddonsFinalHookPostfix"));
+#endif
 
                 initialized = true;
             }
@@ -249,7 +250,7 @@ namespace Cutebold_Assemblies
 
             return __result;
         }
-
+#if RW1_4
         /// <summary>
         /// Custom fixes for body addons
         /// </summary>
@@ -260,29 +261,27 @@ namespace Cutebold_Assemblies
         /// <param name="offsetVector"></param>
         /// <param name="angle"></param>
         /// <param name="mat"></param>
-        private static void CuteboldDrawAddonsFinalHookPostfix(Pawn pawn, AlienPartGenerator.BodyAddon ba, Rot4 rot, ref Graphic addonGraphic, ref Vector3 offsetVector, ref float angle, ref Material mat)
+        private static void CuteboldDrawAddonsFinalHookPostfix(Pawn pawn, AlienPartGenerator.BodyAddon addon, Rot4 rot, ref Graphic graphic, ref Vector3 offsetVector, ref float angle, ref Material mat)
         {
-            /*AlienPartGenerator.AlienComp alienComp = pawn.GetComp<AlienPartGenerator.AlienComp>();
+            AlienPartGenerator.AlienComp alienComp = pawn.GetComp<AlienPartGenerator.AlienComp>();
+            var ba = addon;
+            var addonGraphic = graphic;
             bool isPortrait = false;
 
-            addonGraphic.drawSize = (isPortrait && ba.drawSizePortrait != Vector2.zero ? 
-                                        ba.drawSizePortrait : 
-                                        ba.drawSize
-                                        ) * (ba.scaleWithPawnDrawsize ?
-                                            ba.alignWithHead ?
-                                                (isPortrait ?
-                                                    alienComp.customPortraitHeadDrawSize :
-                                                    alienComp.customHeadDrawSize
-                                                ) * (ModsConfig.BiotechActive ?
-                                                    (pawn.ageTracker.CurLifeStage.headSizeFactor ?? 1f) * 1.5f :
-                                                    1.5f) :
-                                                (isPortrait ?
-                                                    alienComp.customPortraitDrawSize :
-                                                    alienComp.customDrawSize
-                                                ) * (ModsConfig.BiotechActive ?
-                                                    pawn.ageTracker.CurLifeStage.bodySizeFactor :
-                                                    1) * 1.5f :
-                                        Vector2.one * 1.5f);*/
+            // Temporary, included in dev version of HAR
+
+            addonGraphic.drawSize = (isPortrait && ba.drawSizePortrait != Vector2.zero ? ba.drawSizePortrait : ba.drawSize) *
+                                            (ba.scaleWithPawnDrawsize ?
+                                                 (ba.alignWithHead ?
+                                                     (isPortrait ?
+                                                         alienComp.customPortraitHeadDrawSize :
+                                                         alienComp.customHeadDrawSize) :
+                                                     (isPortrait ?
+                                                         alienComp.customPortraitDrawSize :
+                                                         alienComp.customDrawSize)
+                                                     ) * (ModsConfig.BiotechActive ? pawn.ageTracker.CurLifeStage.bodyWidth ?? 1.5f : 1.5f)
+                                                 : Vector2.one * 1.5f);
         }
+#endif
     }
 }

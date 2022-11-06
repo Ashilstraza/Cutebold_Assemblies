@@ -27,8 +27,9 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.13")]
+[assembly: AssemblyVersion("1.0.14")]
 
+// 1.0.14 Changes to allow for nicer interactions with transpilers and enable goggle layering
 // 1.0.13 Fix for VFE fuckery
 // 1.0.12 Rimworld 1.4 compatability
 // 1.0.11 Changed settings UI to be able to be translated.

@@ -1,7 +1,10 @@
-﻿using HarmonyLib;
+﻿using AlienRace;
+using HarmonyLib;
 using RimWorld;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
 using Verse;
 
@@ -21,7 +24,7 @@ namespace Cutebold_Assemblies.Patches
             var pawn_IdeoTracker_CertaintyChangeFactor = AccessTools.Method(typeof(Pawn_IdeoTracker), "get_CertaintyChangeFactor");
             var hediffGiver_TryApply = AccessTools.Method(typeof(HediffGiver), "TryApply");
 
-            Alien_AddRaceToPatch(Cutebold_Assemblies.RaceName);
+            Alien_RacesToPatch();
 
             string alienRaceID = "rimworld.erdelf.alien_race.main";
             //StringBuilder stringBuilder = new StringBuilder("Temporary patches to allow for custom racial life stages, provided by the Cutebold Mod.\nIf you want your race to use these patches, call Cutebold_Assemblies.Patches.Alien_Patches.Alien_AddRaceToPatch() with the string of your race def to add them!\n\n(This may disappear when HAR adds this ability.)");
@@ -43,10 +46,10 @@ namespace Cutebold_Assemblies.Patches
                 patches = true;
             }
 
-            if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(Pawn_IdeoTracker), "get_CertaintyChangeFactor"))?.Prefixes?.Any(patch => patch.owner == alienRaceID) ?? true)
+            if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(Pawn_IdeoTracker), "get_CertaintyChangeFactor"))?.Transpilers?.Any(patch => !patch.owner.NullOrEmpty()) ?? true)
             {
                 stringBuilder.AppendLine("  Patching Pawn_IdeoTracker.get_CertaintyChangeFactor");
-                harmony.Patch(pawn_IdeoTracker_CertaintyChangeFactor, prefix: new HarmonyMethod(thisClass, "Alien_CertaintyChangeFactor_Prefix"));
+                harmony.Patch(pawn_IdeoTracker_CertaintyChangeFactor, transpiler: new HarmonyMethod(thisClass, "Alien_CertaintyChangeFactor_Transpiler"));
                 patches = true;
             }
 
@@ -65,15 +68,12 @@ namespace Cutebold_Assemblies.Patches
         /// </summary>
         /// <param name="alienRace">String name of the alien race defName</param>
         /// <returns>Returns true if the race was added to the list, false if it was not.</returns>
-        public static bool Alien_AddRaceToPatch(string alienRace)
+        public static void Alien_RacesToPatch()
         {
-            if (!RaceList.Contains(alienRace) && DefDatabase<ThingDef>.AllDefs.Where(thingDef => thingDef.race != null && thingDef.race.Humanlike && thingDef.defName == alienRace).Count() > 0)
+            foreach (var race in DefDatabase<ThingDef>.AllDefs.Where(thingDef => thingDef.race != null && thingDef.race.Humanlike))
             {
-                RaceList.Add(alienRace);
-                return true;
+                RaceList.Add(race.defName);
             }
-
-            return false;
         }
 
         /// <summary>
@@ -107,18 +107,47 @@ namespace Cutebold_Assemblies.Patches
         }
 
         /// <summary>
-        /// Sets the Ideology certainty factor curve for children.
+        /// Destructively replaces the SimpleCurve for the CertaintyChangeFactor
         /// </summary>
-        public static bool Alien_CertaintyChangeFactor_Prefix(Pawn_IdeoTracker __instance, ref float __result)
+        /// <param name="instructions">The instructions we are messing with.</param>
+        /// <param name="ilGenerator">The IDGenerator that allows us to create local variables and labels.</param>
+        /// <returns>The code that is usable.</returns>
+        public static IEnumerable<CodeInstruction> Alien_CertaintyChangeFactor_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
         {
-            var pawn = Traverse.Create(__instance).Field("pawn").GetValue<Pawn>();
+            MethodInfo alienCertaintyChangeFactor = AccessTools.Method(typeof(Alien_Patches), nameof(Alien_Patches.CertaintyCurve));
+            var x = Traverse.Create(typeof(Pawn_IdeoTracker)).Fields()[0];
+            FieldInfo pawn = AccessTools.Field(typeof(Pawn_IdeoTracker), "pawn");
 
-            if (RaceList.Contains(pawn.def.defName))
+            List<CodeInstruction> instructionList = instructions.ToList();
+            int instructionListCount = instructionList.Count;
+
+            /*
+             * See drSpy decompile of PawnIdeo_Tracker.get_CertaintyChangeFactor() for variable references 
+             */
+            List<CodeInstruction> racialCertainty = new List<CodeInstruction>()
             {
-                __result = CertaintyCurve(pawn);
-                return false;
+                new CodeInstruction(OpCodes.Ldarg_0), // Load this
+                new CodeInstruction(OpCodes.Ldfld, pawn), // Load this.pawn
+                new CodeInstruction(OpCodes.Call, alienCertaintyChangeFactor), // Call Alien_CertaintyChangeFactor(pawn)
+                new CodeInstruction(OpCodes.Ret), // Returns the adjusted float from the previous call
+            };
+
+            for (int i = 0; i < instructionListCount; i++)
+            {
+                CodeInstruction instruction = instructionList[i];
+                
+                if (i+1<instructionListCount && instructionList[i].opcode == OpCodes.Ldsfld){
+
+                    racialCertainty[0] = racialCertainty[0].MoveLabelsFrom(instructionList[i]);
+                    foreach (CodeInstruction codeInstruction in racialCertainty)
+                    {
+                        yield return codeInstruction;
+                    }
+                    break;
+                }
+
+                yield return instruction;
             }
-            return true;
         }
 
         /// <summary>
@@ -131,9 +160,9 @@ namespace Cutebold_Assemblies.Patches
         /// </summary>
         /// <param name="pawn">Pawn to check the ideology certainty curve of.</param>
         /// <returns>Float between the values of 2 and 1 depending on how close to an adult the pawn is.</returns>
-        private static float CertaintyCurve(Pawn pawn)
+        public static float CertaintyCurve(Pawn pawn)
         {
-            if (!ModsConfig.BiotechActive || pawn == null) return 1f;
+            if (pawn == null) return 1f;
 
             if (!ideoCurves.ContainsKey(pawn.def))
             {

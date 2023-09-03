@@ -170,7 +170,7 @@ namespace Cutebold_Assemblies
             int instructionListCount = instructionList.Count;
 
             /*
-             * See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
+             * See drSpy decompile of Mineable.TrySpawnYield() for variable references
              *
              * num += GenMath.RoundRandom(
              *          CuteboldCalculateExtraPercent(StatDefOf.MiningYield, StatRequest.For(pawn), true)) *
@@ -325,7 +325,7 @@ namespace Cutebold_Assemblies
             int instructionListCount = instructionList.Count;
 
             /*
-             * See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
+             * See drSpy decompile of JobDriver_PlantWork.MakeNewToils() for variable references
              * 
              * StatRequest statRequestVar = 
              * int num2 = GenMath.RoundRandom((float)plant.YieldNow() * (StatUtility.GetStatValueFromList(statRequestVar.StatBases, StatDefOf.PlantHarvestYield, 1f) + Cutebold_Patch_Stats.CuteboldCalculateExtraPercent(StatDefOf.PlantHarvestYield, StatRequest.For(actor), true)));

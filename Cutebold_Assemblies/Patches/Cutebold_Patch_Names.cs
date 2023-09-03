@@ -71,7 +71,7 @@ namespace Cutebold_Assemblies
                 harmony.Patch(AccessTools.Method(typeof(PawnBioAndNameGenerator), "GeneratePawnName"), prefix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldGeneratePawnNamePrefix"));
                 // Ignores Validation for Player's Cutebold Names on World Gen
                 harmony.Patch(AccessTools.Method(typeof(Page_ConfigureStartingPawns), "CanDoNext"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldCanDoNextPostfix"));
-
+                // Allow for renaming pawns that lack a first and/or last name
                 harmony.Patch(AccessTools.PropertyGetter(typeof(NameTriple), "IsValid"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "Cutebold_NameTriple_IsValidPostfix"));
             }
         }

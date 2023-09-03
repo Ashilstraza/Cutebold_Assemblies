@@ -263,24 +263,6 @@ namespace Cutebold_Assemblies
         /// <param name="mat"></param>
         private static void CuteboldDrawAddonsFinalHookPostfix(Pawn pawn, AlienPartGenerator.BodyAddon addon, Rot4 rot, ref Graphic graphic, ref Vector3 offsetVector, ref float angle, ref Material mat)
         {
-            AlienPartGenerator.AlienComp alienComp = pawn.GetComp<AlienPartGenerator.AlienComp>();
-            var ba = addon;
-            var addonGraphic = graphic;
-            bool isPortrait = false;
-
-            // Temporary, included in dev version of HAR
-
-            addonGraphic.drawSize = (isPortrait && ba.drawSizePortrait != Vector2.zero ? ba.drawSizePortrait : ba.drawSize) *
-                                            (ba.scaleWithPawnDrawsize ?
-                                                 (ba.alignWithHead ?
-                                                     (isPortrait ?
-                                                         alienComp.customPortraitHeadDrawSize :
-                                                         alienComp.customHeadDrawSize) :
-                                                     (isPortrait ?
-                                                         alienComp.customPortraitDrawSize :
-                                                         alienComp.customDrawSize)
-                                                     ) * (ModsConfig.BiotechActive ? pawn.ageTracker.CurLifeStage.bodyWidth ?? 1.5f : 1.5f)
-                                                 : Vector2.one * 1.5f);
         }
 #endif
     }

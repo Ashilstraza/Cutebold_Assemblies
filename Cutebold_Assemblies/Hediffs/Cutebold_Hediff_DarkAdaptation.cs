@@ -322,19 +322,21 @@ namespace Cutebold_Assemblies
             lastLightLevel = LightLevel;
             adaptationComp.LightLevel = CheckLightLevel();
 
-            if ((lastLightLevel >= 30) == (LightLevel < 30))
+            if (((lastLightLevel >= 0.3f) && (LightLevel < 0.3f)) || ((lastLightLevel <= 0.3f) && (LightLevel > 0.3f)))
             {
-                pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                //pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                GlobalTextureAtlasManager.TryMarkPawnFrameSetDirty(pawn);
             }
 
-            if (EyeGlowEnabled && EyeBlink && LightLevel < 30)
+            if (EyeGlowEnabled && EyeBlink && LightLevel < 0.3f)
             {
                 var offsetTicks = Math.Abs(pawn.HashOffsetTicks());
                 var blinkValue = Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89)));
 
                 if ((blinkValue < 1 && blinkLastValue >= 1) || (blinkValue >= 1 && blinkLastValue < 1))
                 {
-                    pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                    //pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                    GlobalTextureAtlasManager.TryMarkPawnFrameSetDirty(pawn);
                 }
 
                 blinkLastValue = blinkValue;

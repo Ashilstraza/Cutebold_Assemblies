@@ -69,8 +69,6 @@ namespace Cutebold_Assemblies
                 }), prefix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldGenerateNamePrefix"));
                 // Generate Cutebold Names
                 harmony.Patch(AccessTools.Method(typeof(PawnBioAndNameGenerator), "GeneratePawnName"), prefix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldGeneratePawnNamePrefix"));
-                // Ignores Validation for Player's Cutebold Names on World Gen
-                harmony.Patch(AccessTools.Method(typeof(Page_ConfigureStartingPawns), "CanDoNext"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldCanDoNextPostfix"));
                 // Allow for renaming pawns that lack a first and/or last name
                 harmony.Patch(AccessTools.PropertyGetter(typeof(NameTriple), "IsValid"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "Cutebold_NameTriple_IsValidPostfix"));
             }
@@ -312,19 +310,6 @@ namespace Cutebold_Assemblies
                 cutebold_Name.ConfusinglySimilarTo(otherName);
             }
             return false;
-        }
-
-        /// <summary>
-        /// Catches the result of the CanDoNext() method when starting a new game and it validates the pawn names.
-        /// </summary>
-        /// <param name="__result">True if everyone's name is valid.</param>
-        [HarmonyPriority(Priority.Low)]
-        private static void CuteboldCanDoNextPostfix(ref bool __result)
-        {
-            if (__result) return;
-
-            if (Find.GameInitData.startingAndOptionalPawns.Any(pawn => !pawn.Name.IsValid && pawn.def.defName == Cutebold_Assemblies.RaceName))
-                __result = true;
         }
 
         private static void Cutebold_NameTriple_IsValidPostfix(ref bool __result, NameTriple __instance)

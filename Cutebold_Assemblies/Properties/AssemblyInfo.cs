@@ -27,8 +27,11 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.14")]
+[assembly: AssemblyVersion("1.0.15")]
 
+// 1.0.15 Allow for renaming pawns that lack a first and/or last name
+// 1.0.14.2 Built against latest versions of HAR and Rimworld as of 2/21/23
+// 1.0.14.1 Built against latest versions of HAR and Rimworld as of 2/3/23
 // 1.0.14 Changes to allow for nicer interactions with transpilers and enable goggle layering
 // 1.0.13 Fix for VFE fuckery
 // 1.0.12 Rimworld 1.4 compatability

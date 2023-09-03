@@ -327,15 +327,6 @@ namespace Cutebold_Assemblies
                 pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
             }
 
-            if (((pawn.CurJob != null && pawn.jobs.curDriver.asleep) != asleep) ||
-                ((pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f) == !unconscious))
-            {
-                asleep = (pawn.CurJob != null && pawn.jobs.curDriver.asleep);
-                unconscious = pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f;
-
-                pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
-            }
-
             if (EyeGlowEnabled && EyeBlink && LightLevel < 30)
             {
                 var offsetTicks = Math.Abs(pawn.HashOffsetTicks());
@@ -351,6 +342,15 @@ namespace Cutebold_Assemblies
 
             if (pawn.IsHashIntervalTick(60))
             {
+                if (((pawn.CurJob != null && pawn.jobs.curDriver.asleep) != asleep) ||
+                ((pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f) == !unconscious))
+                {
+                    asleep = (pawn.CurJob != null && pawn.jobs.curDriver.asleep);
+                    unconscious = pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f;
+
+                    pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                }
+
                 UpdateCuteboldCompProperties();
 
                 if (updateGlowCurve || (lastIndex != CurStageIndex))

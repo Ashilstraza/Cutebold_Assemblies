@@ -71,6 +71,8 @@ namespace Cutebold_Assemblies
                 harmony.Patch(AccessTools.Method(typeof(PawnBioAndNameGenerator), "GeneratePawnName"), prefix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldGeneratePawnNamePrefix"));
                 // Ignores Validation for Player's Cutebold Names on World Gen
                 harmony.Patch(AccessTools.Method(typeof(Page_ConfigureStartingPawns), "CanDoNext"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldCanDoNextPostfix"));
+
+                harmony.Patch(AccessTools.PropertyGetter(typeof(NameTriple), "IsValid"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "Cutebold_NameTriple_IsValidPostfix"));
             }
         }
 
@@ -240,7 +242,7 @@ namespace Cutebold_Assemblies
 
                 if (tempName.Nick.EndsWith("za") && pawn.gender != Gender.Female)
                 {
-                    __result = new NameTriple(tempName.First, tempName.Nick.TrimEnd('a'), tempName.Last);
+                    __result = (NameTriple)(new NameTriple(tempName.First, tempName.Nick.TrimEnd('a'), tempName.Last));
                 }
                 else __result = tempName;
 
@@ -288,7 +290,7 @@ namespace Cutebold_Assemblies
         /// <returns>Returns a new cutebold name.</returns>
         private static NameTriple CuteboldNameResolver(RulePackDef nameMaker, string forcedLastName)
         {
-            NameTriple name = NameTriple.FromString(NameGenerator.GenerateName(nameMaker, null, false, null, null));
+            NameTriple name = (NameTriple)NameTriple.FromString(NameGenerator.GenerateName(nameMaker, null, false, null, null));
             name.Nick.CapitalizeFirst();
             name.ResolveMissingPieces(forcedLastName);
 
@@ -303,26 +305,11 @@ namespace Cutebold_Assemblies
         private static bool CuteboldNameChecker(Name name)
         {
             //Log.Message("Cutebold Name Checker name=" + name.ToString());
-            NameTriple nameTriple = name as NameTriple;
+            NameTriple cutebold_Name = name as NameTriple;
 
-            foreach (Name otherNameTemp in NameUseChecker.AllPawnsNamesEverUsed)
+            foreach (Name otherName in NameUseChecker.AllPawnsNamesEverUsed)
             {
-                var otherName = otherNameTemp as NameTriple;
-
-                if (otherName != null)
-                {
-                    if (!otherName.Nick.NullOrEmpty() && !nameTriple.Nick.NullOrEmpty() && otherName.Nick == nameTriple.Nick)
-                    {
-                        //Log.Message("  Nick already in use.");
-                        return true;
-                    }
-                    if (!otherName.First.NullOrEmpty() && !nameTriple.First.NullOrEmpty() && otherName.First == nameTriple.First
-                        && otherName.Last == nameTriple.Last)
-                    {
-                        //Log.Message("  First and last already in use.");
-                        return true;
-                    }
-                }
+                cutebold_Name.ConfusinglySimilarTo(otherName);
             }
             return false;
         }
@@ -338,6 +325,15 @@ namespace Cutebold_Assemblies
 
             if (Find.GameInitData.startingAndOptionalPawns.Any(pawn => !pawn.Name.IsValid && pawn.def.defName == Cutebold_Assemblies.RaceName))
                 __result = true;
+        }
+
+        private static void Cutebold_NameTriple_IsValidPostfix(ref bool __result, NameTriple __instance)
+        {
+            if (__result) return;
+            if (!__instance.Nick.NullOrEmpty())
+            {
+                __result = true;
+            }
         }
     }
 }

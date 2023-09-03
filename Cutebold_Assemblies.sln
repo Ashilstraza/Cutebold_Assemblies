@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30225.117
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Cutebold_Assemblies", "Cutebold_Assemblies\Cutebold_Assemblies.csproj", "{595E3FE8-C183-4363-83F6-03E75C56D839}"
 EndProject
@@ -12,7 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Cutebold Race(1)", "..\..\..\Rimworld Mods\Cutebold Race\", "{5A69BEA3-C56E-448C-AD87-B4FE665953F0}"
 	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.8"
 		Debug.AspNetCompiler.VirtualPath = "/localhost_64163"
 		Debug.AspNetCompiler.PhysicalPath = "..\..\..\Rimworld Mods\Cutebold Race\"
 		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_64163\"
@@ -37,27 +37,26 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "1.3 Assembly-CSharp", "..\A
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AlienRace", "..\AlienRaces\Source\AlienRace\AlienRace\AlienRace.csproj", "{E7AFA757-436C-40A3-AAFD-66351AA01536}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rimworld 1_4", "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.4 Unstable Debug Copy\Source\Rimworld 1_4.csproj", "{434C209A-85B6-4887-9418-967AEF748D5B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "1.4 Assembly-CSharp", "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.4 Debug Copy\Source\1.4 Assembly-CSharp.csproj", "{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}"
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Data(3)", "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.4 Unstable Debug Copy\Data\", "{9B86F29A-29EB-4244-B936-AC61CD48723A}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Data(4)", "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.4 Debug Copy\Data\", "{8E817130-C5D3-4FB4-9AFB-CA9028F20809}"
 	ProjectSection(WebsiteProperties) = preProject
-		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.0"
-		Debug.AspNetCompiler.VirtualPath = "/localhost_64391"
-		Debug.AspNetCompiler.PhysicalPath = "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.4 Unstable Debug Copy\Data\"
-		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_64391\"
+		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.8"
+		Debug.AspNetCompiler.VirtualPath = "/localhost_63926"
+		Debug.AspNetCompiler.PhysicalPath = "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.4 Debug Copy\Data\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_63926\"
 		Debug.AspNetCompiler.Updateable = "true"
 		Debug.AspNetCompiler.ForceOverwrite = "true"
 		Debug.AspNetCompiler.FixedNames = "false"
 		Debug.AspNetCompiler.Debug = "True"
-		Release.AspNetCompiler.VirtualPath = "/localhost_64391"
-		Release.AspNetCompiler.PhysicalPath = "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.4 Unstable Debug Copy\Data\"
-		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_64391\"
+		Release.AspNetCompiler.VirtualPath = "/localhost_63926"
+		Release.AspNetCompiler.PhysicalPath = "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.4 Debug Copy\Data\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_63926\"
 		Release.AspNetCompiler.Updateable = "true"
 		Release.AspNetCompiler.ForceOverwrite = "true"
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
-		VWDPort = "64391"
-		SlnRelativePath = "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.4 Unstable Debug Copy\Data\"
+		VWDPort = "63926"
 	EndProjectSection
 EndProject
 Global
@@ -138,43 +137,54 @@ Global
 		{E7AFA757-436C-40A3-AAFD-66351AA01536}.1.4 Release|Any CPU.ActiveCfg = Debug|Any CPU
 		{E7AFA757-436C-40A3-AAFD-66351AA01536}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E7AFA757-436C-40A3-AAFD-66351AA01536}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{434C209A-85B6-4887-9418-967AEF748D5B}.1.1 Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{434C209A-85B6-4887-9418-967AEF748D5B}.1.1 Release|Any CPU.ActiveCfg = Release|Any CPU
-		{434C209A-85B6-4887-9418-967AEF748D5B}.1.2 Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{434C209A-85B6-4887-9418-967AEF748D5B}.1.2 Release|Any CPU.ActiveCfg = Release|Any CPU
-		{434C209A-85B6-4887-9418-967AEF748D5B}.1.3 Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{434C209A-85B6-4887-9418-967AEF748D5B}.1.3 Release|Any CPU.ActiveCfg = Release|Any CPU
-		{434C209A-85B6-4887-9418-967AEF748D5B}.1.4 Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{434C209A-85B6-4887-9418-967AEF748D5B}.1.4 Release|Any CPU.ActiveCfg = Release|Any CPU
-		{434C209A-85B6-4887-9418-967AEF748D5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{434C209A-85B6-4887-9418-967AEF748D5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{434C209A-85B6-4887-9418-967AEF748D5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.1 Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.1 Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.1 Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.1 Release|Any CPU.Build.0 = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.2 Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.2 Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.2 Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.2 Release|Any CPU.Build.0 = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.3 Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.3 Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.3 Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.3 Release|Any CPU.Build.0 = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.4 Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.4 Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.1.4 Release|Any CPU.Build.0 = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B86F29A-29EB-4244-B936-AC61CD48723A}.Release|Any CPU.Build.0 = Debug|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.1 Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.1 Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.1 Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.1 Release|Any CPU.Build.0 = Release|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.2 Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.2 Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.2 Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.2 Release|Any CPU.Build.0 = Release|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.3 Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.3 Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.3 Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.3 Release|Any CPU.Build.0 = Release|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.4 Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.4 Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.4 Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.1.4 Release|Any CPU.Build.0 = Release|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.1 Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.1 Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.1 Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.1 Release|Any CPU.Build.0 = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.2 Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.2 Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.2 Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.2 Release|Any CPU.Build.0 = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.3 Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.3 Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.3 Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.3 Release|Any CPU.Build.0 = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.4 Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.4 Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.4 Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.1.4 Release|Any CPU.Build.0 = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.Release|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809}.Release|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{5A69BEA3-C56E-448C-AD87-B4FE665953F0} = {0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}
-		{9B86F29A-29EB-4244-B936-AC61CD48723A} = {0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}
+		{BD41D677-BE50-4C61-83EE-2F6021F4EBAB} = {0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}
+		{8E817130-C5D3-4FB4-9AFB-CA9028F20809} = {0B9224B8-CDD4-4A1B-AE17-ED4D649A8C8F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F130C33D-7A0B-463F-A4D4-12D5EC8D0BF7}

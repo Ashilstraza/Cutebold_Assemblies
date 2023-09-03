@@ -49,7 +49,7 @@ namespace Cutebold_Assemblies
                 CuteboldAddonModifier(Cutebold_Assemblies.CuteboldSettings);
                 harmonyRef.Patch(canDrawAddonRef, prefix: cuteboldCanDrawAddonPrefixRef);
 #if RW1_4
-                harmonyRef.Patch(AccessTools.Method(typeof(HarmonyPatches), "DrawAddonsFinalHook"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldDrawAddonsFinalHookPostfix"));
+                //harmonyRef.Patch(AccessTools.Method(typeof(HarmonyPatches), "DrawAddonsFinalHook"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldDrawAddonsFinalHookPostfix"));
 #endif
 
                 initialized = true;

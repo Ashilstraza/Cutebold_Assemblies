@@ -1,4 +1,5 @@
 ﻿using AlienRace;
+using DubsBadHygiene;
 using HarmonyLib;
 using RimWorld;
 using System.Collections.Generic;
@@ -7,10 +8,14 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using Verse;
+using Verse.AI;
 
 #if !RWPre1_4
 namespace Cutebold_Assemblies.Patches
 {
+    /// <summary>
+    /// Set of patches for all Alien races, provided by the Cutebold mod author
+    /// </summary>
     public class Alien_Patches
     {
         public static List<string> RaceList { get; private set; } = new List<string>();
@@ -27,8 +32,8 @@ namespace Cutebold_Assemblies.Patches
             Alien_RacesToPatch();
 
             string alienRaceID = "rimworld.erdelf.alien_race.main";
-            //StringBuilder stringBuilder = new StringBuilder("Temporary patches to allow for custom racial life stages, provided by the Cutebold Mod.\nIf you want your race to use these patches, call Cutebold_Assemblies.Patches.Alien_Patches.Alien_AddRaceToPatch() with the string of your race def to add them!\n\n(This may disappear when HAR adds this ability.)");
-            StringBuilder stringBuilder = new StringBuilder();
+            
+            StringBuilder stringBuilder = new StringBuilder("Cutebold Mod Provided Alien Patches:");
             bool patches = false;
 
             if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(IncidentWorker_Disease), "CanAddHediffToAnyPartOfDef"))?.Prefixes?.Any(patch => patch.owner == alienRaceID) ?? true)
@@ -38,7 +43,6 @@ namespace Cutebold_Assemblies.Patches
                 patches = true;
             }
 
-            //Optional
             if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(ITab_Pawn_Gear), "get_IsVisible"))?.Prefixes?.Any(patch => patch.owner == alienRaceID) ?? true)
             {
                 stringBuilder.AppendLine("  Patching ITab_Pawn_Gear.get_IsVisible");
@@ -61,6 +65,118 @@ namespace Cutebold_Assemblies.Patches
             }
 
             if (patches) Log.Message(stringBuilder.ToString().TrimEndNewlines());
+            
+            // If Dub's Bad Hygene isn't enabled, don't try to patch that which is not there.
+            if(ModLister.GetActiveModWithIdentifier("Dubwise.DubsBadHygiene") != null && Cutebold_Assemblies.CuteboldSettings.DBH_Patches)
+            {
+                harmony.Patch(AccessTools.Method(typeof(NeedsUtil), "ShouldHaveNeed"), transpiler: new HarmonyMethod(thisClass, "Alien_FixBaby_Transpiler"));
+                harmony.Patch(AccessTools.Method(typeof(WorkGiver_washPatient), "ShouldBeWashed"), transpiler: new HarmonyMethod(thisClass, "Alien_FixBaby_Transpiler"));
+                harmony.Patch(AccessTools.Method(typeof(WorkGiver_washChild), "ShouldBeWashed"), transpiler: new HarmonyMethod(thisClass, "Alien_FixBaby_Transpiler"));
+                harmony.Patch(AccessTools.Method(typeof(WorkGiver_washChild), "PotentialWorkThingsGlobal"), transpiler: new HarmonyMethod(thisClass, "Alien_FixBaby_Transpiler"));
+                harmony.Patch(AccessTools.Method(typeof(Thing), "Ingested"), postfix: new HarmonyMethod(thisClass, "Alien_DBH_IngestedPostfix"));
+                harmony.Patch(AccessTools.Method(typeof(ChildcareUtility), "SuckleFromLactatingPawn"),
+                    prefix: new HarmonyMethod(thisClass, "Alien_DBH_SuckleFromLactatingPawn_Prefix"),
+                    postfix: new HarmonyMethod(thisClass, "Alien_DBH_SuckleFromLactatingPawn_Postfix"));
+            }
+        }
+
+        /// <summary>
+        /// Replaces instances of Pawn.ageTracker.CurLifeStage == LifeStageDefOf.HumanlikeBaby with Pawn.ageTracker.CurLifeStage.developmentalStage.Baby()
+        /// </summary>
+        /// <param name="instructions">The instructions we are messing with.</param>
+        /// <param name="ilGenerator">The IDGenerator that allows us to create local variables and labels.</param>
+        /// <returns></returns>
+        public static IEnumerable<CodeInstruction> Alien_FixBaby_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
+        {
+            FieldInfo humanLikeBaby = AccessTools.Field(typeof(LifeStageDefOf), "HumanlikeBaby");
+            FieldInfo developmentalStage = AccessTools.Field(typeof(LifeStageDef), "developmentalStage");
+            MethodInfo baby = AccessTools.Method(typeof(DevelopmentalStageExtensions), "Baby");
+            
+            List<CodeInstruction> instructionList = instructions.ToList();
+            int instructionListCount = instructionList.Count;
+
+
+            /*
+             *  
+             * Replaces == LifeStageDefOf.HumanlikeBaby with .developmentalStage.Baby()
+             * 
+             */
+            List<CodeInstruction> babyFix = new List<CodeInstruction>()
+            {
+                new CodeInstruction(OpCodes.Ldfld, developmentalStage), // Load developmentStage
+                new CodeInstruction(OpCodes.Call, baby), // Call Baby() on the loaded development stage
+                new CodeInstruction(OpCodes.Brtrue, null) // Branches if true, Operand label to be replaced on runtime
+            };
+
+            for (int i = 0; i < instructionListCount; i++)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (i < instructionListCount && instructionList[i].Is(OpCodes.Ldsfld, humanLikeBaby))
+                {
+                    foreach (CodeInstruction codeInstruction in babyFix)
+                    {
+                        if(codeInstruction.opcode == OpCodes.Brtrue)
+                        {
+                            CodeInstruction tempInstruction = new CodeInstruction(codeInstruction);
+                            // Check if the branch instruction is branching when not equal
+                            if (instructionList[i+1].opcode == OpCodes.Bne_Un_S)
+                            {
+                                tempInstruction.opcode = OpCodes.Brfalse;
+                            }
+
+                            tempInstruction.operand = instructionList[i + 1].operand; // Grab branch label
+
+                            yield return tempInstruction;
+                        }
+                        else yield return codeInstruction;
+                    }
+
+                    i += 2;
+                    instruction = instructionList[i];
+                }
+
+                yield return instruction;
+            }
+        }
+
+        /// <summary>
+        /// Allow for baby suckling to satisfy their thirst need (unused by DBH currently)
+        /// </summary>
+        /// <param name="baby">baby being fed</param>
+        /// <param name="feeder">pawn feeding baby (unused)</param>
+        /// <param name="__state">food level before suckle</param>
+        public static void Alien_DBH_SuckleFromLactatingPawn_Prefix(Pawn baby, Pawn feeder, out float __state)
+        {
+            __state = baby.needs.food.CurLevel;
+        }
+
+        /// <summary>
+        /// Allow for baby suckling to satisfy their thirst need (unused by DBH currently)
+        /// </summary>
+        /// <param name="baby">baby being fed</param>
+        /// <param name="feeder">pawn feeding baby (unused)</param>
+        /// <param name="__state">food level before suckle</param>
+        public static void Alien_DBH_SuckleFromLactatingPawn_Postfix(Pawn baby, Pawn feeder, ref float __state)
+        {
+            var nutritionPercent = baby.needs.food.MaxLevel / (baby.needs.food.CurLevel - __state);
+            baby.needs.TryGetNeed<Need_Thirst>()?.Drink(nutritionPercent+.01f);
+        }
+
+        /// <summary>
+        /// Dirty patch to allow babyfood to satisfy the thirst of a baby without doing an xml patch. (unused by DBH currently)
+        /// </summary>
+        /// <param name="__instance">Item being fed</param>
+        /// <param name="ingester">Pawn being fed</param>
+        /// <param name="__result">Nutrition value</param>
+        public static void Alien_DBH_IngestedPostfix(Thing __instance, Pawn ingester, ref float __result)
+        {
+            if(__instance != null && ingester != null)
+            {
+                if(ingester.ageTracker.CurLifeStage.developmentalStage.Baby() && __instance.def.defName.Equals("BabyFood")){
+                    ingester.needs.TryGetNeed<Need_Thirst>()?.Drink(__result);
+                }
+            }
         }
 
         /// <summary>

@@ -1,6 +1,7 @@
 ﻿using RimWorld;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using UnityEngine;
 using Verse;
 
@@ -78,6 +79,8 @@ namespace Cutebold_Assemblies
         public Cutebold_DarknessOptions darknessOptions = Cutebold_DarknessOptions.CuteboldDefault;
         /// <summary>If sun sickness should be ignored.</summary>
         public bool ignoreSickness = false;
+        /// <summary>If the special patches for Dub's Bad Hygene should be enabled.</summary>
+        public bool DBH_Patches = true;
 
         /// <summary>
         /// Data to be saved.
@@ -92,6 +95,8 @@ namespace Cutebold_Assemblies
             Scribe_Values.Look(ref detachableParts, "detachableParts", true, true);
             Scribe_Values.Look(ref darknessOptions, "darknessOptions", Cutebold_DarknessOptions.CuteboldDefault, true);
             Scribe_Values.Look(ref ignoreSickness, "ignoreSickness", false, true);
+            // Mod Specific
+            Scribe_Values.Look(ref DBH_Patches, "DBH_Patches", true, true);
             base.ExposeData();
         }
     }
@@ -109,6 +114,8 @@ namespace Cutebold_Assemblies
         private readonly bool extraYieldDisabled = ModLister.GetActiveModWithIdentifier("syrchalis.harvestyieldpatch") != null;
         /// <summary>Tab string</summary>
         private readonly string tab = "        ";
+        /// <summary>True if Dub's Bad Hygene is enabled.</summary>
+        private readonly bool DBH_Loaded = ModLister.GetActiveModWithIdentifier("Dubwise.DubsBadHygiene") != null;
 
         /// <summary>
         /// Required constructor to allow for the rest of the mod to be able to use the settings.
@@ -131,10 +138,7 @@ namespace Cutebold_Assemblies
             settingEntries.Begin(inRect);
             settingEntries.SectionLabel("Cutebold_Settings_GeneralLabel".Translate());
             settingEntries.CheckboxLabeled("Cutebold_Settings_ResourceCheckbox".Translate().ToString() + (extraYieldDisabled ? "Cutebold_Settings_ResourceCheckbox_SYR_HarvestYield".Translate().ToString() : ""), ref settings.extraYield, (extraYieldDisabled ? "Cutebold_Settings_ResourceCheckbox_ToolTip_Disabled".Translate() : "Cutebold_Settings_ResourceCheckbox_ToolTip_Enabled".Translate()), extraYieldDisabled);
-            if (Prefs.DevMode)
-            {
-                settingEntries.CheckboxLabeled("Cutebold_Settings_AltYield".Translate(tab), ref settings.altYield, "Cutebold_Settings_AltYield_ToolTip".Translate(), !settings.extraYield);
-            };
+            if (Prefs.DevMode) settingEntries.CheckboxLabeled("Cutebold_Settings_AltYield".Translate(tab), ref settings.altYield, "Cutebold_Settings_AltYield_ToolTip".Translate(), !settings.extraYield);
             settingEntries.CheckboxLabeled("Cutebold_Settings_DarkAdaptation".Translate(), ref settings.eyeAdaptation, "Cutebold_Settings_DarkAdaptation_ToolTip".Translate());
             settingEntries.CheckboxLabeled("Cutebold_Settings_DetachableParts".Translate(), ref settings.detachableParts, "Cutebold_Settings_DetachableParts_ToolTip".Translate());
 
@@ -163,6 +167,9 @@ namespace Cutebold_Assemblies
                 }
 #endif
             }
+
+            settingEntries.SectionLabel("Cutebold_Settings_ModSpecific".Translate());
+            if(DBH_Loaded) settingEntries.CheckboxLabeled("Cutebold_Settings_DBH_Patches".Translate(), ref settings.DBH_Patches, "Cutebold_Settings_DBH_Patches_Tooltip".Translate());
 
             if (Prefs.DevMode)
             {

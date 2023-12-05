@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using Cutebold_Assemblies.Patches;
+using HarmonyLib;
 using RimWorld;
 using System;
 using System.Collections.Generic;
@@ -27,6 +28,7 @@ namespace Cutebold_Assemblies
         public Cutebold_Patch_Stats(Harmony harmony)
         {
             var settings = Cutebold_Assemblies.CuteboldSettings;
+            var thisClass = typeof(Cutebold_Patch_Stats);
 
             if (settings.extraYield && ModLister.GetActiveModWithIdentifier("syrchalis.harvestyieldpatch") == null)
             {
@@ -39,7 +41,7 @@ namespace Cutebold_Assemblies
                 {
                     if (!settings.altYield)
                     {
-                        harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldTrySpawnYieldMiningTranspiler"));
+                        harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), transpiler: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_Stats.CuteboldTrySpawnYieldMiningTranspiler)));
                         miningAltYield = false;
                     }
                 }
@@ -49,9 +51,9 @@ namespace Cutebold_Assemblies
                 }
                 finally
                 {
-                    if(miningAltYield || settings.altYield)
+                    if (miningAltYield || settings.altYield)
                     {
-                        harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldTrySpawnYieldMiningPostfix"));
+                        harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_Stats.CuteboldTrySpawnYieldMiningPostfix)));
                     }
                 }
 
@@ -81,17 +83,13 @@ namespace Cutebold_Assemblies
 #endif
 
                 // Insert bonus yield explination
-                harmony.Patch(AccessTools.Method(typeof(StatWorker), "GetExplanationUnfinalized"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldGetExplanationUnfinalizedPostfix"));
+                harmony.Patch(AccessTools.Method(typeof(StatWorker), nameof(StatWorker.GetExplanationUnfinalized)), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_Stats.CuteboldGetExplanationUnfinalizedPostfix)));
                 // Edits the stats in the stat bio window to be the correct value.
-                harmony.Patch(AccessTools.Method(typeof(StatsReportUtility), "StatsToDraw", new[] { typeof(Thing) }), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldStatsToDrawPostfix"));
+                harmony.Patch(AccessTools.Method(typeof(StatsReportUtility), "StatsToDraw", new[] { typeof(Thing) }), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_Stats.CuteboldStatsToDrawPostfix)));
 
             }
         }
 
-        private void YieldTranspilers()
-        {
-
-        }
 
         /// Convered into a transpiler.
         /// <summary>
@@ -103,7 +101,7 @@ namespace Cutebold_Assemblies
         /// <param name="yieldChance">The chance to yield something (Ignored)</param>
         /// <param name="moteOnWaste">If we should do a mote on waste (Ignored)</param>
         /// <param name="pawn">The pawn mining</param>
-        private static void CuteboldTrySpawnYieldMiningPostfix(Mineable __instance, float ___yieldPct, Map map, float yieldChance, bool moteOnWaste, Pawn pawn)
+        public static void CuteboldTrySpawnYieldMiningPostfix(Mineable __instance, float ___yieldPct, Map map, float yieldChance, bool moteOnWaste, Pawn pawn)
         {
             //Log.Message("CuteboldTrySapwnYieldMiningPostfix");
 
@@ -145,7 +143,7 @@ namespace Cutebold_Assemblies
         /// <param name="instructions">The instructions we are messing with.</param>
         /// <param name="ilGenerator">The IDGenerator that allows us to create local variables and labels.</param>
         /// <returns>All the code!</returns>
-        private static IEnumerable<CodeInstruction> CuteboldTrySpawnYieldMiningTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
+        public static IEnumerable<CodeInstruction> CuteboldTrySpawnYieldMiningTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
         {
             FieldInfo miningYield = AccessTools.Field(typeof(StatDefOf), nameof(StatDefOf.MiningYield));
             MethodInfo statRequest = AccessTools.Method(typeof(StatRequest), nameof(StatRequest.For), new[] { typeof(Thing) });
@@ -222,7 +220,7 @@ namespace Cutebold_Assemblies
         /// <param name="__result">The previous output from the original toil generator.</param>
         /// <param name="__instance">The plant job.</param>
         /// <returns>A headache. (The new toils)</returns>
-        private static IEnumerable<Toil> CuteboldMakeNewToilsPlantWorkPostfix(IEnumerable<Toil> __result, JobDriver_PlantWork __instance)
+        public static IEnumerable<Toil> CuteboldMakeNewToilsPlantWorkPostfix(IEnumerable<Toil> __result, JobDriver_PlantWork __instance)
         {
             //Log.Message("CuteboldMakeNewToilsPlantWorkPostfix");
 
@@ -311,7 +309,7 @@ namespace Cutebold_Assemblies
         /// <param name="instructions">The instructions we are messing with.</param>
         /// <param name="ilGenerator">The IDGenerator that allows us to create local variables and labels.</param>
         /// <returns>All the code!</returns>
-        private static IEnumerable<CodeInstruction> CuteboldMakeNewToilsPlantWorkTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
+        public static IEnumerable<CodeInstruction> CuteboldMakeNewToilsPlantWorkTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
         {
             MethodInfo yieldNow = AccessTools.Method(typeof(Plant), nameof(Plant.YieldNow));
             FieldInfo plantHarvestYield = AccessTools.Field(typeof(StatDefOf), nameof(StatDefOf.PlantHarvestYield));
@@ -369,7 +367,7 @@ namespace Cutebold_Assemblies
         /// <param name="__result">The list of stats being displayed in the stats bio page.</param>
         /// <param name="thing">The pawn or object being inspected.</param>
         /// <returns>Requested stat entry.</returns>
-        private static IEnumerable<StatDrawEntry> CuteboldStatsToDrawPostfix(IEnumerable<StatDrawEntry> __result, Thing thing)
+        public static IEnumerable<StatDrawEntry> CuteboldStatsToDrawPostfix(IEnumerable<StatDrawEntry> __result, Thing thing)
         {
             foreach (StatDrawEntry statEntry in __result)
             {
@@ -403,7 +401,7 @@ namespace Cutebold_Assemblies
         /// <param name="___stat">The StatDef of the StatWorker</param>
         /// <param name="req">The item requesting the stat.</param>
         /// <param name="numberSense">Unused</param>
-        private static void CuteboldGetExplanationUnfinalizedPostfix(ref string __result, StatDef ___stat, StatRequest req, ToStringNumberSense numberSense)
+        public static void CuteboldGetExplanationUnfinalizedPostfix(ref string __result, StatDef ___stat, StatRequest req, ToStringNumberSense numberSense)
         {
             Pawn pawn = req.Pawn ?? (req.Thing is Pawn ? (Pawn)req.Thing : null);
 
@@ -430,7 +428,7 @@ namespace Cutebold_Assemblies
         {
             Pawn pawn = req.Pawn ?? (req.Thing is Pawn ? (Pawn)req.Thing : null);
 
-            if (stat == null || req == null || pawn?.def != Cutebold_Assemblies.AlienRaceDef) return 0f;
+            if (stat == null || req == null || pawn?.def != Cutebold_Assemblies.AlienRaceDef || stat.Worker.IsDisabledFor(pawn)) return 0f;
             if (stat == StatDefOf.PlantHarvestYield) useMultiplier = false;
 
             float rawPercent = stat.Worker.GetValueUnfinalized(req, false);

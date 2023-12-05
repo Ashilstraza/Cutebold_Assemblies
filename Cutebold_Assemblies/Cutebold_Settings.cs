@@ -169,7 +169,7 @@ namespace Cutebold_Assemblies
             }
 
             settingEntries.SectionLabel("Cutebold_Settings_ModSpecific".Translate());
-            if(DBH_Loaded) settingEntries.CheckboxLabeled("Cutebold_Settings_DBH_Patches".Translate(), ref settings.DBH_Patches, "Cutebold_Settings_DBH_Patches_Tooltip".Translate());
+            if (DBH_Loaded) settingEntries.CheckboxLabeled("Cutebold_Settings_DBH_Patches".Translate(), ref settings.DBH_Patches, "Cutebold_Settings_DBH_Patches_Tooltip".Translate());
 
             if (Prefs.DevMode)
             {

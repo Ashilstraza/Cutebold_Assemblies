@@ -27,12 +27,12 @@ namespace Cutebold_Assemblies
         /// <summary>Reference to our harmony instance.</summary>
         private static Harmony harmonyRef;
         /// <summary>Reference to the CanDrawAddon method.</summary>
-        private static readonly System.Reflection.MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), "CanDrawAddon", new[] {
+        private static readonly System.Reflection.MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), nameof(AlienPartGenerator.BodyAddon.CanDrawAddon), new[] {
             typeof(Pawn)
         });
 
         /// <summary>Our prefix to the CanDrawAddon method.</summary>
-        private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldCanDrawAddonPrefix");
+        private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), nameof(Cutebold_Patch_BodyAddons.CuteboldCanDrawAddonPrefix));
         /// <summary>If eye blinking is enabled.</summary>
         private static bool eyeBlink => Cutebold_Assemblies.CuteboldSettings.blinkEyes;
 

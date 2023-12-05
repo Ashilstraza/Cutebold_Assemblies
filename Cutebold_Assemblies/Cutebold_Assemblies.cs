@@ -59,11 +59,11 @@ namespace Cutebold_Assemblies
             new Cutebold_Patch_Names(harmony);
 
             // Eating Humanoid Meat
-            harmony.Patch(AccessTools.Method(typeof(Thing), "Ingested"), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldIngestedPostfix"));
+            harmony.Patch(AccessTools.Method(typeof(Thing), nameof(Thing.Ingested)), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), nameof(Cutebold_Assemblies.CuteboldIngestedPostfix)));
             // Butchering Humanoid Corpses
-            harmony.Patch(AccessTools.Method(typeof(Corpse), "ButcherProducts"), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldButcherProductsPostfix"));
+            harmony.Patch(AccessTools.Method(typeof(Corpse), nameof(Corpse.ButcherProducts)), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), nameof(Cutebold_Assemblies.CuteboldButcherProductsPostfix)));
             // Wearing Humanoid Clothing
-            harmony.Patch(AccessTools.Method(typeof(ThoughtWorker_HumanLeatherApparel), "CurrentStateInternal"), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), "CuteboldCurrentStateInternalPostfix"));
+            harmony.Patch(AccessTools.Method(typeof(ThoughtWorker_HumanLeatherApparel), "CurrentStateInternal"), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), nameof(Cutebold_Assemblies.CuteboldCurrentStateInternalPostfix)));
 
             new Cutebold_Patch_BodyAddons(harmony);
 
@@ -72,7 +72,7 @@ namespace Cutebold_Assemblies
             new Cutebold_Patch_HediffRelated(harmony);
 
 #if !RWPre1_4
-            new Patches.Alien_Patches(harmony); // Patches for allowing custom LifeStageDefs
+            new Patches.Alien_Patches(harmony); // Patches for allowing custom LifeStageDefs along with patches for other mods
 #endif
         }
 
@@ -139,7 +139,7 @@ namespace Cutebold_Assemblies
         /// <param name="__instance">What was ingested.</param>
         /// <param name="ingester">Who ingested the thing.</param>
         /// <returns>Passes through the original float without modifying it.</returns>
-        private static void CuteboldIngestedPostfix(Thing __instance, Pawn ingester)
+        public static void CuteboldIngestedPostfix(Thing __instance, Pawn ingester)
         {
             //Log.Message("Ingested Postfix");
             //Log.Message("Instance: " + __instance.ToString() + " Instance Source: " + ((__instance.def.ingestible != null && __instance.def.ingestible.sourceDef != null) ? __instance.def.ingestible.sourceDef.defName.ToString() : "Null") + " ingester: " + ingester.ToString());
@@ -173,7 +173,7 @@ namespace Cutebold_Assemblies
         /// <param name="__instance">What was butchered.</param>
         /// <param name="butcher">Who butchered the thing.</param>
         /// <returns>Passes through the original IEnumerable.</returns>
-        private static void CuteboldButcherProductsPostfix(Corpse __instance, Pawn butcher)
+        public static void CuteboldButcherProductsPostfix(Corpse __instance, Pawn butcher)
         {
             //Log.Message("Butcher Products Postfix");
             //Log.Message("Instance: " +  __instance.ToString() + " Instance Source: " + ((__instance.def.ingestible != null && __instance.def.ingestible.sourceDef != null) ? __instance.def.ingestible.sourceDef.defName.ToString() : "Null") + " butcher: " + butcher.ToString());
@@ -206,7 +206,7 @@ namespace Cutebold_Assemblies
         /// <param name="__result">How much of an effect the clothing is having on the pawn. Max is 4.</param>
         /// <param name="p">The pawn to check.</param>
         /// <returns>The modified effect of the clothing. Max is 4.</returns>
-        private static void CuteboldCurrentStateInternalPostfix(ThoughtState __result, Pawn p)
+        public static void CuteboldCurrentStateInternalPostfix(ThoughtState __result, Pawn p)
         {
             //Log.Message("Current State Internal");
             if (p == null || p.def.defName != RaceName) return; // We only want to apply to cutebolds (currently).
@@ -299,6 +299,7 @@ namespace Cutebold_Assemblies
         /// <summary>
         /// Attempts to repair messed up hediffs due to adding tongues.
         /// </summary>
+        [Obsolete("Tongues have been in for awhile, can remove soon.")]
         public static void FixTonguedHediffs()
         {
             List<string> ids = new List<string>();

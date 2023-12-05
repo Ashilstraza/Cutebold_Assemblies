@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using Cutebold_Assemblies.Patches;
+using HarmonyLib;
 using RimWorld;
 using System;
 using System.Collections.Generic;
@@ -58,19 +59,20 @@ namespace Cutebold_Assemblies
             {
                 CreateBackstoryLists();
                 createdLists = true;
+                var thisClass = typeof(Cutebold_Patch_Names);
 
                 // Disable Cutebold Name Validation
-                harmony.Patch(AccessTools.Method(typeof(NameGenerator), "GenerateName", new Type[] {
+                harmony.Patch(AccessTools.Method(typeof(NameGenerator), nameof(NameGenerator.GenerateName), new Type[] {
                     typeof(GrammarRequest),
                     typeof(Predicate<string>),
                     typeof(bool),
                     typeof(string),
                     typeof(string)
-                }), prefix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldGenerateNamePrefix"));
+                }), prefix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_Names.CuteboldGenerateNamePrefix)));
                 // Generate Cutebold Names
-                harmony.Patch(AccessTools.Method(typeof(PawnBioAndNameGenerator), "GeneratePawnName"), prefix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "CuteboldGeneratePawnNamePrefix"));
+                harmony.Patch(AccessTools.Method(typeof(PawnBioAndNameGenerator), "GeneratePawnName"), prefix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_Names.CuteboldGeneratePawnNamePrefix)));
                 // Allow for renaming pawns that lack a first and/or last name
-                harmony.Patch(AccessTools.PropertyGetter(typeof(NameTriple), "IsValid"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Names), "Cutebold_NameTriple_IsValidPostfix"));
+                harmony.Patch(AccessTools.PropertyGetter(typeof(NameTriple), "IsValid"), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_Names.Cutebold_NameTriple_IsValidPostfix)));
             }
         }
 
@@ -140,7 +142,7 @@ namespace Cutebold_Assemblies
         /// <param name="appendNumberIfNameUsed">Ignored</param>
         /// <param name="rootKeyword">Ignored</param>
         /// <param name="untranslatedRootKeyword">Ignored</param>
-        private static void CuteboldGenerateNamePrefix(GrammarRequest request, ref Predicate<string> validator, bool appendNumberIfNameUsed, string rootKeyword, string untranslatedRootKeyword)
+        public static void CuteboldGenerateNamePrefix(GrammarRequest request, ref Predicate<string> validator, bool appendNumberIfNameUsed, string rootKeyword, string untranslatedRootKeyword)
         {
 
             //Log.Message("Generate Name Prefix");
@@ -158,7 +160,7 @@ namespace Cutebold_Assemblies
         /// <param name="forcedLastName">Force the use of a given last name.</param>
         /// <returns>Two return types, method returns true when want to use the regular GeneratePawnName method and returns false when we use our custom one. The second return type is __result which is the generated name that we want to use.</returns>
         [HarmonyPriority(Priority.Low)]
-        private static bool CuteboldGeneratePawnNamePrefix(Pawn pawn, ref Name __result, NameStyle style = NameStyle.Full, string forcedLastName = null)
+        public static bool CuteboldGeneratePawnNamePrefix(Pawn pawn, ref Name __result, NameStyle style = NameStyle.Full, string forcedLastName = null)
         {
 
             //Log.Message("Generate Pawn Name Prefix");
@@ -312,7 +314,12 @@ namespace Cutebold_Assemblies
             return false;
         }
 
-        private static void Cutebold_NameTriple_IsValidPostfix(ref bool __result, NameTriple __instance)
+        /// <summary>
+        /// Allows for names that are only nicknames when naming pawns. This affects all pawns and not just Cutebolds
+        /// </summary>
+        /// <param name="__result">If the name is valid.</param>
+        /// <param name="__instance">New name.</param>
+        public static void Cutebold_NameTriple_IsValidPostfix(ref bool __result, NameTriple __instance)
         {
             if (__result) return;
             if (!__instance.Nick.NullOrEmpty())

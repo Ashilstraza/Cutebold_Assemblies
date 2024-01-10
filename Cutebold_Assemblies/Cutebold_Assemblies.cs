@@ -1,4 +1,5 @@
 ﻿using AlienRace;
+using Cutebold_Assemblies.Patches;
 using HarmonyLib;
 using RimWorld;
 using System;
@@ -56,14 +57,16 @@ namespace Cutebold_Assemblies
             }
             CreateHumanoidLeatherList();
 
+            var thisClass = typeof(Cutebold_Assemblies);
+
             new Cutebold_Patch_Names(harmony);
 
             // Eating Humanoid Meat
-            harmony.Patch(AccessTools.Method(typeof(Thing), nameof(Thing.Ingested)), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), nameof(Cutebold_Assemblies.CuteboldIngestedPostfix)));
+            harmony.Patch(AccessTools.Method(typeof(Thing), nameof(Thing.Ingested)), postfix: new HarmonyMethod(thisClass, nameof(CuteboldIngestedPostfix)));
             // Butchering Humanoid Corpses
-            harmony.Patch(AccessTools.Method(typeof(Corpse), nameof(Corpse.ButcherProducts)), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), nameof(Cutebold_Assemblies.CuteboldButcherProductsPostfix)));
+            harmony.Patch(AccessTools.Method(typeof(Corpse), nameof(Corpse.ButcherProducts)), postfix: new HarmonyMethod(thisClass, nameof(CuteboldButcherProductsPostfix)));
             // Wearing Humanoid Clothing
-            harmony.Patch(AccessTools.Method(typeof(ThoughtWorker_HumanLeatherApparel), "CurrentStateInternal"), postfix: new HarmonyMethod(typeof(Cutebold_Assemblies), nameof(Cutebold_Assemblies.CuteboldCurrentStateInternalPostfix)));
+            harmony.Patch(AccessTools.Method(typeof(ThoughtWorker_HumanLeatherApparel), "CurrentStateInternal"), postfix: new HarmonyMethod(thisClass, nameof(CuteboldCurrentStateInternalPostfix)));
 
             new Cutebold_Patch_BodyAddons(harmony);
 
@@ -72,7 +75,10 @@ namespace Cutebold_Assemblies
             new Cutebold_Patch_HediffRelated(harmony);
 
 #if !RWPre1_4
-            new Patches.Alien_Patches(harmony); // Patches for allowing custom LifeStageDefs along with patches for other mods
+            new Alien_Patches(harmony); // Patches for allowing custom LifeStageDefs along with patches for other mods
+            harmony.Patch(AccessTools.Method(typeof(Pawn_AgeTracker), "get_GrowthPointsFactor"), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_GrowthPointsFactor_Get_Postfix)));
+
+            harmony.Patch(AccessTools.Method(typeof(Pawn_AgeTracker), "TrySimulateGrowthPoints"), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_TrySimulateGrowthPoints_Postfix)));
 #endif
         }
 
@@ -296,29 +302,86 @@ namespace Cutebold_Assemblies
             Log.Message(stringBuilder.ToString().TrimEndNewlines());
         }
 
+        /*
+         * Humans
+         * Age range        Learning Point Max      Rate
+         * 3-7              180                     0.75
+         * 7-10             180                     1
+         * 10-13            180                     1
+         * 
+         * Cutebolds
+         * Age range        Learning Point Max      Rate
+         * 1.5-3            180                     2
+         * 3-6              180                     1
+         * 6-9              180                     1
+         */
+
+        /// <summary>Age at which young Cutebolds should learn at full speed, humans do this at age 7</summary>
+        private static float normalRateAge = 3f;
+        /// <summary>Rate Cutebolds should learn at full speed, humans are 1.0</summary>
+        private static float normalLearnRate = 1f;
+        /// <summary>Rate Cutebolds should learn when very young, humans are 0.75</summary>
+        private static float youngLearnRate = 2f;
+
         /// <summary>
-        /// Attempts to repair messed up hediffs due to adding tongues.
+        /// Adjusts the GrowthPointsFactor for Cutebolds without waiting on HAR to add it.
         /// </summary>
-        [Obsolete("Tongues have been in for awhile, can remove soon.")]
-        public static void FixTonguedHediffs()
+        /// <param name="__instance">The pawn's age tracker that we are fixing.</param>
+        /// <param name="__result">The growth points multiplier</param>
+        public static void Cutebold_GrowthPointsFactor_Get_Postfix(Pawn_AgeTracker __instance, ref float __result)
         {
-            List<string> ids = new List<string>();
-            foreach (Pawn pawn in PawnsFinder.All_AliveOrDead)
+            if (__instance.CurLifeStageRace.def.defName.StartsWith("Cutebold"))
             {
-                if (pawn.def.defName == Cutebold_Assemblies.RaceName)
+                __result = __instance.AgeBiologicalYearsFloat < normalRateAge ? youngLearnRate : normalLearnRate;
+            }
+        }
+
+        /// <summary>
+        /// List of Growth Moment Ages for cutebolds
+        /// </summary>
+        private static List<float> growthMomentAges;
+
+        /// <summary>
+        /// Adjusts the growth points for spawning child Cutebolds without waiting on HAR to add it.
+        /// </summary>
+        /// <param name="__instance">The pawn's age tracker that we are fixing.</param>
+        public static void Cutebold_TrySimulateGrowthPoints_Postfix(Pawn_AgeTracker __instance)
+        {
+            if (__instance.CurLifeStageRace.def.defName.StartsWith("Cutebold"))
+            {
+                if (!ModsConfig.BiotechActive || __instance.AgeBiologicalYears >= __instance.AdultMinAge)
                 {
-                    if (!ids.Contains(pawn.ThingID))
+                    return;
+                }
+
+                if(growthMomentAges == null) {
+                    growthMomentAges = new List<float>
                     {
-                        foreach (var hediff in pawn.health.hediffSet.hediffs)
+                        1.5f
+                    };
+                    growthMomentAges.AddRange(HarmonyPatches.GrowthMomentHelper(AlienRaceDef).Select(a => (float)a));
+                }
+
+                __instance.growthPoints = 0f;
+                int ageBiologicalYears = __instance.AgeBiologicalYears;
+                for (int growthMoment = growthMomentAges.Count - 1; growthMoment >= 0; growthMoment--)
+                {
+                    if (ageBiologicalYears >= growthMomentAges[growthMoment])
+                    {
+                        float growthPointsPerDay = (Rand.Range(0.2f, 0.5f) * (__instance.AgeBiologicalYearsFloat < normalRateAge ? youngLearnRate : normalLearnRate) * __instance.ChildAgingMultiplier)
+                            * (((float)growthMomentAges[growthMoment] < normalRateAge) ? youngLearnRate : normalLearnRate);
+                        int growthMomentTicks = (int)growthMomentAges[growthMoment] * 3600000;
+                        long ageTicks = __instance.AgeBiologicalTicks;
+                        while (ageTicks > growthMomentTicks)
                         {
-                            if (hediff.Part?.Index > 21)
-                            {
-                                hediff.Part = hediff.Part.body.GetPartAtIndex(hediff.Part.Index + 1);
-                            }
+                            ageTicks -= 60000;
+                            __instance.growthPoints += growthPointsPerDay;
                         }
-                        ids.Add(pawn.ThingID);
+                        break;
                     }
                 }
+
+                __instance.growthPoints *= 0.25f;
             }
         }
     }

@@ -10,25 +10,25 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		2.4+.txt = 2.4+.txt
 	EndProjectSection
 EndProject
-Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Cutebold Race(1)", "..\..\..\Rimworld Mods\Cutebold Race\", "{5A69BEA3-C56E-448C-AD87-B4FE665953F0}"
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "Cutebold Race(1)", "..\..\..\Rimworld Mods\LocalMods\Cutebold Race\", "{5A69BEA3-C56E-448C-AD87-B4FE665953F0}"
 	ProjectSection(WebsiteProperties) = preProject
 		TargetFrameworkMoniker = ".NETFramework,Version%3Dv4.8"
 		Debug.AspNetCompiler.VirtualPath = "/localhost_64163"
-		Debug.AspNetCompiler.PhysicalPath = "..\..\..\Rimworld Mods\Cutebold Race\"
+		Debug.AspNetCompiler.PhysicalPath = "..\..\..\Rimworld Mods\LocalMods\Cutebold Race\"
 		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_64163\"
 		Debug.AspNetCompiler.Updateable = "true"
 		Debug.AspNetCompiler.ForceOverwrite = "true"
 		Debug.AspNetCompiler.FixedNames = "false"
 		Debug.AspNetCompiler.Debug = "True"
 		Release.AspNetCompiler.VirtualPath = "/localhost_64163"
-		Release.AspNetCompiler.PhysicalPath = "..\..\..\Rimworld Mods\Cutebold Race\"
+		Release.AspNetCompiler.PhysicalPath = "..\..\..\Rimworld Mods\LocalMods\Cutebold Race\"
 		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\localhost_64163\"
 		Release.AspNetCompiler.Updateable = "true"
 		Release.AspNetCompiler.ForceOverwrite = "true"
 		Release.AspNetCompiler.FixedNames = "false"
 		Release.AspNetCompiler.Debug = "False"
 		VWDPort = "64163"
-		SlnRelativePath = "..\..\..\Rimworld Mods\Cutebold Race\"
+		SlnRelativePath = "..\..\..\Rimworld Mods\LocalMods\Cutebold Race\"
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "1.1 Assembly-CSharp", "..\..\..\..\..\..\SteamLibrary\steamapps\common\RimWorld 1.1 Debug Copy\Source\Assembly-CSharp\1.1 Assembly-CSharp.csproj", "{6819003D-3A62-4127-AF84-AA7CB7AA4D87}"

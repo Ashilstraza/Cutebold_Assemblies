@@ -27,8 +27,9 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.15")]
+[assembly: AssemblyVersion("1.0.16")]
 
+// 1.0.16 Dub's Bad Hygene patches, error when clicking on baby stats. Added various patches. Removed tongue fixer.
 // 1.0.15 Allow for renaming pawns that lack a first and/or last name, enabes alien patches for any alien, made speed optimizations
 // 1.0.14.2 Built against latest versions of HAR and Rimworld as of 2/21/23
 // 1.0.14.1 Built against latest versions of HAR and Rimworld as of 2/3/23

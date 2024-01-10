@@ -184,11 +184,6 @@ namespace Cutebold_Assemblies
                 {
                     Cutebold_Assemblies.CheckPatchedMethods(true);
                 }
-                if (settingEntries.AltButtonTextLabeled("Cutebold_Settings_FixTongues".Translate(), "Cutebold_Settings_FixTongues_Button".Translate(), height: Text.LineHeight * 2, tooltip: "Cutebold_Settings_FixTongues_ToolTip".Translate()))
-                {
-                    Cutebold_Assemblies.FixTonguedHediffs();
-                }
-
             }
             settingEntries.End();
 

@@ -26,28 +26,28 @@ namespace Cutebold_Assemblies
             if (Cutebold_Assemblies.CuteboldSettings.eyeAdaptation)
             {
                 // Allows for dark adaptation, obviously not cave adaptation since that is a different game with cute kobolds.
-                harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "FactorFromGlow"), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_HediffRelated.CuteboldFactorFromGlowPostfix)));
+                harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "FactorFromGlow"), postfix: new HarmonyMethod(thisClass, nameof(CuteboldFactorFromGlowPostfix)));
                 if (Cutebold_Assemblies.CuteboldSettings.darknessOptions != Cutebold_DarknessOptions.IdeologyDefault)
                 {
                     // Ignores the ignoreIfPrefersDarkness flag.
-                    harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "ActiveFor"), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_HediffRelated.CuteboldGlowActiveForPostfix)));
+                    harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "ActiveFor"), postfix: new HarmonyMethod(thisClass, nameof(CuteboldGlowActiveForPostfix)));
                 }
                 // Applies dark adaptation to all cutebolds as they spawn.               
-                harmony.Patch(AccessTools.Method(typeof(Pawn), nameof(Pawn.SpawnSetup)), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_HediffRelated.CuteboldAdaptationSpawnSetupPostfix)));
+                harmony.Patch(AccessTools.Method(typeof(Pawn), nameof(Pawn.SpawnSetup)), postfix: new HarmonyMethod(thisClass, nameof(CuteboldAdaptationSpawnSetupPostfix)));
                 // Update dark adaptation eye references.
-                harmony.Patch(AccessTools.Method(typeof(HediffSet), nameof(HediffSet.DirtyCache)), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_HediffRelated.CuteboldHediffSetDirtyCachePostfix)));
+                harmony.Patch(AccessTools.Method(typeof(HediffSet), nameof(HediffSet.DirtyCache)), postfix: new HarmonyMethod(thisClass, nameof(CuteboldHediffSetDirtyCachePostfix)));
                 // Update dark adaptation goggle references.
 #if RWPre1_3
                 harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "Notify_ApparelAdded"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
                 harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "Notify_ApparelRemoved"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
 #else
-                harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), nameof(Pawn_ApparelTracker.Notify_ApparelChanged)), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_HediffRelated.CuteboldApparelChangedPostfix)));
+                harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), nameof(Pawn_ApparelTracker.Notify_ApparelChanged)), postfix: new HarmonyMethod(thisClass, nameof(CuteboldApparelChangedPostfix)));
 #endif
             }
             else
             {
                 // Removes dark adaptation to all cutebolds as they spawn in.
-                harmony.Patch(AccessTools.Method(typeof(Pawn), nameof(Pawn.SpawnSetup)), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_HediffRelated.CuteboldNoAdaptationSpawnSetupPostfix)));
+                harmony.Patch(AccessTools.Method(typeof(Pawn), nameof(Pawn.SpawnSetup)), postfix: new HarmonyMethod(thisClass, nameof(CuteboldNoAdaptationSpawnSetupPostfix)));
             }
 
             try
@@ -56,7 +56,6 @@ namespace Cutebold_Assemblies
                 if (ModLister.GetActiveModWithIdentifier("CETeam.CombatExtended") == null/* && ModLister.GetActiveModWithIdentifier("OskarPotocki.VanillaFactionsExpanded.Core") == null*/)
                 {
                     // Adjust layer offset for cutebold goggles.
-                    //Harmony.DEBUG = true;
 
 #if RWPre1_3
                     harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
@@ -78,11 +77,10 @@ namespace Cutebold_Assemblies
                     harmony.Patch(toBePatched, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
 #elif RW1_4
                     // Can access a point outside of the local function
-                    harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "DrawHeadHair"), transpiler: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_HediffRelated.CuteboldGogglesFixTranspiler)));
+                    harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "DrawHeadHair"), transpiler: new HarmonyMethod(thisClass, nameof(CuteboldGogglesFixTranspiler)));
 #else
 #warning Goggle patch disabled.
 #endif
-                    //Harmony.DEBUG = false;
                 }
             }
             catch (Exception e)

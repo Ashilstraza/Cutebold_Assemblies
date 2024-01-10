@@ -1,9 +1,13 @@
 ﻿using AlienRace;
+using DubsBadHygiene;
 using HarmonyLib;
 using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
+using System.Security.Cryptography;
 using UnityEngine;
 using Verse;
 
@@ -32,7 +36,7 @@ namespace Cutebold_Assemblies
         });
 
         /// <summary>Our prefix to the CanDrawAddon method.</summary>
-        private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), nameof(Cutebold_Patch_BodyAddons.CuteboldCanDrawAddonPrefix));
+        private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), nameof(CuteboldCanDrawAddonPrefix));
         /// <summary>If eye blinking is enabled.</summary>
         private static bool eyeBlink => Cutebold_Assemblies.CuteboldSettings.blinkEyes;
 
@@ -50,6 +54,7 @@ namespace Cutebold_Assemblies
                 harmonyRef.Patch(canDrawAddonRef, prefix: cuteboldCanDrawAddonPrefixRef);
 #if RW1_4
                 //harmonyRef.Patch(AccessTools.Method(typeof(HarmonyPatches), "DrawAddonsFinalHook"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldDrawAddonsFinalHookPostfix"));
+                
 #endif
 
                 initialized = true;
@@ -186,6 +191,8 @@ namespace Cutebold_Assemblies
                     {
                         genderedBody.path = $"{graphicsPaths.body.path}{genderedBody.gender}Naked_{body.bodytype}";
                     }
+                    body.paths = new List<string>() { body.path };
+
                 }
 
                 foreach (var head in graphicsPaths.head.headtypeGraphics)
@@ -197,6 +204,7 @@ namespace Cutebold_Assemblies
                     {
                         generedHead.path = graphicsPaths.head.path + headTypePath;
                     }
+                    head.paths = new List<string>() { head.path };
                 }
 
                 dirty = true;
@@ -209,6 +217,7 @@ namespace Cutebold_Assemblies
                     if (pawn.def.defName == Cutebold_Assemblies.RaceName)
                     {
                         pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                        
                     }
                 }
             }

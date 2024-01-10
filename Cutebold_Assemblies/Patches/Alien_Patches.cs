@@ -1,14 +1,14 @@
 ﻿using AlienRace;
-using DubsBadHygiene;
 using HarmonyLib;
 using RimWorld;
+using SomeThingsFloat;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using Verse;
-using Verse.AI;
 
 #if !RWPre1_4
 namespace Cutebold_Assemblies.Patches
@@ -24,55 +24,127 @@ namespace Cutebold_Assemblies.Patches
         {
             var thisClass = typeof(Alien_Patches);
 
-            Alien_RacesToPatch();
-
             string alienRaceID = "rimworld.erdelf.alien_race.main";
 
             StringBuilder stringBuilder = new StringBuilder("Cutebold Mod Provided Alien Patches:");
-            bool patches = false;
 
-            if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(IncidentWorker_Disease), "CanAddHediffToAnyPartOfDef"))?.Prefixes?.Any(patch => patch.owner == alienRaceID) ?? true)
+            if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(IncidentWorker_Disease), "CanAddHediffToAnyPartOfDef"))?.Transpilers?.Any(patch => patch.owner == alienRaceID) ?? true)
             {
                 stringBuilder.AppendLine("  Patching IncidentWorker_Disease.CanAddHediffToAnyPartOfDef");
-                harmony.Patch(AccessTools.Method(typeof(IncidentWorker_Disease), "CanAddHediffToAnyPartOfDef"), prefix: new HarmonyMethod(thisClass, nameof(Alien_Patches.Alien_CanAddHediffToAnyPartOfDef_Prefix)));
-                patches = true;
+                harmony.Patch(AccessTools.Method(typeof(IncidentWorker_Disease), "CanAddHediffToAnyPartOfDef"), transpiler: new HarmonyMethod(thisClass, nameof(Alien_FixBaby_Transpiler)));
             }
 
-            if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(ITab_Pawn_Gear), "get_IsVisible"))?.Prefixes?.Any(patch => patch.owner == alienRaceID) ?? true)
+            if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(ITab_Pawn_Gear), "get_IsVisible"))?.Transpilers?.Any(patch => patch.owner == alienRaceID) ?? true)
             {
                 stringBuilder.AppendLine("  Patching ITab_Pawn_Gear.get_IsVisible");
-                harmony.Patch(AccessTools.Method(typeof(ITab_Pawn_Gear), "get_IsVisible"), prefix: new HarmonyMethod(thisClass, nameof(Alien_Patches.Alien_get_IsVisible_Prefix)));
-                patches = true;
+                harmony.Patch(AccessTools.Method(typeof(ITab_Pawn_Gear), "get_IsVisible"), transpiler: new HarmonyMethod(thisClass, nameof(Alien_FixBaby_Transpiler)));
             }
 
             if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(Pawn_IdeoTracker), "get_CertaintyChangeFactor"))?.Transpilers?.Any(patch => !patch.owner.NullOrEmpty()) ?? true)
             {
                 stringBuilder.AppendLine("  Patching Pawn_IdeoTracker.get_CertaintyChangeFactor");
-                harmony.Patch(AccessTools.Method(typeof(Pawn_IdeoTracker), "get_CertaintyChangeFactor"), transpiler: new HarmonyMethod(thisClass, nameof(Alien_Patches.Alien_CertaintyChangeFactor_Transpiler)));
-                patches = true;
+                harmony.Patch(AccessTools.Method(typeof(Pawn_IdeoTracker), "get_CertaintyChangeFactor"), transpiler: new HarmonyMethod(thisClass, nameof(Alien_CertaintyChangeFactor_Transpiler)));
             }
 
-            if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(HediffGiver), nameof(HediffGiver.TryApply)))?.Prefixes?.Any(patch => patch.owner == alienRaceID) ?? true)
+            if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(HediffGiver), nameof(HediffGiver.TryApply)))?.Transpilers?.Any(patch => patch.owner == alienRaceID) ?? true)
             {
                 stringBuilder.AppendLine("  Patching HediffGiver.TryApply");
-                harmony.Patch(AccessTools.Method(typeof(HediffGiver), nameof(HediffGiver.TryApply)), prefix: new HarmonyMethod(thisClass, nameof(Alien_Patches.Alien_TryApply_Prefix)));
-                patches = true;
+                harmony.Patch(AccessTools.Method(typeof(HediffGiver), nameof(HediffGiver.TryApply)), transpiler: new HarmonyMethod(thisClass, nameof(Alien_FixBaby_Transpiler)));
             }
 
-            if (patches) Log.Message(stringBuilder.ToString().TrimEndNewlines());
+            MethodInfo drawExtraEyeGraphicMethod = typeof(PawnRenderer).GetNestedTypes(AccessTools.all).First<Type>().GetMethods(AccessTools.all).FirstOrDefault((MethodInfo x) => x.Name.Contains("<DrawHeadHair>") && x.Name.Contains("DrawExtraEyeGraphic"));
+
+            if (!Harmony.GetPatchInfo(drawExtraEyeGraphicMethod)?.Transpilers?.Any(patch => patch.owner == alienRaceID) ?? true)
+            {
+                harmony.Patch(drawExtraEyeGraphicMethod, transpiler: new HarmonyMethod(thisClass, nameof(Alien_DrawExtraEyeGraphic_Transpiler)));
+            }
 
             // If Dub's Bad Hygene isn't enabled, don't try to patch that which is not there.
             if (ModLister.GetActiveModWithIdentifier("Dubwise.DubsBadHygiene") != null && Cutebold_Assemblies.CuteboldSettings.DBH_Patches)
             {
-                harmony.Patch(AccessTools.Method(typeof(NeedsUtil), "ShouldHaveNeed"), transpiler: new HarmonyMethod(thisClass, nameof(Alien_Patches.Alien_FixBaby_Transpiler)));
-                harmony.Patch(AccessTools.Method(typeof(WorkGiver_washPatient), "ShouldBeWashed"), transpiler: new HarmonyMethod(thisClass, nameof(Alien_Patches.Alien_FixBaby_Transpiler)));
-                harmony.Patch(AccessTools.Method(typeof(WorkGiver_washChild), "ShouldBeWashed"), transpiler: new HarmonyMethod(thisClass, nameof(Alien_Patches.Alien_FixBaby_Transpiler)));
-                harmony.Patch(AccessTools.Method(typeof(WorkGiver_washChild), "PotentialWorkThingsGlobal"), transpiler: new HarmonyMethod(thisClass, nameof(Alien_Patches.Alien_FixBaby_Transpiler)));
-                // Fixes for thirst; DBH has thirst disabled on babies though, so these are unneeded
-                /*harmony.Patch(AccessTools.Method(typeof(Thing), "Ingested"), postfix: new HarmonyMethod(thisClass, "Alien_DBH_IngestedPostfix"));
-                harmony.Patch(AccessTools.Method(typeof(ChildcareUtility), "SuckleFromLactatingPawn"),
-                    prefix: new HarmonyMethod(thisClass, "Alien_DBH_SuckleFromLactatingPawn_Prefix"),
-                    postfix: new HarmonyMethod(thisClass, "Alien_DBH_SuckleFromLactatingPawn_Postfix"));*/
+                stringBuilder.AppendLine("  Patching Dub's Bad Hygine");
+
+                try
+                {
+                    new DBHPatches(harmony, thisClass);
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"{Cutebold_Assemblies.ModName}: Exception when trying to apply DBH Patches. Please notify the author for the cutebold mod with the logs. Thanks!\n{e}");
+                }
+
+            }
+
+            if (!stringBuilder.ToString().Equals("Cutebold Mod Provided Alien Patches:")) Log.Message(stringBuilder.ToString().TrimEndNewlines());
+#if DEBUG   // Personal patches
+            if (ModLister.GetActiveModWithIdentifier("Mlie.SomeThingsFloat") != null)
+            {
+                new SomeThingsFloat(harmony, thisClass);
+            }
+            // faster baby feeding, maybe new mod?
+            var feedBabyFoodFromInventoryMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_BottleFeedBaby)).ElementAt(13);
+            harmony.Patch(feedBabyFoodFromInventoryMethod, transpiler: new HarmonyMethod(thisClass, nameof(FasterFeeding_Transpiler)));
+            harmony.Patch(AccessTools.Method(typeof(ChildcareUtility), "SuckleFromLactatingPawn"), transpiler: new HarmonyMethod(thisClass, nameof(FasterFeeding_Transpiler)));
+#endif
+        }
+
+        public static IEnumerable<CodeInstruction> QuickFix_SomeThingsFloat_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            FieldInfo map = AccessTools.Field(typeof(MapComponent), "map");
+            FieldInfo terrainGrid = AccessTools.Field(typeof(Map), "terrainGrid");
+            FieldInfo underGrid = AccessTools.Field(typeof(TerrainGrid), "underGrid");
+            FieldInfo topGrid = AccessTools.Field(typeof(TerrainGrid), "topGrid");
+
+            List<CodeInstruction> instructionList = instructions.ToList();
+            int instructionListCount = instructionList.Count;
+            int n = 0;
+
+            List<CodeInstruction> fix = new List<CodeInstruction>()
+            {
+                new CodeInstruction(OpCodes.Ldarg_0),
+                new CodeInstruction(OpCodes.Ldfld, map),
+                new CodeInstruction(OpCodes.Ldfld, terrainGrid),
+                new CodeInstruction(OpCodes.Ldfld, underGrid),
+                new CodeInstruction(OpCodes.Ldloc_0),
+                new CodeInstruction(OpCodes.Ldelem_Ref),
+                new CodeInstruction(OpCodes.Brfalse, null)
+            };
+
+            for(int i = 0; i < instructionListCount; i++)
+            {
+                yield return instructionList[i];
+
+                if (i < instructionListCount && i > 4 && instructionList[i-4].Is(OpCodes.Ldfld, topGrid))
+                {
+                    if (n == 1)
+                    {
+                        foreach (CodeInstruction instruction in fix)
+                        {
+                            if (instruction.opcode == OpCodes.Brfalse) instruction.operand = instructionList[i + 8].operand;
+
+                            yield return instruction;
+                        }
+                    }
+
+                    n++;
+                }
+            }
+        }
+
+        public static IEnumerable<CodeInstruction> FasterFeeding_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            List<CodeInstruction> instructionList = instructions.ToList();
+            int instructionListCount = instructionList.Count;
+
+            for (int i = 0; i < instructionListCount; i++)
+            {
+
+
+                if (instructionList[i].Is(OpCodes.Ldc_R4, 5000f))
+                {
+                    instructionList[i].operand = 1250f;
+                }
+                yield return instructionList[i];
             }
         }
 
@@ -82,7 +154,7 @@ namespace Cutebold_Assemblies.Patches
         /// <param name="instructions">The instructions we are messing with.</param>
         /// <param name="ilGenerator">The IDGenerator that allows us to create local variables and labels.</param>
         /// <returns>The fixed code.</returns>
-        public static IEnumerable<CodeInstruction> Alien_FixBaby_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
+        public static IEnumerable<CodeInstruction> Alien_FixBaby_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             FieldInfo humanLikeBaby = AccessTools.Field(typeof(LifeStageDefOf), "HumanlikeBaby");
             FieldInfo developmentalStage = AccessTools.Field(typeof(LifeStageDef), "developmentalStage");
@@ -137,99 +209,12 @@ namespace Cutebold_Assemblies.Patches
         }
 
         /// <summary>
-        /// Allow for baby suckling to satisfy their thirst need (unused by DBH currently)
-        /// </summary>
-        /// <param name="baby">baby being fed</param>
-        /// <param name="feeder">pawn feeding baby (unused)</param>
-        /// <param name="__state">food level before suckle</param>
-        public static void Alien_DBH_SuckleFromLactatingPawn_Prefix(Pawn baby, Pawn feeder, out float __state)
-        {
-            __state = baby.needs.food.CurLevel;
-        }
-
-        /// <summary>
-        /// Allow for baby suckling to satisfy their thirst need (unused by DBH currently)
-        /// </summary>
-        /// <param name="baby">baby being fed</param>
-        /// <param name="feeder">pawn feeding baby (unused)</param>
-        /// <param name="__state">food level before suckle</param>
-        public static void Alien_DBH_SuckleFromLactatingPawn_Postfix(Pawn baby, Pawn feeder, ref float __state)
-        {
-            var nutritionPercent = baby.needs.food.MaxLevel / (baby.needs.food.CurLevel - __state);
-            baby.needs.TryGetNeed<Need_Thirst>()?.Drink(nutritionPercent + .01f);
-        }
-
-        /// <summary>
-        /// Dirty patch to allow babyfood to satisfy the thirst of a baby without doing an xml patch. (unused by DBH currently)
-        /// </summary>
-        /// <param name="__instance">Item being fed</param>
-        /// <param name="ingester">Pawn being fed</param>
-        /// <param name="__result">Nutrition value</param>
-        public static void Alien_DBH_IngestedPostfix(Thing __instance, Pawn ingester, ref float __result)
-        {
-            if (__instance != null && ingester != null)
-            {
-                if (ingester.ageTracker.CurLifeStage.developmentalStage.Baby() && __instance.def.defName.Equals("BabyFood"))
-                {
-                    ingester.needs.TryGetNeed<Need_Thirst>()?.Drink(__result);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Adds all the races to a list to patch baby related issues due to poor checking.
-        /// </summary>
-        public static void Alien_RacesToPatch()
-        {
-            foreach (var race in DefDatabase<ThingDef>.AllDefs.Where(thingDef => thingDef.race != null && thingDef.race.Humanlike))
-            {
-                RaceList.Add(race.defName);
-            }
-        }
-
-        /// <summary>
-        /// Patch is for when the "Babies always healthy" Storyteller option is enabled.
-        /// </summary>
-        /// <param name="__result">If the hediff can be added</param>
-        /// <param name="pawn">The pawn to check</param>
-        /// <returns>False if we should not call the regular function.</returns>
-        public static bool Alien_CanAddHediffToAnyPartOfDef_Prefix(ref bool __result, Pawn pawn)
-        {
-            if (RaceList.Contains(pawn.def.defName) && pawn.ageTracker.CurLifeStage.developmentalStage.Baby() && Find.Storyteller.difficulty.babiesAreHealthy)
-            {
-                __result = false;
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Is optional. Human babies don't have the Gear tab, but also it doesn't cause issues if displayed.
-        /// </summary>
-        /// <param name="__instance">Gear tab we are checking</param>
-        /// <param name="__result">If the gear tab should be shown</param>
-        /// <returns>False if we should not call the regular function.</returns>
-        public static bool Alien_get_IsVisible_Prefix(ITab_Pawn_Gear __instance, ref bool __result)
-        {
-            var pawn = Traverse.Create(__instance).Method("get_SelPawnForGear").GetValue<Pawn>();
-
-            if (RaceList.Contains(pawn.def.defName) && pawn.ageTracker.CurLifeStage.developmentalStage.Baby())
-            {
-                __result = false;
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
         /// Destructively replaces the SimpleCurve for the CertaintyChangeFactor
         /// </summary>
         /// <param name="instructions">The instructions we are messing with.</param>
         /// <param name="ilGenerator">The IDGenerator that allows us to create local variables and labels.</param>
         /// <returns>The code that is usable.</returns>
-        public static IEnumerable<CodeInstruction> Alien_CertaintyChangeFactor_Transpiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
+        public static IEnumerable<CodeInstruction> Alien_CertaintyChangeFactor_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             MethodInfo alienCertaintyChangeFactor = AccessTools.Method(typeof(Alien_Patches), nameof(Alien_Patches.CertaintyCurve));
             var x = Traverse.Create(typeof(Pawn_IdeoTracker)).Fields()[0];
@@ -307,21 +292,28 @@ namespace Cutebold_Assemblies.Patches
             return ideoCurves[pawn.def].Evaluate(pawn.ageTracker.AgeBiologicalYearsFloat);
         }
 
-        /// <summary>
-        /// Patch is for when the "Babies always healthy" Storyteller option is enabled.
-        /// </summary>
-        /// <param name="__result">Result of the method we are patching</param>
-        /// <param name="pawn">Pawn to check</param>
-        /// <returns>False if we should not call the regular function.</returns>
-        public static bool Alien_TryApply_Prefix(ref bool __result, Pawn pawn)
+        public static IEnumerable<CodeInstruction> Alien_DrawExtraEyeGraphic_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
-            if (RaceList.Contains(pawn.def.defName) && pawn.ageTracker.CurLifeStage.developmentalStage.Baby() && Find.Storyteller.difficulty.babiesAreHealthy)
-            {
-                __result = false;
-                return false;
-            }
+            FieldInfo woundAnchors = AccessTools.Field(typeof(BodyTypeDef), "woundAnchors");
+            FieldInfo pawn = AccessTools.Field(typeof(PawnRenderer), "pawn");
+            MethodInfo findAnchorsPostfix = AccessTools.Method(typeof(HarmonyPatches), nameof(HarmonyPatches.FindAnchorsPostfix));
 
-            return true;
+            List<CodeInstruction> instructionList = instructions.ToList();
+
+            for (int i = 0; i < instructionList.Count; i++)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                yield return instruction;
+
+                if (instruction.Is(OpCodes.Ldfld, woundAnchors))
+                {
+                    yield return new CodeInstruction(OpCodes.Ldarg_0);
+                    yield return new CodeInstruction(OpCodes.Ldfld, instructionList[i - 4].operand);
+                    yield return new CodeInstruction(OpCodes.Ldfld, pawn);
+                    yield return new CodeInstruction(OpCodes.Call, findAnchorsPostfix);
+                }
+            }
         }
     }
 }

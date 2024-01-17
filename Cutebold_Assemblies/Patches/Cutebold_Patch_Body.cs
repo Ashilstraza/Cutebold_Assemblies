@@ -16,7 +16,7 @@ namespace Cutebold_Assemblies
     /// <summary>
     /// Harmony patches for controlling body part addons.
     /// </summary>
-    class Cutebold_Patch_BodyAddons
+    class Cutebold_Patch_Body
     {
         /// <summary>If we already initialized the body addon patches.</summary>
         private static bool initialized = false;
@@ -31,12 +31,12 @@ namespace Cutebold_Assemblies
         /// <summary>Reference to our harmony instance.</summary>
         private static Harmony harmonyRef;
         /// <summary>Reference to the CanDrawAddon method.</summary>
-        private static readonly System.Reflection.MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), nameof(AlienPartGenerator.BodyAddon.CanDrawAddon), new[] {
+        private static readonly MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), nameof(AlienPartGenerator.BodyAddon.CanDrawAddon), new[] {
             typeof(Pawn)
         });
 
         /// <summary>Our prefix to the CanDrawAddon method.</summary>
-        private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), nameof(CuteboldCanDrawAddonPrefix));
+        private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_Body), nameof(CuteboldCanDrawAddonPrefix));
         /// <summary>If eye blinking is enabled.</summary>
         private static bool eyeBlink => Cutebold_Assemblies.CuteboldSettings.blinkEyes;
 
@@ -44,7 +44,7 @@ namespace Cutebold_Assemblies
         /// Enables/Disables body addons on startup.
         /// </summary>
         /// <param name="harmony">Our instance of harmony to patch with.</param>
-        public Cutebold_Patch_BodyAddons(Harmony harmony)
+        public Cutebold_Patch_Body(Harmony harmony)
         {
             if (!initialized)
             {
@@ -55,6 +55,9 @@ namespace Cutebold_Assemblies
 #if RW1_4
                 //harmonyRef.Patch(AccessTools.Method(typeof(HarmonyPatches), "DrawAddonsFinalHook"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldDrawAddonsFinalHookPostfix"));
                 
+                // Bodytype fixes
+                harmony.Patch(AccessTools.Method(typeof(HarmonyPatches), nameof(HarmonyPatches.CheckBodyType)), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Body), nameof(Cutebold_CheckBodyType_Postfix)));
+                harmony.Patch(AccessTools.Method(typeof(PawnGraphicSet), nameof(PawnGraphicSet.ResolveAllGraphics)), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Body), nameof(Cutebold_ResolveAllGraphics_Postfix)));
 #endif
 
                 initialized = true;
@@ -103,7 +106,7 @@ namespace Cutebold_Assemblies
                 else if (!glowEyes || !eyeAdaptation)
                 {
                     if (patched)
-                        harmonyRef.Unpatch(canDrawAddonMethod, typeof(Cutebold_Patch_BodyAddons).GetMethod("CuteboldCanDrawAddonPrefix"));
+                        harmonyRef.Unpatch(canDrawAddonMethod, typeof(Cutebold_Patch_Body).GetMethod("CuteboldCanDrawAddonPrefix"));
 
                     foreach (var bodyAddon in raceAddons)
                     {
@@ -258,6 +261,69 @@ namespace Cutebold_Assemblies
             }
 
             return __result;
+        }
+
+        public static void Cutebold_CheckBodyType_Postfix(Pawn pawn, ref BodyTypeDef __result)
+        {
+            if (pawn.def.defName != Cutebold_Assemblies.RaceName || __result == BodyTypeDefOf.Child || __result == BodyTypeDefOf.Baby) return;
+
+            BodyTypeDef replacementBodyType = __result;
+
+            // Cutebold body types can normally be either thin or feminine
+            if (pawn.gender == Gender.Male && __result != BodyTypeDefOf.Female && pawn.story.Childhood.defName.StartsWith("Cutebold")) replacementBodyType = BodyTypeDefOf.Thin;
+            if (pawn.gender == Gender.Female && __result != BodyTypeDefOf.Thin && pawn.story.Childhood.defName.StartsWith("Cutebold")) replacementBodyType = BodyTypeDefOf.Female;
+
+            List<Gene> genesListForReading = pawn.genes.GenesListForReading;
+            HashSet<BodyTypeDef> geneBodyTypes = new HashSet<BodyTypeDef>();
+
+            for (int index = 0; index < genesListForReading.Count; ++index)
+            {
+                if (genesListForReading[index].def.bodyType.HasValue)
+                {
+                    var bodyTypeTemp = genesListForReading[index].def.bodyType.Value.ToBodyType(pawn);
+                    switch (bodyTypeTemp.defName)
+                    {
+                        case "Male":
+                            geneBodyTypes.Add(pawn.story.Childhood.defName.StartsWith("Cutebold") ? BodyTypeDefOf.Thin : bodyTypeTemp);
+                            break;
+                        default: geneBodyTypes.Add(bodyTypeTemp); break;
+
+
+                    }
+                }
+            }
+
+            BodyTypeDef randomGeneBody;
+            if (geneBodyTypes.TryRandomElement<BodyTypeDef>(out randomGeneBody))
+                replacementBodyType = randomGeneBody;
+
+            __result = replacementBodyType;
+        }
+
+        public static Vector2 Cutebold_MaleDrawSize_Adjust = new Vector2(-0.2f, 0.0f);
+        public static Vector2 Cutebold_FatDrawSize_Adjust = new Vector2(-0.2f, 0.0f);
+        public static Vector2 Cutebold_HulkDrawSize_Adjust = new Vector2(-0.2f, -0.1f);
+
+        public static void Cutebold_ResolveAllGraphics_Postfix(PawnGraphicSet __instance)
+        {
+            if (__instance.pawn.def.defName != Cutebold_Assemblies.RaceName) return;
+            AlienPartGenerator.AlienComp alienComp = __instance.pawn.GetComp<AlienPartGenerator.AlienComp>();
+            switch (__instance.pawn.story.bodyType.defName)
+            {
+                case "Male":
+                    alienComp.customDrawSize += Cutebold_MaleDrawSize_Adjust;
+                    alienComp.customPortraitDrawSize += Cutebold_MaleDrawSize_Adjust;
+                    return;
+                case "Fat":
+                    alienComp.customDrawSize += Cutebold_FatDrawSize_Adjust;
+                    alienComp.customPortraitDrawSize += Cutebold_FatDrawSize_Adjust;
+                    return;
+                case "Hulk":
+                    alienComp.customDrawSize += Cutebold_HulkDrawSize_Adjust;
+                    alienComp.customPortraitDrawSize += Cutebold_HulkDrawSize_Adjust;
+                    return;
+                default: return;
+            }
         }
 #if RW1_4
         /// <summary>

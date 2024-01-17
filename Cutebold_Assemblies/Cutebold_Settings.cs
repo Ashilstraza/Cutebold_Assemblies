@@ -198,7 +198,7 @@ namespace Cutebold_Assemblies
         public override void WriteSettings()
         {
             //Cutebold_Patch_BodyAddons.CuteboldAddonSettingsUpdate(settings);
-            Cutebold_Patch_BodyAddons.CuteboldAddonModifier(settings);
+            Cutebold_Patch_Body.CuteboldAddonModifier(settings);
             Hediff_CuteboldDarkAdaptation.UpdateIgnoreSickness();
             base.WriteSettings();
         }
@@ -214,7 +214,7 @@ namespace Cutebold_Assemblies
     }
 
     /// <summary>
-    /// Enables the ability to disable a checkbox.
+    /// Enables extra functionality.
     /// </summary>
     public class Cutebold_Listing : Listing_Standard
     {

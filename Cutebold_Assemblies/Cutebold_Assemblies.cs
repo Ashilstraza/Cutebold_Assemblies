@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 using Verse;
 
 namespace Cutebold_Assemblies
@@ -68,7 +69,7 @@ namespace Cutebold_Assemblies
             // Wearing Humanoid Clothing
             harmony.Patch(AccessTools.Method(typeof(ThoughtWorker_HumanLeatherApparel), "CurrentStateInternal"), postfix: new HarmonyMethod(thisClass, nameof(CuteboldCurrentStateInternalPostfix)));
 
-            new Cutebold_Patch_BodyAddons(harmony);
+            new Cutebold_Patch_Body(harmony);
 
             new Cutebold_Patch_Stats(harmony);
 
@@ -76,8 +77,8 @@ namespace Cutebold_Assemblies
 
 #if !RWPre1_4
             new Alien_Patches(harmony); // Patches for allowing custom LifeStageDefs along with patches for other mods
+            // Growth point fix
             harmony.Patch(AccessTools.Method(typeof(Pawn_AgeTracker), "get_GrowthPointsFactor"), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_GrowthPointsFactor_Get_Postfix)));
-
             harmony.Patch(AccessTools.Method(typeof(Pawn_AgeTracker), "TrySimulateGrowthPoints"), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_TrySimulateGrowthPoints_Postfix)));
 #endif
         }

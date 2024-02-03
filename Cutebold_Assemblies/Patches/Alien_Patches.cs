@@ -1,4 +1,5 @@
 ﻿using AlienRace;
+using GrowingZonePlus;
 using HarmonyLib;
 using RimWorld;
 using SomeThingsFloat;
@@ -8,6 +9,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
+using UnityEngine;
 using Verse;
 
 #if !RWPre1_4
@@ -56,6 +58,7 @@ namespace Cutebold_Assemblies.Patches
 
             if (!Harmony.GetPatchInfo(drawExtraEyeGraphicMethod)?.Transpilers?.Any(patch => patch.owner == alienRaceID) ?? true)
             {
+                stringBuilder.AppendLine("  Patching PawnRenderer.DrawHeadHair.DrawExtraEyeGraphic");
                 harmony.Patch(drawExtraEyeGraphicMethod, transpiler: new HarmonyMethod(thisClass, nameof(Alien_DrawExtraEyeGraphic_Transpiler)));
             }
 
@@ -81,11 +84,33 @@ namespace Cutebold_Assemblies.Patches
             {
                 new SomeThingsFloat(harmony, thisClass);
             }
+            if (ModLister.GetActiveModWithIdentifier("babylettuce.growingzone") != null)
+            {
+                new GZP(harmony, thisClass);
+            }
             // faster baby feeding, maybe new mod?
             var feedBabyFoodFromInventoryMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_BottleFeedBaby)).ElementAt(13);
             harmony.Patch(feedBabyFoodFromInventoryMethod, transpiler: new HarmonyMethod(thisClass, nameof(FasterFeeding_Transpiler)));
             harmony.Patch(AccessTools.Method(typeof(ChildcareUtility), "SuckleFromLactatingPawn"), transpiler: new HarmonyMethod(thisClass, nameof(FasterFeeding_Transpiler)));
 #endif
+        }
+
+        public static void GZP_ExposeData_Postfix(Zone_GrowingPlus __instance)
+        {
+            var billStack = __instance.customBillStack;
+            foreach( var bill in billStack )
+            {
+                var UID = Traverse.Create(bill).Field("zoneUniqueID");
+                if (UID.GetValue() == null)
+                {
+                    UID.SetValue(__instance.UniqueID);
+                }
+                if (bill.zgp == null)
+                {
+                    bill.zgp = __instance;
+                }
+                
+            }
         }
 
         public static IEnumerable<CodeInstruction> QuickFix_SomeThingsFloat_Transpiler(IEnumerable<CodeInstruction> instructions)

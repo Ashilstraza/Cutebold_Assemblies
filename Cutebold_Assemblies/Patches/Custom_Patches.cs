@@ -1,4 +1,5 @@
 ﻿using DubsBadHygiene;
+using GrowingZonePlus;
 using HarmonyLib;
 using SomeThingsFloat;
 using System;
@@ -24,6 +25,14 @@ namespace Cutebold_Assemblies.Patches
         public SomeThingsFloat(Harmony harmony, Type alienPatches)
         {
             harmony.Patch(AccessTools.Method(typeof(FloatingThings_MapComponent), "updateListOfWaterCells"), transpiler: new HarmonyMethod(alienPatches, nameof(Alien_Patches.QuickFix_SomeThingsFloat_Transpiler)));
+        }
+    }
+
+    internal class GZP
+    {
+        public GZP(Harmony harmony, Type alienPatches)
+        {
+            harmony.Patch(AccessTools.Method(typeof(Zone_GrowingPlus), "ExposeData"), postfix: new HarmonyMethod(alienPatches, nameof(Alien_Patches.GZP_ExposeData_Postfix)));
         }
     }
 }

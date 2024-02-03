@@ -22,9 +22,9 @@ namespace Cutebold_Assemblies
     public static class Cutebold_Assemblies
     {
         /// <summary>List of all the butcherable races that gives bad thoughts to cutebolds.</summary>
-        private static IEnumerable<string> butcherRaceList;
+        private static HashSet<string> butcherRaceList;
         /// <summary>List of all the humanoid leathers.</summary>
-        private static IEnumerable<ThingDef> humanoidLeathers;
+        private static HashSet<ThingDef> humanoidLeathers;
         /// <summary>If we already have logged the butcher error.</summary>
         private static bool butcherLogged = false;
         /// <summary>If we already have logged the ingestor error.</summary>
@@ -77,9 +77,6 @@ namespace Cutebold_Assemblies
 
 #if !RWPre1_4
             new Alien_Patches(harmony); // Patches for allowing custom LifeStageDefs along with patches for other mods
-            // Growth point fix
-            harmony.Patch(AccessTools.Method(typeof(Pawn_AgeTracker), "get_GrowthPointsFactor"), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_GrowthPointsFactor_Get_Postfix)));
-            harmony.Patch(AccessTools.Method(typeof(Pawn_AgeTracker), "TrySimulateGrowthPoints"), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_TrySimulateGrowthPoints_Postfix)));
 #endif
         }
 
@@ -89,7 +86,8 @@ namespace Cutebold_Assemblies
         private static void CreateButcherRaceList()
         {
             //Log.Message("Create Butcher Race List");
-            List<string> butcherList = new List<string>();
+            //List<string> butcherList = new List<string>();
+            HashSet<string> butcherList = new HashSet<string>();
 
 #if RW1_1
             foreach (String race in AlienRaceDef.alienRace.thoughtSettings.butcherThoughtSpecific.FirstOrDefault().raceList)
@@ -114,8 +112,8 @@ namespace Cutebold_Assemblies
         private static void CreateHumanoidLeatherList()
         {
             //Log.Message("Create Humanoid Leather List");
-            var aliens = new List<ThingDef>();
-            var animals = new List<ThingDef>();
+            var aliens = new HashSet<ThingDef>();
+            var animals = new HashSet<ThingDef>();
 
             foreach (var thingDef in DefDatabase<ThingDef>.AllDefs)
             {
@@ -134,7 +132,7 @@ namespace Cutebold_Assemblies
                 }
             }
 
-            humanoidLeathers = aliens.Except(animals).AsEnumerable<ThingDef>(); // We only want the list of leathers unique to humanoids.
+            humanoidLeathers = (HashSet<ThingDef>)aliens.Except(animals); // We only want the list of leathers unique to humanoids.
             //Log.Message("Humanoid Leather:");
             //foreach (ThingDef leathers in humanoidLeathers) Log.Message(leathers.ToString());
         }
@@ -146,7 +144,7 @@ namespace Cutebold_Assemblies
         /// <param name="__instance">What was ingested.</param>
         /// <param name="ingester">Who ingested the thing.</param>
         /// <returns>Passes through the original float without modifying it.</returns>
-        public static void CuteboldIngestedPostfix(Thing __instance, Pawn ingester)
+        public static void CuteboldIngestedPostfix(ref Thing __instance, Pawn ingester)
         {
             //Log.Message("Ingested Postfix");
             //Log.Message("Instance: " + __instance.ToString() + " Instance Source: " + ((__instance.def.ingestible != null && __instance.def.ingestible.sourceDef != null) ? __instance.def.ingestible.sourceDef.defName.ToString() : "Null") + " ingester: " + ingester.ToString());
@@ -180,7 +178,7 @@ namespace Cutebold_Assemblies
         /// <param name="__instance">What was butchered.</param>
         /// <param name="butcher">Who butchered the thing.</param>
         /// <returns>Passes through the original IEnumerable.</returns>
-        public static void CuteboldButcherProductsPostfix(Corpse __instance, Pawn butcher)
+        public static void CuteboldButcherProductsPostfix(ref Corpse __instance, Pawn butcher)
         {
             //Log.Message("Butcher Products Postfix");
             //Log.Message("Instance: " +  __instance.ToString() + " Instance Source: " + ((__instance.def.ingestible != null && __instance.def.ingestible.sourceDef != null) ? __instance.def.ingestible.sourceDef.defName.ToString() : "Null") + " butcher: " + butcher.ToString());
@@ -213,10 +211,9 @@ namespace Cutebold_Assemblies
         /// <param name="__result">How much of an effect the clothing is having on the pawn. Max is 4.</param>
         /// <param name="p">The pawn to check.</param>
         /// <returns>The modified effect of the clothing. Max is 4.</returns>
-        public static void CuteboldCurrentStateInternalPostfix(ThoughtState __result, Pawn p)
+        public static void CuteboldCurrentStateInternalPostfix(ref ThoughtState __result, Pawn p)
         {
-            //Log.Message("Current State Internal");
-            if (p == null || p.def.defName != RaceName) return; // We only want to apply to cutebolds (currently).
+            if (p?.def.defName != RaceName) return; // We only want to apply to cutebolds (currently).
 
             // Pretty much copied from the regular code.
             string text = null;
@@ -224,7 +221,6 @@ namespace Cutebold_Assemblies
             ThoughtState newThoughtState;
             foreach (var apparel in p.apparel.WornApparel)
             {
-                //Log.Message("apparel stuff: "+wornApparel[i].Stuff.ToString());
                 if (humanoidLeathers.Contains(apparel.Stuff))
                 {
                     if (text == null)
@@ -238,10 +234,8 @@ namespace Cutebold_Assemblies
             if (num == 0) newThoughtState = ThoughtState.Inactive;
             else if (num >= 5) newThoughtState = ThoughtState.ActiveAtStage(4, text);
             else newThoughtState = ThoughtState.ActiveAtStage(num - 1, text);
-
-            //Log.Message("num: " + num.ToString() + " Result Stage Index: " + __result.StageIndex.ToString() + "new Thought State Stage Index: " + newThoughtState.StageIndex.ToString());
-
-            if (__result.StageIndex <= newThoughtState.StageIndex) __result = newThoughtState;
+            
+            __result = newThoughtState;
         }
 
         /// <summary>
@@ -301,89 +295,6 @@ namespace Cutebold_Assemblies
             }
 
             Log.Message(stringBuilder.ToString().TrimEndNewlines());
-        }
-
-        /*
-         * Humans
-         * Age range        Learning Point Max      Rate
-         * 3-7              180                     0.75
-         * 7-10             180                     1
-         * 10-13            180                     1
-         * 
-         * Cutebolds
-         * Age range        Learning Point Max      Rate
-         * 1.5-3            180                     2
-         * 3-6              180                     1
-         * 6-9              180                     1
-         */
-
-        /// <summary>Age at which young Cutebolds should learn at full speed, humans do this at age 7</summary>
-        private static float normalRateAge = 3f;
-        /// <summary>Rate Cutebolds should learn at full speed, humans are 1.0</summary>
-        private static float normalLearnRate = 1f;
-        /// <summary>Rate Cutebolds should learn when very young, humans are 0.75</summary>
-        private static float youngLearnRate = 2f;
-
-        /// <summary>
-        /// Adjusts the GrowthPointsFactor for Cutebolds without waiting on HAR to add it.
-        /// </summary>
-        /// <param name="__instance">The pawn's age tracker that we are fixing.</param>
-        /// <param name="__result">The growth points multiplier</param>
-        public static void Cutebold_GrowthPointsFactor_Get_Postfix(Pawn_AgeTracker __instance, ref float __result)
-        {
-            if (__instance.CurLifeStageRace.def.defName.StartsWith("Cutebold"))
-            {
-                __result = __instance.AgeBiologicalYearsFloat < normalRateAge ? youngLearnRate : normalLearnRate;
-            }
-        }
-
-        /// <summary>
-        /// List of Growth Moment Ages for cutebolds
-        /// </summary>
-        private static List<float> growthMomentAges;
-
-        /// <summary>
-        /// Adjusts the growth points for spawning child Cutebolds without waiting on HAR to add it.
-        /// </summary>
-        /// <param name="__instance">The pawn's age tracker that we are fixing.</param>
-        public static void Cutebold_TrySimulateGrowthPoints_Postfix(Pawn_AgeTracker __instance)
-        {
-            if (__instance.CurLifeStageRace.def.defName.StartsWith("Cutebold"))
-            {
-                if (!ModsConfig.BiotechActive || __instance.AgeBiologicalYears >= __instance.AdultMinAge)
-                {
-                    return;
-                }
-
-                if(growthMomentAges == null) {
-                    growthMomentAges = new List<float>
-                    {
-                        1.5f
-                    };
-                    growthMomentAges.AddRange(HarmonyPatches.GrowthMomentHelper(AlienRaceDef).Select(a => (float)a));
-                }
-
-                __instance.growthPoints = 0f;
-                int ageBiologicalYears = __instance.AgeBiologicalYears;
-                for (int growthMoment = growthMomentAges.Count - 1; growthMoment >= 0; growthMoment--)
-                {
-                    if (ageBiologicalYears >= growthMomentAges[growthMoment])
-                    {
-                        float growthPointsPerDay = (Rand.Range(0.2f, 0.5f) * (__instance.AgeBiologicalYearsFloat < normalRateAge ? youngLearnRate : normalLearnRate) * __instance.ChildAgingMultiplier)
-                            * (((float)growthMomentAges[growthMoment] < normalRateAge) ? youngLearnRate : normalLearnRate);
-                        int growthMomentTicks = (int)growthMomentAges[growthMoment] * 3600000;
-                        long ageTicks = __instance.AgeBiologicalTicks;
-                        while (ageTicks > growthMomentTicks)
-                        {
-                            ageTicks -= 60000;
-                            __instance.growthPoints += growthPointsPerDay;
-                        }
-                        break;
-                    }
-                }
-
-                __instance.growthPoints *= 0.25f;
-            }
         }
     }
 }

@@ -133,6 +133,10 @@
       <HintPath>References\1.4\BadHygiene.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="GrowingZonePlus, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>References\1.4\GrowingZonePlus.dll</HintPath>
+    </Reference>
     <Reference Include="SomeThingsFloat, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>References\1.4\SomeThingsFloat.dll</HintPath>

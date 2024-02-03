@@ -85,20 +85,16 @@ namespace Cutebold_Assemblies
         /// </summary>
         private static void CreateButcherRaceList()
         {
-            //Log.Message("Create Butcher Race List");
-            //List<string> butcherList = new List<string>();
             HashSet<string> butcherList = new HashSet<string>();
 
 #if RW1_1
             foreach (String race in AlienRaceDef.alienRace.thoughtSettings.butcherThoughtSpecific.FirstOrDefault().raceList)
             {
-                //Log.Message("  Race: " + race);
                 butcherList.Add(race);
             }
 #else
             foreach (ThingDef race in AlienRaceDef.alienRace.thoughtSettings.butcherThoughtSpecific.FirstOrDefault().raceList)
             {
-                //Log.Message("  Race: " + race.defName);
                 butcherList.Add(race.defName);
             }
 #endif   
@@ -111,30 +107,22 @@ namespace Cutebold_Assemblies
         /// </summary>
         private static void CreateHumanoidLeatherList()
         {
-            //Log.Message("Create Humanoid Leather List");
             var aliens = new HashSet<ThingDef>();
             var animals = new HashSet<ThingDef>();
 
-            foreach (var thingDef in DefDatabase<ThingDef>.AllDefs)
+            foreach (var thingDef in DefDatabase<ThingDef>.AllDefs.Where(thingDef => thingDef.race?.leatherDef != null))
             {
-                if (thingDef.race?.leatherDef != null)
+                if (thingDef.race.Humanlike)
                 {
-                    //Log.Message("thingDef: " + thingDef.ToString()+" thingDef.race: " + thingDef.race.ToString() + " thingDef.race.leatherDef: " + thingDef.race.leatherDef.ToString(), true);
-                    if (thingDef.race.Humanlike)
-                    {
-                        //Log.Message("    Humanlike");
-                        aliens.Add(thingDef.race.leatherDef);
-                    }
-                    else
-                    {
-                        animals.Add(thingDef.race.leatherDef);
-                    }
+                    aliens.Add(thingDef.race.leatherDef);
+                }
+                else
+                {
+                    animals.Add(thingDef.race.leatherDef);
                 }
             }
 
-            humanoidLeathers = (HashSet<ThingDef>)aliens.Except(animals); // We only want the list of leathers unique to humanoids.
-            //Log.Message("Humanoid Leather:");
-            //foreach (ThingDef leathers in humanoidLeathers) Log.Message(leathers.ToString());
+            humanoidLeathers = new HashSet<ThingDef>(aliens.Except(animals).AsEnumerable()); // We only want the list of leathers unique to humanoids.
         }
 
         /// <summary>

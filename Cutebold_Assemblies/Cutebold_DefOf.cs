@@ -37,5 +37,6 @@ namespace Cutebold_Assemblies
         public static readonly HediffDef CuteboldLightSickness;
         // ApparelDefs
         public static readonly ThingDef Cutebold_Goggles;
+        //public static readonly ThingDef Cutebold_AdvancedGoggles;
     }
 }

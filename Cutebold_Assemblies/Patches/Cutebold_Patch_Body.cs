@@ -1,15 +1,19 @@
-﻿using AlienRace;
-using DubsBadHygiene;
+﻿#if RW1_5
+using AlienRace.ExtendedGraphics;
+#elif RW1_4
+using UnityEngine;
+#endif
+
+using AlienRace;
 using HarmonyLib;
 using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Security.Cryptography;
-using UnityEngine;
+
 using Verse;
+using static AlienRace.AlienPartGenerator;
 
 namespace Cutebold_Assemblies
 {
@@ -30,15 +34,33 @@ namespace Cutebold_Assemblies
         private static bool detachableParts = true;
         /// <summary>Reference to our harmony instance.</summary>
         private static Harmony harmonyRef;
+#if RWPre1_5
         /// <summary>Reference to the CanDrawAddon method.</summary>
         private static readonly MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), nameof(AlienPartGenerator.BodyAddon.CanDrawAddon), new[] {
             typeof(Pawn)
         });
-
+#endif
         /// <summary>Our prefix to the CanDrawAddon method.</summary>
         private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_Body), nameof(CuteboldCanDrawAddonPrefix));
+
+        /// <summary>What kind of modification we want to do to the addons.</summary>
+        private enum Modification : byte
+        {
+            Add,
+            Remove
+        }
+
+        /// <summary>Dictionary with the various paths.</summary>
+        private static readonly Dictionary<String, String> paths = new Dictionary<string, string>(){
+            {"headPath",  "Cutebold/Heads/"},
+            {"simpleHeadPath", "Cutebold/Heads/Simple/"},
+            {"bodyPath", "Cutebold/Bodies/"},
+            {"simpleBodyPath", "Cutebold/Bodies/Simple/"}
+        };
+
+
         /// <summary>If eye blinking is enabled.</summary>
-        private static bool eyeBlink => Cutebold_Assemblies.CuteboldSettings.blinkEyes;
+        public static bool EyeBlink => Cutebold_Assemblies.CuteboldSettings.blinkEyes;
 
         /// <summary>
         /// Enables/Disables body addons on startup.
@@ -48,18 +70,18 @@ namespace Cutebold_Assemblies
         {
             if (!initialized)
             {
-                raceAddons = new List<AlienPartGenerator.BodyAddon>(Cutebold_Assemblies.AlienRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons);
+                raceAddons = new List<BodyAddon>(Cutebold_Assemblies.CuteboldRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons);
                 harmonyRef = harmony;
                 CuteboldAddonModifier(Cutebold_Assemblies.CuteboldSettings);
+#if RWPre1_5
                 harmonyRef.Patch(canDrawAddonRef, prefix: cuteboldCanDrawAddonPrefixRef);
+#endif
+
 #if RW1_4
-                //harmonyRef.Patch(AccessTools.Method(typeof(HarmonyPatches), "DrawAddonsFinalHook"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_BodyAddons), "CuteboldDrawAddonsFinalHookPostfix"));
-                
                 // Bodytype fixes
                 harmony.Patch(AccessTools.Method(typeof(HarmonyPatches), nameof(HarmonyPatches.CheckBodyType)), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Body), nameof(Cutebold_CheckBodyType_Postfix)));
                 harmony.Patch(AccessTools.Method(typeof(PawnGraphicSet), nameof(PawnGraphicSet.ResolveAllGraphics)), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Body), nameof(Cutebold_ResolveAllGraphics_Postfix)));
 #endif
-
                 initialized = true;
             }
         }
@@ -70,163 +92,190 @@ namespace Cutebold_Assemblies
         /// <param name="settings">The settings to reference.</param>
         public static void CuteboldAddonModifier(Cutebold_Settings settings)
         {
-            bool dirty = false;
-            var currentAddons = Cutebold_Assemblies.AlienRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons;
+            List<BodyAddon> currentAddons = Cutebold_Assemblies.CuteboldRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons;
 
-
-            if (settings.glowEyes != glowEyes || settings.eyeAdaptation != eyeAdaptation)
-            {
-                var canDrawAddonMethod = typeof(AlienPartGenerator.BodyAddon).GetMethod("CanDrawAddon");
-                bool patched = false;
-
-
-                if (initialized && Harmony.GetPatchInfo(canDrawAddonMethod).Prefixes.Any(patch => patch.owner == Cutebold_Assemblies.HarmonyID))
-                    patched = true;
-
-                glowEyes = settings.glowEyes;
-                eyeAdaptation = settings.eyeAdaptation;
-
-                if (glowEyes && eyeAdaptation && initialized)
-                {
-                    if (!patched)
-                        harmonyRef.Patch(canDrawAddonRef, cuteboldCanDrawAddonPrefixRef, null, null, null);
-
-                    foreach (var bodyAddon in raceAddons)
-                    {
-#if RWPre1_4
-                        if ((bodyAddon.bodyPart == "left eye" || bodyAddon.bodyPart == "right eye") && !currentAddons.Contains(bodyAddon))
-                            currentAddons.Add(bodyAddon);
-#else
-                        if (bodyAddon.bodyPart.defName != "Eye" && !currentAddons.Contains(bodyAddon))
-                            currentAddons.Add(bodyAddon);
-#endif
-                    }
-
-                }
-                else if (!glowEyes || !eyeAdaptation)
-                {
-                    if (patched)
-                        harmonyRef.Unpatch(canDrawAddonMethod, typeof(Cutebold_Patch_Body).GetMethod("CuteboldCanDrawAddonPrefix"));
-
-                    foreach (var bodyAddon in raceAddons)
-                    {
-#if RWPre1_4
-                        if ((bodyAddon.bodyPart == "left eye" || bodyAddon.bodyPart == "right eye") && currentAddons.Contains(bodyAddon))
-                            currentAddons.Remove(bodyAddon);
-#else
-                        if (bodyAddon.bodyPart.defName != "Eye" && !currentAddons.Contains(bodyAddon))
-                            currentAddons.Add(bodyAddon);
-#endif
-                    }
-                }
-
-                dirty = true;
-            }
-#if RWPre1_4
-            if (settings.detachableParts != detachableParts)
-            {
-                detachableParts = settings.detachableParts;
-
-                var graphicsPaths = Cutebold_Assemblies.AlienRaceDef.alienRace.graphicPaths.First();
-
-                if (detachableParts && initialized)
-                {
-                    graphicsPaths.head = "Cutebold/Heads/";
-                    graphicsPaths.body = "Cutebold/Bodies/";
-
-                    foreach (var bodyAddon in raceAddons)
-                    {
-                        if (bodyAddon.bodyPart != "left eye" && bodyAddon.bodyPart != "right eye" && !currentAddons.Contains(bodyAddon))
-                            currentAddons.Add(bodyAddon);
-                    }
-                }
-                else if (!detachableParts)
-                {
-                    graphicsPaths.head = "Cutebold/Heads/Simple/";
-                    graphicsPaths.body = "Cutebold/Bodies/Simple/";
-
-                    foreach (var bodyAddon in raceAddons)
-                    {
-                        if (bodyAddon.bodyPart != "left eye" && bodyAddon.bodyPart != "right eye" && currentAddons.Contains(bodyAddon))
-                            currentAddons.Remove(bodyAddon);
-                    }
-                }
-
-                dirty = true;
-            }
-#else
-            var graphicsPaths = Cutebold_Assemblies.AlienRaceDef.alienRace.graphicPaths;
-
-            if (settings.detachableParts != detachableParts)
-            {
-                detachableParts = settings.detachableParts;
-
-                if (detachableParts && initialized)
-                {
-                    graphicsPaths.head.path = "Cutebold/Heads/";
-                    graphicsPaths.body.path = "Cutebold/Bodies/";
-
-                    foreach (var bodyAddon in raceAddons)
-                    {
-                        if (bodyAddon.bodyPart.defName != "Eye" && !currentAddons.Contains(bodyAddon))
-                            currentAddons.Add(bodyAddon);
-                    }
-                }
-                else if (!detachableParts)
-                {
-                    graphicsPaths.head.path = "Cutebold/Heads/Simple/";
-                    graphicsPaths.body.path = "Cutebold/Bodies/Simple/";
-
-                    foreach (var bodyAddon in raceAddons)
-                    {
-                        if (bodyAddon.bodyPart.defName != "Eye" && currentAddons.Contains(bodyAddon))
-                            currentAddons.Remove(bodyAddon);
-                    }
-                }
-
-                // Mimics the way AlienRace builds the body and head graphic paths
-
-                foreach (var body in graphicsPaths.body.bodytypeGraphics)
-                {
-                    body.path = $"{graphicsPaths.body.path}Naked_{body.bodytype}";
-
-                    foreach (var genderedBody in body.genderGraphics)
-                    {
-                        genderedBody.path = $"{graphicsPaths.body.path}{genderedBody.gender}Naked_{body.bodytype}";
-                    }
-                    body.paths = new List<string>() { body.path };
-
-                }
-
-                foreach (var head in graphicsPaths.head.headtypeGraphics)
-                {
-                    var headTypePath = System.IO.Path.GetFileName(head.headType.graphicPath);
-                    head.path = graphicsPaths.head.path + headTypePath.Substring(headTypePath.IndexOf('_') + 1);
-
-                    foreach (var generedHead in head.genderGraphics)
-                    {
-                        generedHead.path = graphicsPaths.head.path + headTypePath;
-                    }
-                    head.paths = new List<string>() { head.path };
-                }
-
-                dirty = true;
-            }
-#endif
-            if (dirty)
+            if (UpdateEyes(settings, ref currentAddons) || UpdateBodiesAndHeads(settings, ref currentAddons))
             {
                 foreach (Pawn pawn in PawnsFinder.All_AliveOrDead)
                 {
-                    if (pawn.def.defName == Cutebold_Assemblies.RaceName)
+                    if (pawn.def == Cutebold_Assemblies.CuteboldRaceDef)
                     {
-                        pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
-                        
+                        SetDirty(pawn);
                     }
                 }
             }
         }
 
         /// <summary>
+        /// Sets the given pawn's graphics as dirty to have it redrawn.
+        /// </summary>
+        /// <param name="pawn">The pawn to dirty</param>
+        public static void SetDirty(Pawn pawn)
+        {
+#if RWPre1_3
+            pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+#elif RWPre1_5
+            pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+            GlobalTextureAtlasManager.TryMarkPawnFrameSetDirty(pawn);
+#else
+            pawn.Drawer.renderer.renderTree.SetDirty();
+            GlobalTextureAtlasManager.TryMarkPawnFrameSetDirty(pawn);
+#endif
+        }
+
+        /// <summary>
+        /// Updates eye addons.
+        /// </summary>
+        /// <param name="settings">The current settings</param>
+        /// <param name="currentAddons"> reference to the list of current addons.</param>
+        /// <returns>True if we need to redraw the cache for cutebolds.</returns>
+        private static bool UpdateEyes(Cutebold_Settings settings, ref List<BodyAddon> currentAddons)
+        {
+            if (settings.glowEyes != glowEyes || settings.eyeAdaptation != eyeAdaptation)
+            {
+                MethodInfo canDrawAddonMethod = typeof(BodyAddon).GetMethod("CanDrawAddon");
+                bool patched = false;
+
+                glowEyes = settings.glowEyes;
+                eyeAdaptation = settings.eyeAdaptation;
+
+                if (initialized && Harmony.GetPatchInfo(canDrawAddonMethod).Prefixes.Any(patch => patch.owner == Cutebold_Assemblies.HarmonyID))
+                    patched = true;
+
+                if (glowEyes && eyeAdaptation && initialized)
+                {
+                    if (!patched)
+#if RWPre1_5
+                        harmonyRef.Patch(canDrawAddonRef, prefix: cuteboldCanDrawAddonPrefixRef);
+#endif
+
+                    foreach (BodyAddon bodyAddon in raceAddons)
+                    {
+                        CheckModifyPart(true, ref currentAddons, bodyAddon, Modification.Add);
+                    }
+
+                }
+                else if (!glowEyes || !eyeAdaptation)
+                {
+                    if (patched)
+#if RWPre1_5
+                        harmonyRef.Unpatch(canDrawAddonRef, cuteboldCanDrawAddonPrefixRef.method);
+#endif
+
+                    foreach (BodyAddon bodyAddon in raceAddons)
+                    {
+                        CheckModifyPart(true, ref currentAddons, bodyAddon, Modification.Remove);
+                    }
+                }
+
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Updates body and head addons that are not eyes.
+        /// </summary>
+        /// <param name="settings">The current settings</param>
+        /// <param name="currentAddons"> reference to the list of current addons.</param>
+        /// <returns>True if we need to redraw the cache for cutebolds.</returns>
+        private static bool UpdateBodiesAndHeads(Cutebold_Settings settings, ref List<BodyAddon> currentAddons)
+        {
+            if (settings.detachableParts != detachableParts)
+            {
+                detachableParts = settings.detachableParts;
+
+                SetGraphicPaths(detachableParts);
+
+                if (detachableParts && initialized)
+                {
+                    foreach (BodyAddon bodyAddon in raceAddons)
+                    {
+                        CheckModifyPart(false, ref currentAddons, bodyAddon, Modification.Add);
+                    }
+                }
+                else if (!detachableParts)
+                {
+                    foreach (BodyAddon bodyAddon in raceAddons)
+                    {
+                        CheckModifyPart(false, ref currentAddons, bodyAddon, Modification.Remove);
+                    }
+                }
+
+                return true;
+            }
+            
+            return false;
+        }
+
+        /// <summary>
+        /// Updates the graphic paths depending on version
+        /// </summary>
+        /// <param name="detachableParts">If we want parts to be visually detached</param>
+        private static void SetGraphicPaths(bool detachableParts = true)
+        {
+            GraphicPaths graphicsPaths;
+#if RWPre1_4
+            graphicsPaths = Cutebold_Assemblies.CuteboldRaceDef.alienRace.graphicPaths.First();
+            graphicsPaths.head = detachableParts ? paths["headPath"] : paths["simpleHeadPath"];
+            graphicsPaths.body = detachableParts ? paths["bodyPath"] : paths["simpleBodyPath"];
+#else
+            graphicsPaths = Cutebold_Assemblies.CuteboldRaceDef.alienRace.graphicPaths;
+            graphicsPaths.head.path = detachableParts ? paths["headPath"] : paths["simpleHeadPath"];
+            graphicsPaths.body.path = detachableParts ? paths["bodyPath"] : paths["simpleBodyPath"];
+
+            //Handle body and head variations
+            UpdateBodyGraphics(ref graphicsPaths);
+            UpdateHeadGraphics(ref graphicsPaths);
+#endif
+        }
+
+        /// <summary>
+        /// Handles version dependant modification of body addons
+        /// </summary>
+        /// <param name="forEyes">If we are messing with the eyes</param>
+        /// <param name="currentAddons">List of the current body addons</param>
+        /// <param name="bodyAddon">Current body addon we want to modify</param>
+        /// <param name="modify">If we should add or remove body parts</param>
+        private static void CheckModifyPart(bool forEyes, ref List<BodyAddon> currentAddons, BodyAddon bodyAddon, Modification modify)
+        {
+            bool shouldModify;
+
+            if (forEyes)
+            {
+#if RWPre1_4
+                shouldModify = bodyAddon.bodyPart == "left eye" || bodyAddon.bodyPart == "right eye";
+#elif RW1_4
+                    shouldModify = bodyAddon.bodyPart.defName == "Eye";
+#else
+                    shouldModify = ((ConditionBodyPart)bodyAddon.conditions.Find(condition => condition is ConditionBodyPart))?.bodyPart.defName == "Eye";
+#endif
+            }
+            else
+            {
+#if RWPre1_4
+                shouldModify = bodyAddon.bodyPart != "left eye" && bodyAddon.bodyPart != "right eye";
+#elif RW1_4
+                    shouldModify = bodyAddon.bodyPart.defName != "Eye";
+#else
+                    shouldModify = ((ConditionBodyPart)bodyAddon.conditions.Find(condition => condition is ConditionBodyPart))?.bodyPart.defName != "Eye";
+#endif
+            }
+            if (modify == Modification.Add)
+            {
+                if (shouldModify && !currentAddons.Contains(bodyAddon))
+                    currentAddons.Add(bodyAddon);
+            }
+            else if (modify == Modification.Remove)
+            {
+                if (shouldModify && currentAddons.Contains(bodyAddon))
+                    currentAddons.Remove(bodyAddon);
+            }
+        }
+
+        /// <summary>
+        /// Used Pre 1.5
         /// Checks a body addon if it should be drawn. This checks if the pawn is:
         /// - Dead
         /// - In a lit room
@@ -236,36 +285,86 @@ namespace Cutebold_Assemblies
         /// <param name="__result">If we should draw this addon.</param>
         /// <param name="pawn">The pawn the addon belongs to.</param>
         /// <returns>Returns true if we want to continue checking the addon in the regular method, false if we don't want to draw this addon.</returns>
-        private static bool CuteboldCanDrawAddonPrefix(Pawn pawn, ref bool __result, AlienPartGenerator.BodyAddon __instance)
+        private static bool CuteboldCanDrawAddonPrefix(Pawn pawn, ref bool __result, BodyAddon __instance)
         {
 #if RWPre1_4
-            if (pawn.def.defName != Cutebold_Assemblies.RaceName || (__instance.bodyPart != "left eye" && __instance.bodyPart != "right eye")) return true;
+            if (pawn.def != Cutebold_Assemblies.CuteboldRaceDef || (__instance.bodyPart != "left eye" && __instance.bodyPart != "right eye")) return true;
+#elif RW1_4
+            if (pawn.def != Cutebold_Assemblies.CuteboldRaceDef || __instance.bodyPart.defName != "Eye") return true;
 #else
-            if (pawn.def.defName != Cutebold_Assemblies.RaceName || __instance.bodyPart.defName != "Eye") return true;
+            return __result;
 #endif
+#pragma warning disable IDE0079 // Remove unnecessary suppression
+#pragma warning disable CS0162 // Unreachable code detected
             __result = true;
 
+#pragma warning restore CS0162 // Unreachable code detected
+#pragma warning restore IDE0079 // Remove unnecessary suppression
+
             if (pawn.Dead ||
-                ((pawn.ParentHolder as Map) != null ? pawn.Map.glowGrid.GameGlowAt(pawn.Position) : (pawn.CarriedBy != null ? pawn.CarriedBy.Map.glowGrid.GameGlowAt(pawn.CarriedBy.Position) : 0.5f)) >= 0.3f ||
+                Cutebold_Patch_HediffRelated.CuteboldGlowHandler(pawn) >= 0.3f ||
                 (pawn.CurJob != null && pawn.jobs.curDriver.asleep) ||
                 pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f ||
                 pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f)
             {
                 __result = false;
             }
-            else if (eyeBlink)
+            else if (EyeBlink)
             {
                 // Blink Fucntion; somewhat regular blinking, but not exactly even nor completely random.
-                var offsetTicks = Math.Abs(pawn.HashOffsetTicks());
+                int offsetTicks = Math.Abs(pawn.HashOffsetTicks());
                 if (Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89))) < 1) __result = false;
             }
 
+
             return __result;
+        }
+#if RWPre1_4
+    } // Close Cutebold_Patch_Body Class
+#endif
+
+        #region 1.4 Only Code
+#if RW1_4
+        /// <summary>
+        /// Updates the paths for the body graphic variations
+        /// </summary>
+        /// <param name="graphicsPaths">Reference to the graphic paths.</param>
+        private static void UpdateBodyGraphics(ref GraphicPaths graphicsPaths)
+        {
+            foreach (var body in graphicsPaths.body.bodytypeGraphics)
+            {
+                body.path = $"{graphicsPaths.body.path}Naked_{body.bodytype}";
+
+                foreach (var genderedBody in body.genderGraphics)
+                {
+                    genderedBody.path = $"{graphicsPaths.body.path}{genderedBody.gender}Naked_{body.bodytype}";
+                }
+                body.paths = new List<string>() { body.path };
+            }
+        }
+
+        /// <summary>
+        /// Updates the paths for the head graphic variations
+        /// </summary>
+        /// <param name="graphicsPaths">Reference to the graphic paths.</param>
+        private static void UpdateHeadGraphics(ref GraphicPaths graphicsPaths)
+        {
+            foreach (var head in graphicsPaths.head.headtypeGraphics)
+            {
+                var headTypePath = System.IO.Path.GetFileName(head.headType.graphicPath);
+                head.path = graphicsPaths.head.path + headTypePath.Substring(headTypePath.IndexOf('_') + 1);
+
+                foreach (var generedHead in head.genderGraphics)
+                {
+                    generedHead.path = graphicsPaths.head.path + headTypePath;
+                }
+                head.paths = new List<string>() { head.path };
+            }
         }
 
         public static void Cutebold_CheckBodyType_Postfix(Pawn pawn, ref BodyTypeDef __result)
         {
-            if (pawn.def.defName != Cutebold_Assemblies.RaceName || __result == BodyTypeDefOf.Child || __result == BodyTypeDefOf.Baby) return;
+            if (pawn.def != Cutebold_Assemblies.CuteboldRaceDef || __result == BodyTypeDefOf.Child || __result == BodyTypeDefOf.Baby) return;
 
             BodyTypeDef replacementBodyType = __result;
 
@@ -306,7 +405,7 @@ namespace Cutebold_Assemblies
 
         public static void Cutebold_ResolveAllGraphics_Postfix(PawnGraphicSet __instance)
         {
-            if (__instance.pawn.def.defName != Cutebold_Assemblies.RaceName) return;
+            if (__instance.pawn.def != Cutebold_Assemblies.CuteboldRaceDef) return;
             AlienPartGenerator.AlienComp alienComp = __instance.pawn.GetComp<AlienPartGenerator.AlienComp>();
             switch (__instance.pawn.story.bodyType.defName)
             {
@@ -325,20 +424,76 @@ namespace Cutebold_Assemblies
                 default: return;
             }
         }
-#if RW1_4
-        /// <summary>
-        /// Custom fixes for body addons
-        /// </summary>
-        /// <param name="pawn"></param>
-        /// <param name="ba"></param>
-        /// <param name="rot"></param>
-        /// <param name="addonGraphic"></param>
-        /// <param name="offsetVector"></param>
-        /// <param name="angle"></param>
-        /// <param name="mat"></param>
-        private static void CuteboldDrawAddonsFinalHookPostfix(Pawn pawn, AlienPartGenerator.BodyAddon addon, Rot4 rot, ref Graphic graphic, ref Vector3 offsetVector, ref float angle, ref Material mat)
-        {
-        }
+    } // Close Cutebold_Patch_Body Class
 #endif
+        #endregion
+
+        #region 1.5 Only Code
+#if RW1_5
+        /// <summary>
+        /// Updates the paths for the body graphic variations
+        /// </summary>
+        /// <param name="graphicsPaths">Reference to the graphic paths.</param>
+        private static void UpdateBodyGraphics(ref GraphicPaths graphicsPaths)
+        {
+            foreach (ExtendedConditionGraphic bodyType in graphicsPaths.body.extendedGraphics.Cast<ExtendedConditionGraphic>())
+            {
+                ConditionBodyType bodyTypeCondition = (ConditionBodyType)bodyType.conditions.Find(body => body is ConditionBodyType);
+                bodyType.path = $"{graphicsPaths.body.path}Naked_{(bodyTypeCondition.bodyType == BodyTypeDefOf.Baby ? BodyTypeDefOf.Child : bodyTypeCondition.bodyType)}";
+
+                foreach (ExtendedConditionGraphic genderedBody in bodyType.extendedGraphics.Cast<ExtendedConditionGraphic>())
+                {
+                    ConditionGender genderCondition = (ConditionGender)genderedBody.conditions.Find(gender => gender is ConditionGender);
+                    genderedBody.path = $"{graphicsPaths.body.path}{genderCondition.gender}_Naked_{(bodyTypeCondition.bodyType == BodyTypeDefOf.Baby ? BodyTypeDefOf.Child : bodyTypeCondition.bodyType)}";
+                }
+                bodyType.paths = new List<string>() { bodyType.path }; //TODO Fix this maybe?
+
+            }
+        }
+
+        /// <summary>
+        /// Updates the paths for the head graphic variations
+        /// </summary>
+        /// <param name="graphicsPaths">Reference to the graphic paths.</param>
+        private static void UpdateHeadGraphics(ref GraphicPaths graphicsPaths)
+        {
+            foreach (ExtendedConditionGraphic headType in graphicsPaths.head.extendedGraphics.Cast<ExtendedConditionGraphic>())
+            {
+                headType.path = graphicsPaths.head.path + System.IO.Path.GetFileName(headType.path);
+
+                foreach (ExtendedConditionGraphic generedHead in headType.extendedGraphics.Cast<ExtendedConditionGraphic>())
+                {
+                    generedHead.path = graphicsPaths.head.path + System.IO.Path.GetFileName(generedHead.path);
+                }
+                headType.paths = new List<string>() { headType.path }; //TODO Fix this maybe?
+            }
+        }
+    } // Close Cutebold_Patch_Body Class
+    public class CuteboldEyeBlink : Condition
+    {
+        public new const string XmlNameParseKey = "CuteboldBlink";
+
+        public override bool Satisfied(ExtendedGraphicsPawnWrapper pawn, ref ResolveData data)
+        {
+            Pawn p = pawn.WrappedPawn;
+            if (p.Dead ||
+                Cutebold_Patch_HediffRelated.CuteboldGlowHandler(p) >= 0.3f ||
+                (pawn.CurJob != null && p.jobs.curDriver.asleep) ||
+                p.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f ||
+                p.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f)
+            {
+                return false;
+            }
+            else if (Cutebold_Patch_Body.EyeBlink)
+            {
+                // Blink Fucntion; somewhat regular blinking, but not exactly even nor completely random.
+                int offsetTicks = Math.Abs(p.HashOffsetTicks());
+                if (Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89))) < 1) return false;
+            }
+
+            return true;
+        } 
     }
+#endif
+#endregion
 }

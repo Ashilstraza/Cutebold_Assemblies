@@ -1,13 +1,17 @@
-﻿using AlienRace;
+﻿#if !RWPre1_4
 using Cutebold_Assemblies.Patches;
+#endif
+
+using AlienRace;
 using HarmonyLib;
 using RimWorld;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using UnityEngine;
 using Verse;
+using UnityEngine;
+using System.Reflection;
 
 namespace Cutebold_Assemblies
 {
@@ -31,11 +35,9 @@ namespace Cutebold_Assemblies
         private static bool ingestedLogged = false;
 
         /// <summary>Cutebold alien race def.</summary>
-        public static readonly ThingDef_AlienRace AlienRaceDef = (ThingDef_AlienRace)Cutebold_DefOf.Alien_Cutebold;
+        public static readonly ThingDef_AlienRace CuteboldRaceDef = (ThingDef_AlienRace)Cutebold_DefOf.Alien_Cutebold;
         /// <summary>Our mod name, for debug output purposes.</summary>
         public static readonly string ModName = "Cutebold Race Mod";
-        /// <summary>Cutebold race def string.</summary>
-        public static readonly string RaceName = "Alien_Cutebold";
         /// <summary>Cutebold Harmony ID.</summary>
         public static readonly string HarmonyID = "rimworld.ashilstraza.races.cute.main";
         /// <summary>Reference to harmony.</summary>
@@ -51,14 +53,10 @@ namespace Cutebold_Assemblies
         {
             CuteboldSettings = LoadedModManager.GetMod<CuteboldMod>().GetSettings<Cutebold_Settings>();
 
-            try { CreateButcherRaceList(); } // Added because of an update to HAR that changed how referencing other races worked.
-            catch (MissingFieldException e)
-            {
-                Log.Error($"{ModName}: Unable to create butcher race list. Check and see if Humanoid Alien Races has been updated.\n    {e.GetBaseException()}");
-            }
+            CreateButcherRaceList();
             CreateHumanoidLeatherList();
 
-            var thisClass = typeof(Cutebold_Assemblies);
+            Type thisClass = typeof(Cutebold_Assemblies);
 
             new Cutebold_Patch_Names(harmony);
 
@@ -70,9 +68,7 @@ namespace Cutebold_Assemblies
             harmony.Patch(AccessTools.Method(typeof(ThoughtWorker_HumanLeatherApparel), "CurrentStateInternal"), postfix: new HarmonyMethod(thisClass, nameof(CuteboldCurrentStateInternalPostfix)));
 
             new Cutebold_Patch_Body(harmony);
-
             new Cutebold_Patch_Stats(harmony);
-
             new Cutebold_Patch_HediffRelated(harmony);
 
 #if !RWPre1_4
@@ -88,12 +84,12 @@ namespace Cutebold_Assemblies
             HashSet<string> butcherList = new HashSet<string>();
 
 #if RW1_1
-            foreach (String race in AlienRaceDef.alienRace.thoughtSettings.butcherThoughtSpecific.FirstOrDefault().raceList)
+            foreach (String race in CuteboldRaceDef.alienRace.thoughtSettings.butcherThoughtSpecific.FirstOrDefault().raceList)
             {
                 butcherList.Add(race);
             }
 #else
-            foreach (ThingDef race in AlienRaceDef.alienRace.thoughtSettings.butcherThoughtSpecific.FirstOrDefault().raceList)
+            foreach (ThingDef race in CuteboldRaceDef.alienRace.thoughtSettings.butcherThoughtSpecific.FirstOrDefault().raceList)
             {
                 butcherList.Add(race.defName);
             }
@@ -107,10 +103,10 @@ namespace Cutebold_Assemblies
         /// </summary>
         private static void CreateHumanoidLeatherList()
         {
-            var aliens = new HashSet<ThingDef>();
-            var animals = new HashSet<ThingDef>();
+            HashSet<ThingDef> aliens = new HashSet<ThingDef>();
+            HashSet<ThingDef> animals = new HashSet<ThingDef>();
 
-            foreach (var thingDef in DefDatabase<ThingDef>.AllDefs.Where(thingDef => thingDef.race?.leatherDef != null))
+            foreach (ThingDef thingDef in DefDatabase<ThingDef>.AllDefs.Where(thingDef => thingDef.race?.leatherDef != null))
             {
                 if (thingDef.race.Humanlike)
                 {
@@ -118,7 +114,8 @@ namespace Cutebold_Assemblies
                 }
                 else
                 {
-                    animals.Add(thingDef.race.leatherDef);
+                    // Ignore animals that have human leather as their type
+                    if(thingDef.race.leatherDef.defName != "Leather_Human") animals.Add(thingDef.race.leatherDef);
                 }
             }
 
@@ -201,20 +198,21 @@ namespace Cutebold_Assemblies
         /// <returns>The modified effect of the clothing. Max is 4.</returns>
         public static void CuteboldCurrentStateInternalPostfix(ref ThoughtState __result, Pawn p)
         {
-            if (p?.def.defName != RaceName) return; // We only want to apply to cutebolds (currently).
+#if RWPre1_3
+            if (p?.def != CuteboldRaceDef) return; // We only want to apply to cutebolds.
+#else
+            if (p?.def != CuteboldRaceDef || p?.Ideo == null) return; // We only want to apply to cutebolds.
+#endif
 
             // Pretty much copied from the regular code.
             string text = null;
             int num = 0;
             ThoughtState newThoughtState;
-            foreach (var apparel in p.apparel.WornApparel)
+            foreach (Apparel apparel in p.apparel.WornApparel)
             {
                 if (humanoidLeathers.Contains(apparel.Stuff))
                 {
-                    if (text == null)
-                    {
-                        text = apparel.def.label;
-                    }
+                    text ??= apparel.def.label;
                     num++;
                 }
             }
@@ -231,58 +229,70 @@ namespace Cutebold_Assemblies
         /// </summary>
         public static void CheckPatchedMethods(bool allMethods = false)
         {
-            StringBuilder stringBuilder = new StringBuilder($"{ModName}: Checking Patched Methods...\n");
-            var patchedMethods = harmony.GetPatchedMethods();
-            if (allMethods) patchedMethods = Harmony.GetAllPatchedMethods();
+            StringBuilder stringBuilder = new StringBuilder();
 
-            foreach (var method in patchedMethods)
+            IEnumerable<MethodBase> patchedMethods = allMethods ? Harmony.GetAllPatchedMethods() : harmony.GetPatchedMethods();
+
+            writeLine($"{ModName}: Checking Patched Methods...\n", ref stringBuilder);
+
+            foreach (MethodBase method in patchedMethods)
             {
-                var patches = Harmony.GetPatchInfo(method);
+                HarmonyLib.Patches patches = Harmony.GetPatchInfo(method);
 
-                stringBuilder.AppendLine($"    {method.Name}");
+                writeLine($"    {method.Name}", ref stringBuilder);
 
                 if (patches != null)
                 {
                     if (patches.Prefixes.Count > 0)
                     {
-                        stringBuilder.AppendLine($"        Prefixes:");
-                        foreach (var patch in patches.Prefixes)
-                            stringBuilder.AppendLine(patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}"));
+                        writeLine("        Prefixes:".Colorize(Color.blue), ref stringBuilder);
+
+                        foreach (Patch patch in patches.Prefixes)
+                            writeLine(patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}").Colorize(patch.owner == HarmonyID ? Color.green : Color.white), ref stringBuilder);
                     }
                     if (patches.Postfixes.Count > 0)
                     {
-                        stringBuilder.AppendLine($"        Postfixes:");
-                        foreach (var patch in patches.Postfixes)
-                            stringBuilder.AppendLine(patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}"));
+                        writeLine("        Postfixes:".Colorize(Color.cyan), ref stringBuilder);
+
+                        foreach (Patch patch in patches.Postfixes)
+                            writeLine(patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}").Colorize(patch.owner == HarmonyID ? Color.green : Color.white), ref stringBuilder);
                     }
                     if (patches.Transpilers.Count > 0)
                     {
-                        stringBuilder.AppendLine($"        Transpilers:");
-                        foreach (var patch in patches.Transpilers)
-                            stringBuilder.AppendLine(patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}"));
+                        writeLine("        Transpilers:".Colorize(Color.magenta), ref stringBuilder);
+
+                        foreach (Patch patch in patches.Transpilers)
+                            writeLine(patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}").Colorize(patch.owner == HarmonyID ? Color.green : Color.white), ref stringBuilder);
                     }
                     if (patches.Finalizers.Count > 0)
                     {
-                        stringBuilder.AppendLine($"        Finalziers:");
-                        foreach (var patch in patches.Finalizers)
-                            stringBuilder.AppendLine(patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}"));
+                        writeLine("        Finalziers:".Colorize(new Color(1f, 0.6f, 0f, 1f)), ref stringBuilder);
+
+                        foreach (Patch patch in patches.Finalizers)
+                            writeLine(patchOutput(patch, $"index={patch.index} owner={patch.owner} patchMethod={patch.PatchMethod} priority={patch.priority} before={patch.before} after={patch.after}").Colorize(patch.owner == HarmonyID ? Color.green : Color.white), ref stringBuilder);
                     }
                 }
                 else
                 {
-                    stringBuilder.AppendLine($"Error: Patches is null");
+                    writeLine("Error: Patches is null".Colorize(Color.red), ref stringBuilder);
                 }
             }
 
-            stringBuilder.AppendLine($"    End of Check");
+            writeLine("    End of Check", ref stringBuilder);
 
-            string patchOutput(Patch patch, string patchText)
+            Log.Message(stringBuilder.ToString().TrimEndNewlines());
+
+            static string patchOutput(Patch patch, string patchText)
             {
                 if (patch.owner == HarmonyID) return "Cb        " + patchText;
                 else return "            " + patchText;
             }
 
-            Log.Message(stringBuilder.ToString().TrimEndNewlines());
+            void writeLine(string text, ref StringBuilder stringBuilder)
+            {
+                if(!allMethods) Log.Message(text);
+                stringBuilder.AppendLine(text.StripTags());
+            }
         }
     }
 }

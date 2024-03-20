@@ -1,12 +1,15 @@
-﻿using Cutebold_Assemblies.Patches;
-using HarmonyLib;
-using RimWorld;
-using System;
+﻿#if RWPre1_3
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using UnityEngine;
+#endif
+
+using HarmonyLib;
+using RimWorld;
+using RimWorld.Planet;
+using System;
 using Verse;
 
 namespace Cutebold_Assemblies
@@ -17,12 +20,12 @@ namespace Cutebold_Assemblies
     class Cutebold_Patch_HediffRelated
     {
         /// <summary>
-        /// Enables patches depending on various options or other mods.
+        /// Enables patches governing Dark Adaptation related methods depending on various options or other mods.
         /// </summary>
         /// <param name="harmony">Our harmony instance.</param>
         public Cutebold_Patch_HediffRelated(Harmony harmony)
         {
-            var thisClass = typeof(Cutebold_Patch_HediffRelated);
+            Type thisClass = typeof(Cutebold_Patch_HediffRelated);
             if (Cutebold_Assemblies.CuteboldSettings.eyeAdaptation)
             {
                 // Allows for dark adaptation, obviously not cave adaptation since that is a different game with cute kobolds.
@@ -55,7 +58,7 @@ namespace Cutebold_Assemblies
                 // Don't patch if CE is running, we will use that to put goggles below headgear.
                 if (ModLister.GetActiveModWithIdentifier("CETeam.CombatExtended") == null/* && ModLister.GetActiveModWithIdentifier("OskarPotocki.VanillaFactionsExpanded.Core") == null*/)
                 {
-                    // Adjust layer offset for cutebold goggles.
+                    // Adjust layer offset for cutebold goggles before ideology got released.
 
 #if RWPre1_3
                     harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
@@ -69,17 +72,6 @@ namespace Cutebold_Assemblies
                                         typeof(bool),
                                         typeof(bool)
                                     }), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
-#elif RW1_3
-                    //Hat rendering was moved to a local function to make things even more fun to patch!
-
-                    // VFE uses typeof(PawnRenderer).GetMethods(AccessTools.all).FirstOrDefault((MethodInfo x) => x.Name.Contains("<DrawHeadHair>") && x.Name.Contains("DrawApparel"));
-                    MethodInfo toBePatched = AccessTools.GetDeclaredMethods(typeof(PawnRenderer)).ElementAt(29);
-                    harmony.Patch(toBePatched, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
-#elif RW1_4
-                    // Can access a point outside of the local function
-                    harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "DrawHeadHair"), transpiler: new HarmonyMethod(thisClass, nameof(CuteboldGogglesFixTranspiler)));
-#else
-#warning Goggle patch disabled.
 #endif
                 }
             }
@@ -96,7 +88,7 @@ namespace Cutebold_Assemblies
         /// <param name="t">The thing that is being evaluated.</param>
         private static void CuteboldFactorFromGlowPostfix(StatPart_Glow __instance, ref float __result, Thing t)
         {
-            if (t.def.defName == Cutebold_Assemblies.RaceName)
+            if (t.def == Cutebold_Assemblies.CuteboldRaceDef)
             {
 
                 switch (__instance.parentStat.defName)
@@ -105,13 +97,64 @@ namespace Cutebold_Assemblies
                     case "SurgerySuccessChanceFactor":
                     case "WorkSpeedGlobal":
                         Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)((Pawn)t).health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
-                        if (hediff != null) __result = hediff.GlowCurve.Evaluate(t.Map.glowGrid.GameGlowAt(t.Position));
+                        if (hediff != null) __result = hediff.GlowCurve.Evaluate(CuteboldGlowHandler((Pawn)t));
                         break;
                     default:
                         break;
                 }
             }
         }
+
+        #region  Pre 1.5 Glow Handler
+#if RWPre1_5
+        /// <summary>
+        /// Checks the glowGrid at the given thing's position
+        /// </summary>
+        /// <param name="t">The thing to assess the glow level</param>
+        /// <returns>The glow level</returns>
+        public static float CuteboldGlowHandler(Pawn p)
+        {
+            if (p is null) return 0.5f;
+            if (p.Spawned) return p.Map.glowGrid.GameGlowAt(p.Position);
+            else if (p.CarriedBy != null) return p.CarriedBy.Map.glowGrid.GameGlowAt(p.CarriedBy.Position);
+            else if (p.ParentHolder != null && p.ParentHolder is Caravan caravan)
+            {
+                float time = GenDate.HourFloat(GenTicks.TicksAbs, Find.WorldGrid.LongLatOf(caravan.Tile).x);
+
+                if (time > 19 || time < 5) return 0f; // Night
+                else if (time > 18 || time < 6) return 0.5f; // Dusk/Dawn
+                else return 1f; // Day
+            }
+            return 0.5f;
+        }
+#endif
+#endregion
+
+        #region Post 1.5 Glow Handler
+#if !RWPre1_5
+/// <summary>
+        /// Checks the glowGrid at the given thing's position
+        /// </summary>
+        /// <param name="t">The thing to assess the glow level</param>
+        /// <returns>The glow level</returns>
+        public static float CuteboldGlowHandler(Pawn p)
+        {
+            if (p is null) return 0.5f;
+            if (p.Spawned) return p.Map.glowGrid.GroundGlowAt(p.Position);
+            else if (p.CarriedBy != null) return p.CarriedBy.Map.glowGrid.GroundGlowAt(p.CarriedBy.Position);
+            else if (p.ParentHolder != null && p.ParentHolder is Caravan caravan)
+            {
+                float time = GenDate.HourFloat(GenTicks.TicksAbs, Find.WorldGrid.LongLatOf(caravan.Tile).x);
+
+                if (time > 19 || time < 5) return 0f; // Night
+                else if (time > 18 || time < 6) return 0.5f; // Dusk/Dawn
+                else return 1f; // Day
+            }
+            return 0.5f;
+        }
+#endif
+#endregion
+
 
         /// <summary>
         /// Overrides if cutebolds ignore darkness ignores.
@@ -120,7 +163,7 @@ namespace Cutebold_Assemblies
         /// <param name="t">The thing that is being evaluated.</param>
         private static void CuteboldGlowActiveForPostfix(ref bool __result, Thing t)
         {
-            if (t.def.defName == Cutebold_Assemblies.RaceName)
+            if (t.def == Cutebold_Assemblies.CuteboldRaceDef)
             {
                 __result = t.Spawned;
             }
@@ -134,11 +177,11 @@ namespace Cutebold_Assemblies
         /// <param name="respawningAfterLoad">If the pawn is spawning after a reload.</param>
         private static void CuteboldAdaptationSpawnSetupPostfix(Pawn __instance, Map map, bool respawningAfterLoad)
         {
-            if (__instance.Dead || __instance?.def.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
+            if (__instance.Dead || __instance?.def != Cutebold_Assemblies.CuteboldRaceDef || __instance.kindDef == null) return;
 
             if (__instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) == null)
             {
-                Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)HediffMaker.MakeHediff(Cutebold_DefOf.CuteboldDarkAdaptation, __instance);
+                Hediff_CuteboldDarkAdaptation hediff = HediffMaker.MakeHediff(Cutebold_DefOf.CuteboldDarkAdaptation, __instance) as Hediff_CuteboldDarkAdaptation;
                 float minSeverity = 0f;
                 float maxSeverity = 0.1f;
                 bool goggles = false;
@@ -196,7 +239,7 @@ namespace Cutebold_Assemblies
                 __instance.health.AddHediff(hediff);
             }
 
-            Hediff_CuteboldDarkAdaptation darkAdaptation = (Hediff_CuteboldDarkAdaptation)__instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
+            Hediff_CuteboldDarkAdaptation darkAdaptation = __instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) as Hediff_CuteboldDarkAdaptation;
             darkAdaptation.UpdateGoggles();
             darkAdaptation.UpdateEyes();
         }
@@ -205,11 +248,9 @@ namespace Cutebold_Assemblies
         /// Removes the dark adaptation hediff on cutebolds if they spawn with it.
         /// </summary>
         /// <param name="__instance">The pawn</param>
-        /// <param name="map">The map they are located on. (unused)</param>
-        /// <param name="respawningAfterLoad">If the pawn is spawning after a reload. (unused)</param>
-        private static void CuteboldNoAdaptationSpawnSetupPostfix(Pawn __instance, Map map, bool respawningAfterLoad)
+        private static void CuteboldNoAdaptationSpawnSetupPostfix(Pawn __instance)
         {
-            if (__instance.Dead || __instance.def?.defName != Cutebold_Assemblies.RaceName || __instance.kindDef == null) return;
+            if (__instance.Dead || __instance?.def != Cutebold_Assemblies.CuteboldRaceDef || __instance.kindDef == null) return;
 
             Hediff hediff = __instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
 
@@ -225,11 +266,11 @@ namespace Cutebold_Assemblies
         /// <param name="__instance">Instance of a pawn's hediff set.</param>
         private static void CuteboldHediffSetDirtyCachePostfix(HediffSet __instance)
         {
-            if (__instance.pawn.def.defName != Cutebold_Assemblies.RaceName) return;
+            if (__instance.pawn.def != Cutebold_Assemblies.CuteboldRaceDef) return;
 
-            var hediff = (Hediff_CuteboldDarkAdaptation)__instance.pawn.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
+            Hediff_CuteboldDarkAdaptation hediff = __instance.pawn.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) as Hediff_CuteboldDarkAdaptation;
 
-            if (hediff != null) hediff.UpdateEyes();
+            hediff?.UpdateEyes();
         }
 
         /// <summary>
@@ -238,13 +279,14 @@ namespace Cutebold_Assemblies
         /// <param name="__instance"></param>
         private static void CuteboldApparelChangedPostfix(HediffSet __instance)
         {
-            if (__instance.pawn.def.defName != Cutebold_Assemblies.RaceName) return;
+            if (__instance.pawn.def != Cutebold_Assemblies.CuteboldRaceDef) return;
 
-            var hediff = (Hediff_CuteboldDarkAdaptation)__instance.pawn.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
+            Hediff_CuteboldDarkAdaptation hediff = __instance.pawn.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) as Hediff_CuteboldDarkAdaptation;
 
-            if (hediff != null) hediff.UpdateGoggles();
+            hediff?.UpdateGoggles();
         }
 
+        #region 1.1 GoggleLayerTranspiler
 #if RW1_1
         /// <summary>
         /// RW1.1
@@ -372,7 +414,11 @@ namespace Cutebold_Assemblies
                         yield return instruction;
                     }
                 }
-#elif RW1_2
+#endif
+        #endregion
+
+        #region 1.2 Goggle Layer Transpiler
+#if RW1_2
         /// <summary>
         /// RW1.1
         /// Adjusts the layer offset for cutebold goggles so that they are drawn under other headgear.
@@ -500,307 +546,7 @@ namespace Cutebold_Assemblies
                 yield return instruction;
             }
         }
-#elif RW1_3
-        /// <summary>
-        /// RW1.3
-        /// Adjusts the layer offset for cutebold goggles so that they are drawn under other headgear.        /// </summary>
-        /// <param name="instructions">The instructions we are messing with.</param>
-        /// <param name="ilGenerator">The IDGenerator that allows us to create local variables and labels.</param>
-        /// <returns>All the code!</returns>
-        [HarmonyPriority(Priority.HigherThanNormal)]
-        private static IEnumerable<CodeInstruction> CuteboldGogglesFixTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
-        {
-            MethodInfo drawMeshNowOrLater = AccessTools.Method(typeof(GenDraw), "DrawMeshNowOrLater", new[] {
-                typeof(Mesh),
-                typeof(Vector3),
-                typeof(Quaternion),
-                typeof(Material),
-                typeof(bool)});
-            FieldInfo sourceApparel = AccessTools.Field(typeof(ApparelGraphicRecord), "sourceApparel");
-            FieldInfo apparelDef = AccessTools.Field(typeof(Thing), "def");
-            FieldInfo gogglesDef = AccessTools.Field(typeof(Cutebold_DefOf), "Cutebold_Goggles");
-            FieldInfo vectorY = AccessTools.Field(typeof(Vector3), "y");
-            FieldInfo graphic = AccessTools.Field(typeof(ApparelGraphicRecord), "graphic");
-            object onHeadLoc = AccessTools.Field(typeof(PawnRenderer).GetNestedTypes(AccessTools.all).First<Type>(), "onHeadLoc");
-
-            bool found = false;
-            bool nextDraw = false;
-            float offset = 0.0005f;
-            Label notGoggles = ilGenerator.DefineLabel();
-            LocalBuilder modified = ilGenerator.DeclareLocal(typeof(bool));
-            Label done = ilGenerator.DefineLabel();
-
-            List<CodeInstruction> instructionList = instructions.ToList();
-
-            /*
-             * See drSpy decompile of PawnRenderer.<DrawHeadHair>g__DrawApparel|39_0() for variable references
-             * 
-             * Adjusts the y offset to put goggles below other headgear.
-             * 
-             * modified = false;
-             * 
-             * if (apparelGraphics[i].sourceApparel.def == Cutebold_DefOf.Cutebold_Goggles)
-             * {
-             *     loc.y -= offset;
-             *     modified = true;
-             * }
-             */
-            List<CodeInstruction> checkForGoggles = new List<CodeInstruction>() {
-                new CodeInstruction(OpCodes.Ldc_I4_0), // Load zero
-                new CodeInstruction(OpCodes.Stloc_S, modified), // Set modified to zero (false)
-
-                new CodeInstruction(OpCodes.Ldarg_1), // Load ApparelGraphicsRecord
-                new CodeInstruction(OpCodes.Ldfld, sourceApparel), // Get the apparel
-                new CodeInstruction(OpCodes.Ldfld, apparelDef), // Get the def of the apparel
-
-                new CodeInstruction(OpCodes.Ldsfld, gogglesDef), // Load the def for cutebold goggles
-
-                new CodeInstruction(OpCodes.Ceq), // Checks if the apparel are cutebold goggles
-                new CodeInstruction(OpCodes.Brfalse, notGoggles), // If not, jump to regular execution*
-                
-                    new CodeInstruction(OpCodes.Ldarg_2), // Loads reference to parent method
-                    new CodeInstruction(OpCodes.Ldflda, onHeadLoc), // Loads the address to onHeadLoc field
-                    new CodeInstruction(OpCodes.Ldarg_2), // Loads reference to parent method
-                    new CodeInstruction(OpCodes.Ldflda, onHeadLoc), // Loads the address to onHeadLoc field
-                    new CodeInstruction(OpCodes.Ldfld, vectorY), // Gets the onHeadLoc.y
-                    new CodeInstruction(OpCodes.Ldc_R4, offset), // Loads the offset
-                    new CodeInstruction(OpCodes.Sub), // Subtract offset from onHeadLoc.y
-                    new CodeInstruction(OpCodes.Stfld, vectorY), // Stores the new value into onHeadLoc.y
-                
-                    new CodeInstruction(OpCodes.Ldc_I4_1), // Load one
-                    new CodeInstruction(OpCodes.Stloc_S, modified), // Set modified to one (true)
-
-                new CodeInstruction(OpCodes.Nop) {labels = new List<Label> {notGoggles}} // Jump Target
-            };
-
-            /*
-             * See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
-             * 
-             * Reverts the y offset for other headgear.
-             * 
-             * if(modified)
-             * {
-             *     loc.y += offset;
-             * }
-             */
-            List<CodeInstruction> revertChange = new List<CodeInstruction>()
-            {
-                new CodeInstruction(OpCodes.Ldloc_S, modified), // Load modified
-                new CodeInstruction(OpCodes.Brfalse, done), // Check if modified is false and if it is, jump done)
-
-                    new CodeInstruction(OpCodes.Ldarg_2), // Loads reference to parent method
-                    new CodeInstruction(OpCodes.Ldflda, onHeadLoc), // Loads the address to onHeadLoc field
-                    new CodeInstruction(OpCodes.Ldarg_2), // Loads reference to parent method
-                    new CodeInstruction(OpCodes.Ldflda, onHeadLoc), // Loads the address to onHeadLoc field
-                    new CodeInstruction(OpCodes.Ldfld, vectorY), // Gets the onHeadLoc.y
-                    new CodeInstruction(OpCodes.Ldc_R4, offset), // Loads the offset
-                    new CodeInstruction(OpCodes.Add), // Subtract offset from onHeadLoc.y
-                    new CodeInstruction(OpCodes.Stfld, vectorY), // Stores the new value into onHeadLoc.y
-
-                new CodeInstruction(OpCodes.Nop) {labels = new List<Label> {done}} // Jump Target
-            };
-
-            //Log.Message("  Start Transpile");
-
-            for (int i = 0; i < instructionList.Count; i++)
-            {
-                CodeInstruction instruction = instructionList[i];
-
-                if(!found && i+1 < instructionList.Count && instructionList[i+1].OperandIs(graphic))
-                {
-                    found = true;
-
-                    foreach (CodeInstruction codeInstruction in checkForGoggles)
-                    {
-                        //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
-                        yield return codeInstruction;
-                    }
-                    nextDraw = true;
-                }
-
-                if (nextDraw && instructionList[i - 1].OperandIs(drawMeshNowOrLater))
-                {
-                    foreach (CodeInstruction codeInstruction in revertChange)
-                    {
-                        //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
-                        yield return codeInstruction;
-                    }
-
-                    nextDraw = false;
-                }
-
-                //if(R4Count<=3)
-                //Log.Message("    "+instruction.ToString() + (instruction.labels.Count > 0 ? instruction.labels[0].ToString() : ""));
-
-                yield return instruction;
-            }
-
-            if (!found) Log.Error($"{Cutebold_Assemblies.ModName}: Goggle transpiler failed. Please notify the author for the cutebold mod. Thanks!");
-        }
-#elif RW1_4
-        /// <summary>
-        /// Adjusts the layer offset for cutebold goggles so that they are drawn under other headgear.
-        /// </summary>
-        /// <param name="instructions">The instructions we are messing with.</param>
-        /// <param name="ilGenerator">The IDGenerator that allows us to create local variables and labels.</param>
-        /// <returns>All the code!</returns>
-        private static IEnumerable<CodeInstruction> CuteboldGogglesFixTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
-        {
-            FieldInfo forceRenderUnderHair = AccessTools.Field(typeof(ApparelProperties), "forceRenderUnderHair");
-            MethodInfo get_Item = AccessTools.Method(typeof(List<ApparelGraphicRecord>), "get_Item");
-            FieldInfo sourceApparel = AccessTools.Field(typeof(ApparelGraphicRecord), "sourceApparel");
-            FieldInfo apparelDef = AccessTools.Field(typeof(Thing), "def");
-            FieldInfo gogglesDef = AccessTools.Field(typeof(Cutebold_DefOf), "Cutebold_Goggles");
-            FieldInfo vectorY = AccessTools.Field(typeof(Vector3), "y");
-            OpCode apparelGraphics = OpCodes.Ldloc_1;
-            OpCode localVariable = OpCodes.Ldloc_S;
-            object localVariableValue = null;
-            object onHeadLoc = null;
-
-            bool found = false;
-            bool foundOnHeadLoc = false;
-            int hit = 0; // How many times have we hit forceRenderUnderHair?
-            int callVirt = 0; // How many times have we hit callvirt IL after the second forceRenderUnderHair?
-            float offset = 0.0005f;
-            Label notGoggles = ilGenerator.DefineLabel();
-            LocalBuilder modified = ilGenerator.DeclareLocal(typeof(bool));
-            Label done = ilGenerator.DefineLabel();
-
-            List<CodeInstruction> instructionList = instructions.ToList();
-
-            /*
-             * See drSpy decompile of PawnRenderer.DrawHeadHair for variable references
-             * 
-             * Adjusts the y offset to put goggles below other headgear.
-             * 
-             * modified = false;
-             * 
-             * if (apparelGraphics[j].sourceApparel.def == Cutebold_DefOf.Cutebold_Goggles)
-             * {
-             *     onHeadLoc.y -= offset;
-             *     modified = true;
-             * }
-             */
-            List<CodeInstruction> checkForGoggles = new List<CodeInstruction>() {
-                new CodeInstruction(OpCodes.Ldc_I4_0), // Load zero
-                new CodeInstruction(OpCodes.Stloc_S, modified), // Set modified to zero (false)
-
-                new CodeInstruction(apparelGraphics), // Load apparelGraphics
-                new CodeInstruction(localVariable, null), // Loads the local variable for the loop (TO BE REPLACED ON RUNTIME)
-                new CodeInstruction(OpCodes.Callvirt, get_Item), // Get the apparel graphic
-                new CodeInstruction(OpCodes.Ldfld, sourceApparel), // Get the apparel
-                new CodeInstruction(OpCodes.Ldfld, apparelDef), // Get the def of the apparel
-
-                new CodeInstruction(OpCodes.Ldsfld, gogglesDef), // Load the def for cutebold goggles
-
-                new CodeInstruction(OpCodes.Ceq), // Checks if the apparel are cutebold goggles
-                new CodeInstruction(OpCodes.Brfalse, notGoggles), // If not, jump to regular execution*
-                
-                    new CodeInstruction(OpCodes.Ldloc_0), // Loads reference to parent method
-                    new CodeInstruction(OpCodes.Ldflda, null), // Loads the address to onHeadLoc field (TO BE REPLACED ON RUNTIME)
-                    new CodeInstruction(OpCodes.Ldflda, vectorY), // Gets the address to onHeadLoc.y
-                    new CodeInstruction(OpCodes.Dup), // Duplicate the address
-                    new CodeInstruction(OpCodes.Ldind_R4), // Indirectly loads the value of onHeadLoc.y
-                    new CodeInstruction(OpCodes.Ldc_R4, offset), // Loads the offset
-                    new CodeInstruction(OpCodes.Sub), // Subtract offset from onHeadLoc.y
-                    new CodeInstruction(OpCodes.Stind_R4), // Stores the new value into onHeadLoc.y
-                
-                    new CodeInstruction(OpCodes.Ldc_I4_1), // Load one
-                    new CodeInstruction(OpCodes.Stloc_S, modified), // Set modified to one (true)
-
-                new CodeInstruction(OpCodes.Nop) {labels = new List<Label> {notGoggles}} // Jump Target
-            };
-
-            /*
-             * See drSpy decompile of PawnRenderer.DrawHeadHair for variable references
-             * 
-             * Reverts the y offset for other headgear.
-             * 
-             * if(modified)
-             * {
-             *     onHeadLoc.y += offset;
-             * }
-             */
-            List<CodeInstruction> revertChange = new List<CodeInstruction>()
-            {
-                new CodeInstruction(OpCodes.Ldloc_S, modified), // Load modified
-                new CodeInstruction(OpCodes.Brfalse, done), // Check if modified is false and if it is, jump done)
-
-                    new CodeInstruction(OpCodes.Ldloc_0), // Loads reference to parent method
-                    new CodeInstruction(OpCodes.Ldflda, null), // Loads the address to onHeadLoc field (TO BE REPLACED ON RUNTIME)
-                    new CodeInstruction(OpCodes.Ldflda, vectorY), // Gets the address to onHeadLoc.y
-                    new CodeInstruction(OpCodes.Dup), // Duplicate the address
-                    new CodeInstruction(OpCodes.Ldind_R4), // Indirectly loads the value of onHeadLoc.y
-                    new CodeInstruction(OpCodes.Ldc_R4, offset), // Loads the offset
-                    new CodeInstruction(OpCodes.Add), // Add offset from onHeadLoc.y
-                    new CodeInstruction(OpCodes.Stind_R4), // Stores the new value into onHeadLoc.y
-
-                new CodeInstruction(OpCodes.Nop) {labels = new List<Label> {done}} // Jump Target
-            };
-
-            //Log.Message("  Start Transpile");
-
-            for (int i = 0; i < instructionList.Count; i++)
-            {
-                CodeInstruction instruction = instructionList[i];
-
-                if (!foundOnHeadLoc && instruction.OperandIs(vectorY))
-                {
-                    foundOnHeadLoc = true;
-                    onHeadLoc = instructionList[i - 1].operand;
-                }
-
-                if (i > 2 && instructionList[i - 2].OperandIs(forceRenderUnderHair)) hit++;
-
-                if (hit == 2 && instructionList[i - 1].opcode == OpCodes.Callvirt) callVirt++;
-
-                if (!found && hit == 2)
-                {
-                    for (int j = 0; j < 15; j++)
-                    {
-                        if (instructionList[i + j].opcode == localVariable)
-                        {
-                            localVariableValue = instructionList[i + j].operand;
-                            break;
-                        }
-                    }
-
-                    foreach (CodeInstruction codeInstruction in checkForGoggles)
-                    {
-                        if (codeInstruction.opcode == OpCodes.Ldflda && codeInstruction.operand == null)
-                        {
-                            codeInstruction.operand = onHeadLoc;
-                        }
-
-                        if (codeInstruction.opcode == localVariable && codeInstruction.operand == null)
-                        {
-                            codeInstruction.operand = localVariableValue;
-                        }
-                        //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
-                        yield return codeInstruction;
-                    }
-                    found = true;
-                }
-
-                if (callVirt == 2)
-                {
-                    foreach (CodeInstruction codeInstruction in revertChange)
-                    {
-                        if (codeInstruction.opcode == OpCodes.Ldflda && codeInstruction.operand == null)
-                        {
-                            codeInstruction.operand = onHeadLoc;
-                        }
-                        //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
-                        yield return codeInstruction;
-                    }
-                    callVirt++;
-                }
-
-                yield return instruction;
-            }
-        }
-#else
-#warning Cutebold goggle patch disabled.
 #endif
+        #endregion
     }
 }

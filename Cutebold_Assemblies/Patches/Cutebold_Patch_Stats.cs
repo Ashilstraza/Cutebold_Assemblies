@@ -1,4 +1,8 @@
-﻿using Cutebold_Assemblies.Patches;
+﻿#if RWPre1_3
+using Verse.AI;
+using Verse.Sound;
+#endif
+
 using HarmonyLib;
 using RimWorld;
 using System;
@@ -8,8 +12,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
 using Verse;
-using Verse.AI;
-using Verse.Sound;
+
 
 namespace Cutebold_Assemblies
 {
@@ -22,64 +25,21 @@ namespace Cutebold_Assemblies
         private static bool adaptation = false;
 
         /// <summary>
-        /// Applies harmony patches on startup.
+        /// Applies harmony patches on startup for stat related things.
         /// </summary>
         /// <param name="harmony">Our instance of harmony to patch with.</param>
         public Cutebold_Patch_Stats(Harmony harmony)
         {
-            var settings = Cutebold_Assemblies.CuteboldSettings;
-            var thisClass = typeof(Cutebold_Patch_Stats);
+            Cutebold_Settings settings = Cutebold_Assemblies.CuteboldSettings;
+            Type thisClass = typeof(Cutebold_Patch_Stats);
 
             if (settings.extraYield && ModLister.GetActiveModWithIdentifier("syrchalis.harvestyieldpatch") == null)
             {
+                adaptation = settings.eyeAdaptation;
 
-                if (settings.eyeAdaptation) adaptation = true;
-
-                bool miningAltYield = true;
-
-                try
-                {
-                    if (!settings.altYield)
-                    {
-                        harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), transpiler: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_Stats.CuteboldTrySpawnYieldMiningTranspiler)));
-                        miningAltYield = false;
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.Error($"{Cutebold_Assemblies.ModName}: Exception when trying to apply CuteboldTrySpawnYieldMiningTranspiler, falling back to postfix. Please notify the author for the cutebold mod with the logs. Thanks!\n{e}");
-                }
-                finally
-                {
-                    if (miningAltYield || settings.altYield)
-                    {
-                        harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_Stats.CuteboldTrySpawnYieldMiningPostfix)));
-                    }
-                }
-
+                PatchMiningYield(settings, harmony, thisClass);
 #if RWPre1_3
-                bool plantAltYield = true;
-
-                try
-                {
-                    if (!settings.altYield)
-                    {
-                        var plantWorkToilMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_PlantWork).GetNestedTypes(AccessTools.all).First()).ElementAt(1);
-                        harmony.Patch(plantWorkToilMethod, transpiler: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkTranspiler"));
-                        miningAltYield = false;
-                    }
-                }
-                catch (Exception e)
-                {
-                    Log.Error($"{Cutebold_Assemblies.ModName}: Exception when trying to apply CuteboldMakeNewToilsPlantWorkTranspiler, falling back to postfix. Please notify the author for the cutebold mod with the logs. Thanks!\n{e}");
-                }
-                finally
-                {
-                    if (miningAltYield || settings.altYield)
-                    {
-                        harmony.Patch(AccessTools.Method(typeof(JobDriver_PlantWork), "MakeNewToils"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_Stats), "CuteboldMakeNewToilsPlantWorkPostfix"));
-                    }
-                }
+                PatchPlantYield(settings, harmony, thisClass);
 #endif
 
                 // Insert bonus yield explination
@@ -90,31 +50,69 @@ namespace Cutebold_Assemblies
             }
         }
 
+        #region MiningYield
 
-        /// Convered into a transpiler.
+        /// <summary>
+        /// Patches TrySpawnYield to exceed resources mined
+        /// </summary>
+        /// <param name="settings">Our mod settings.</param>
+        /// <param name="harmony">Our instance of harmony to patch with.</param>
+        private static void PatchMiningYield(Cutebold_Settings settings, Harmony harmony, Type thisClass)
+        {
+            bool miningAltYield = true;
+
+            try
+            {
+                if (!settings.altYield)
+                {
+#if RW1_5
+                        harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield", new[]
+                        {
+                            typeof(Map),
+                            typeof(bool),
+                            typeof(Pawn)
+                        }), transpiler: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_Stats.CuteboldTrySpawnYieldMiningTranspiler)));
+#else
+                    harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), transpiler: new HarmonyMethod(thisClass, nameof(CuteboldTrySpawnYieldMiningTranspiler)));
+#endif
+                    miningAltYield = false;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error($"{Cutebold_Assemblies.ModName}: Exception when trying to apply {nameof(CuteboldTrySpawnYieldMiningTranspiler)}, falling back to postfix. Please notify the author for the cutebold mod with the logs. Thanks!\n{e}");
+            }
+            finally
+            {
+                if (miningAltYield || settings.altYield)
+                {
+#if RW1_5
+                        harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield", new[]
+                        {
+                            typeof(Map),
+                            typeof(bool),
+                            typeof(Pawn)
+                        }), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_Stats.CuteboldTrySpawnYieldMiningPostfix)));
+#else
+                    harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield"), postfix: new HarmonyMethod(thisClass, nameof(CuteboldTrySpawnYieldMiningPostfix)));
+#endif
+                }
+            }
+        }
+
         /// <summary>
         /// Adds extra materials to mined rock when the yield is over the default max.
         /// </summary>
         /// <param name="__instance">What was mined</param>
         /// <param name="___yieldPct">The max yield percentage</param>
         /// <param name="map">The map we are on</param>
-        /// <param name="yieldChance">The chance to yield something (Ignored)</param>
-        /// <param name="moteOnWaste">If we should do a mote on waste (Ignored)</param>
         /// <param name="pawn">The pawn mining</param>
-        public static void CuteboldTrySpawnYieldMiningPostfix(Mineable __instance, float ___yieldPct, Map map, float yieldChance, bool moteOnWaste, Pawn pawn)
+        public static void CuteboldTrySpawnYieldMiningPostfix(Mineable __instance, float ___yieldPct, Map map, Pawn pawn)
         {
-            //Log.Message("CuteboldTrySapwnYieldMiningPostfix");
 
-            if (pawn?.def.defName != Cutebold_Assemblies.RaceName || __instance == null || __instance.def.building.mineableThing == null || __instance.def.building.mineableDropChance < 1f || !__instance.def.building.mineableYieldWasteable) return;
-            //if (pawn == null || pawn.def.defName != Cutebold_Assemblies.RaceName || __instance == null || __instance.def.building.mineableThing == null || __instance.def.building.mineableDropChance < 1f || !__instance.def.building.mineableYieldWasteable) return;
-
-            //Log.Message("  Effective Mineable Yield="+ __instance.def.building.EffectiveMineableYield.ToString());
-            //Log.Message("  Yield Percent=" + ___yieldPct.ToString());
-            //Log.Message("  Mineable Thing=" + __instance.def.building.mineableThing.ToString());
+            if (pawn?.def != Cutebold_Assemblies.CuteboldRaceDef || __instance == null || __instance.def.building.mineableThing == null || __instance.def.building.mineableDropChance < 1f || !__instance.def.building.mineableYieldWasteable) return;
 
             float extraPercent = CuteboldCalculateExtraPercent(StatDefOf.MiningYield, StatRequest.For(pawn));
-
-            //Log.Message("  Pawn Additional Mining Percent=" + extraPercent);
 
             // Based on the RimWorld base code to allow for mining yield over 100% cause cutebolds are just that good at mining.
             if (___yieldPct >= 1f && extraPercent > 0f)
@@ -152,7 +150,11 @@ namespace Cutebold_Assemblies
             FieldInfo building = AccessTools.Field(typeof(ThingDef), nameof(ThingDef.building));
             MethodInfo roundRandom = AccessTools.Method(typeof(GenMath), nameof(GenMath.RoundRandom), new[] { typeof(float) });
             FieldInfo stackCount = AccessTools.Field(typeof(Thing), nameof(Thing.stackCount));
+#if RWPre1_5
             int pawn = 4;
+#else
+            int pawn = 3;
+#endif
 
 #if RW1_1
             FieldInfo mineableYield = AccessTools.Field(typeof(BuildingProperties), "mineableYield");
@@ -212,8 +214,42 @@ namespace Cutebold_Assemblies
                 yield return instruction;
             }
         }
+        #endregion
 
-        /// Changed into a transpiler.
+        #region PlantYield (Pre 1.3)
+#if RWPre1_3
+
+        /// <summary>
+        /// Patches the PlantWork Job Driver to exceed plant resources gathered
+        /// </summary>
+        /// <param name="settings">Our mod settings.</param>
+        /// <param name="harmony">Our instance of harmony to patch with.</param>
+        private static void PatchPlantYield(Cutebold_Settings settings, Harmony harmony, Type thisClass)
+        {
+            bool plantAltYield = true;
+
+            try
+            {
+                if (!settings.altYield)
+                {
+                    MethodInfo plantWorkToilMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_PlantWork).GetNestedTypes(AccessTools.all).First()).ElementAt(1);
+                    harmony.Patch(plantWorkToilMethod, transpiler: new HarmonyMethod(thisClass, nameof(CuteboldMakeNewToilsPlantWorkTranspiler)));
+                    plantAltYield = false;
+                }
+            }
+            catch (Exception e)
+            {
+                Log.Error($"{Cutebold_Assemblies.ModName}: Exception when trying to apply {nameof(CuteboldMakeNewToilsPlantWorkTranspiler)}, falling back to postfix. Please notify the author for the cutebold mod with the logs. Thanks!\n{e}");
+            }
+            finally
+            {
+                if (plantAltYield || settings.altYield)
+                {
+                    harmony.Patch(AccessTools.Method(typeof(JobDriver_PlantWork), "MakeNewToils"), postfix: new HarmonyMethod(thisClass, nameof(CuteboldMakeNewToilsPlantWorkPostfix)));
+                }
+            }
+        }
+
         /// <summary>
         /// Replaces the plant harvest toil of a cutebold to allow them to harvest over 100%.
         /// </summary>
@@ -226,7 +262,7 @@ namespace Cutebold_Assemblies
 
             foreach (Toil toil in __result)
             {
-                if (toil.tickAction != null && __instance.pawn?.def.defName == Cutebold_Assemblies.RaceName)
+                if (toil.tickAction != null && __instance.pawn?.def == Cutebold_Assemblies.CuteboldRaceDef)
                 {
                     //Log.Message("  Edit Toil");
 
@@ -238,13 +274,13 @@ namespace Cutebold_Assemblies
                         Map map = actor.Map;
                         float xpPerTick = (float)Traverse.Create(__instance).Field("xpPerTick").GetValue();
 
-                        if (actor.skills != null) actor.skills.Learn(SkillDefOf.Plants, xpPerTick);
+                        actor.skills?.Learn(SkillDefOf.Plants, xpPerTick);
 
                         float workSpeed = actor.GetStatValue(StatDefOf.PlantWorkSpeed, true);
-                        Plant plant = (Plant)__instance.job.targetA.Thing;
+                        Plant plant = __instance.job.targetA.Thing as Plant;
 
                         workSpeed *= UnityEngine.Mathf.Lerp(3.3f, 1f, plant.Growth);
-                        var workDoneVariable = Traverse.Create(__instance).Field("workDone");
+                        Traverse workDoneVariable = Traverse.Create(__instance).Field("workDone");
                         float workDone = (float)workDoneVariable.GetValue() + workSpeed;
                         workDoneVariable.SetValue(workDone);
 
@@ -252,12 +288,8 @@ namespace Cutebold_Assemblies
                         {
                             if (plant.def.plant.harvestedThingDef != null)
                             {
-#if RWPre1_3
                                 StatDef stat = StatDefOf.PlantHarvestYield;
-#else
-                                StatDef stat = (plant.def.plant.harvestedThingDef.IsDrug ? StatDefOf.DrugHarvestYield : StatDefOf.PlantHarvestYield);
-#endif
-                                var req = StatRequest.For(actor);
+                                StatRequest req = StatRequest.For(actor);
 
                                 float yieldMultiplier = (StatUtility.GetStatValueFromList(req.StatBases, stat, 1f) + CuteboldCalculateExtraPercent(stat, req));
                                 if (actor.RaceProps.Humanlike && plant.def.plant.harvestFailable && !plant.Blighted && Rand.Value > yieldMultiplier)
@@ -286,13 +318,7 @@ namespace Cutebold_Assemblies
                                 }
                             }
                             plant.def.plant.soundHarvestFinish.PlayOneShot(actor);
-#if RWPre1_3
                             plant.PlantCollected();
-#elif RW1_3
-                            plant.PlantCollected(__instance.pawn);
-#else
-                            plant.PlantCollected(__instance.pawn, PlantDestructionMode.Smash);
-#endif
                             workDoneVariable.SetValue(0f);
                             __instance.ReadyForNextToil();
                             return;
@@ -360,6 +386,8 @@ namespace Cutebold_Assemblies
                 yield return instruction;
             }
         }
+#endif
+#endregion
 
         /// <summary>
         /// Changes the value of certain stats when they exceed the vanilla maximum on purpose.
@@ -371,13 +399,13 @@ namespace Cutebold_Assemblies
         {
             foreach (StatDrawEntry statEntry in __result)
             {
-                if (thing.def?.defName == Cutebold_Assemblies.RaceName)
+                if (thing.def == Cutebold_Assemblies.CuteboldRaceDef)
                 {
-                    var stat = statEntry.stat;
+                    StatDef stat = statEntry.stat;
                     if (stat == StatDefOf.MiningYield || stat == StatDefOf.PlantHarvestYield)
                     {
-                        var req = StatRequest.For(thing);
-                        var extraPercent = CuteboldCalculateExtraPercent(stat, req);
+                        StatRequest req = StatRequest.For(thing);
+                        float extraPercent = CuteboldCalculateExtraPercent(stat, req);
                         if (extraPercent > 0f) yield return new StatDrawEntry(statEntry.category, stat, stat.maxValue + extraPercent, req);
                         else yield return statEntry;
                     }
@@ -397,15 +425,13 @@ namespace Cutebold_Assemblies
         /// Inserts the extra mining yield multiplier into the mining yield detailed description
         /// </summary>
         /// <param name="__result">The description we are adding onto.</param>
-        /// <param name="__instance">The StatWorker</param>
         /// <param name="___stat">The StatDef of the StatWorker</param>
         /// <param name="req">The item requesting the stat.</param>
-        /// <param name="numberSense">Unused</param>
-        public static void CuteboldGetExplanationUnfinalizedPostfix(ref string __result, StatDef ___stat, StatRequest req, ToStringNumberSense numberSense)
+        public static void CuteboldGetExplanationUnfinalizedPostfix(ref string __result, StatDef ___stat, StatRequest req)
         {
-            Pawn pawn = req.Pawn ?? (req.Thing is Pawn ? (Pawn)req.Thing : null);
+            Pawn pawn = req.Pawn ?? (req.Thing is Pawn p ? p : null);
 
-            if (!adaptation || pawn?.def != Cutebold_Assemblies.AlienRaceDef || ___stat != StatDefOf.MiningYield) return;
+            if (!adaptation || pawn?.def != Cutebold_Assemblies.CuteboldRaceDef || ___stat != StatDefOf.MiningYield) return;
 
             float extraPercent = CuteboldCalculateExtraPercent(___stat, req, false) - CuteboldGetIdeoStatOffset(pawn, ___stat);
             float multiplier = MiningMultiplier(pawn);
@@ -426,34 +452,18 @@ namespace Cutebold_Assemblies
         /// <returns>The extra yield</returns>
         private static float CuteboldCalculateExtraPercent(StatDef stat, StatRequest req, bool useMultiplier = true)
         {
-            Pawn pawn = req.Pawn ?? (req.Thing is Pawn ? (Pawn)req.Thing : null);
+            Pawn pawn = req.Pawn ?? (req.Thing is Pawn p ? p : null);
 
-            if (stat == null || req == null || pawn?.def != Cutebold_Assemblies.AlienRaceDef || stat.Worker.IsDisabledFor(pawn)) return 0f;
-            if (stat == StatDefOf.PlantHarvestYield) useMultiplier = false;
+            if (stat == null || req == null || pawn?.def != Cutebold_Assemblies.CuteboldRaceDef || stat.Worker.IsDisabledFor(pawn)) return 0f;
+            useMultiplier = stat != StatDefOf.PlantHarvestYield && useMultiplier;
 
             float rawPercent = stat.Worker.GetValueUnfinalized(req, false);
             float pawnBasePercent = StatUtility.GetStatValueFromList(req.StatBases, stat, 1f);
-            //float maxPercent = stat.maxValue;
             float adaptationMultiplier = MiningMultiplier(pawn, useMultiplier);
-
             float ideoOffset = CuteboldGetIdeoStatOffset(pawn, stat);
-
             float extraPercent = (rawPercent < pawnBasePercent) ? 0f : (rawPercent - pawnBasePercent - ideoOffset) * adaptationMultiplier + ideoOffset;
 
             return (extraPercent > 0f) ? extraPercent : 0f;
-        }
-
-        /// <summary>
-        /// Returns the sum of any ideo stat offsets that modify the given stat.
-        /// </summary>
-        /// <param name="req">Request containing the pawn to test</param>
-        /// <param name="stat">The stat to look for</param>
-        /// <returns>Sum of all ideo stat offsets with the given stat</returns>
-        private static float CuteboldGetIdeoStatOffset(StatRequest req, StatDef stat)
-        {
-            Pawn pawn = req.Pawn ?? (req.Thing is Pawn ? (Pawn)req.Thing : null);
-
-            return CuteboldGetIdeoStatOffset(pawn, stat);
         }
 
         /// <summary>
@@ -492,7 +502,7 @@ namespace Cutebold_Assemblies
             if (adaptation && useMultiplier && pawn?.health.hediffSet.HasHediff(Cutebold_DefOf.CuteboldDarkAdaptation) == true)
             {
                 Hediff_CuteboldDarkAdaptation darkAdaptation = (Hediff_CuteboldDarkAdaptation)pawn.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
-                var severity = darkAdaptation.Severity;
+                float severity = darkAdaptation.Severity;
                 return darkAdaptation.WearingGoggles ? 0.25f : (severity < 0.25f) ? 0.25f : (severity < 0.5f) ? 0.5f : (severity < 0.75f) ? 0.75f : 1f;
             }
 

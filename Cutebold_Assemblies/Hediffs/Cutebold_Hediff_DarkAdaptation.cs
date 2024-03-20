@@ -1,6 +1,8 @@
-﻿
+﻿#if RW1_5 && DEBUG
+using LudeonTK;
+#endif
+
 using RimWorld;
-using RimWorld.Planet;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -86,7 +88,7 @@ namespace Cutebold_Assemblies
             {
                 yield return item;
             }
-            foreach (var adjustment in lightDarkAdjustment)
+            foreach (Cutebold_lightDarkAdjustment adjustment in lightDarkAdjustment)
             {
                 if (adjustment.Dark == -1.0f && adjustment.Light == -1.0f && adjustment.Multiplier == float.MaxValue)
                 {
@@ -139,7 +141,7 @@ namespace Cutebold_Assemblies
 
         /// <summary>Light level of the pawn at the current location.</summary>
         public float LightLevel = 0f;
-        /// <summary>If the pawn can see.</summary>
+        /// <summary>If the pawn can be affected by light.</summary>
         public bool CanSee = true;
         /// <summary>If the pawn should ignore the light level.</summary>
         public bool IgnoreLightLevel = false;
@@ -188,7 +190,7 @@ namespace Cutebold_Assemblies
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.Append(base.CompDebugString());
 
-            if (!base.Pawn.Dead) stringBuilder.AppendLine($"Severity/day in current light level: {SeverityChangePerDay().ToString("F3")}");
+            if (!base.Pawn.Dead) stringBuilder.AppendLine($"Severity/day in current light level: {SeverityChangePerDay():F3}");
 
             return stringBuilder.ToString().TrimEndNewlines();
         }
@@ -234,6 +236,10 @@ namespace Cutebold_Assemblies
         private bool eyesMissing = false;
         /// <summary>If the glow curve should be updated.</summary>
         private bool updateGlowCurve = true;
+        /// <summary>Check ticks without all the overhead.</summary>
+        private int nextTickToCheck = Current.Game.tickManager.TicksGame;
+        /// <summary>If we have checked if the pawn is a mime.</summary>
+        private bool mimeChecked = false;
 
         /// <summary>The defualt glow curve.</summary>
         private static readonly SimpleCurve defaultGlowCurve = new SimpleCurve(new List<CurvePoint>()
@@ -311,46 +317,46 @@ namespace Cutebold_Assemblies
         }
 
         /// <summary>
-        /// Is called at the end of each hediff tick. This updates the saved light variables, component properties, light sickness hediff, and glow curve.
+        /// Is called at the end of each hediff tick. This updates the saved light variables, component properties, light sickness hediff, and glow curve, and sets the pawn's texture cache to be dirty.
         /// </summary>
         public override void PostTick()
         {
             base.PostTick();
 
-            if (ageTicks == 1) CheckdMime();
+            if (!mimeChecked) CheckdMime();
 
             lastLightLevel = LightLevel;
-            adaptationComp.LightLevel = CheckLightLevel();
+            adaptationComp.LightLevel = Cutebold_Patch_HediffRelated.CuteboldGlowHandler(pawn);
 
-            if (((lastLightLevel >= 0.3f) && (LightLevel < 0.3f)) || ((lastLightLevel <= 0.3f) && (LightLevel > 0.3f)))
+            if (((lastLightLevel >= 0.3f) && (LightLevel < 0.3f)) || ((lastLightLevel <= 0.3f) && (LightLevel > 0.3f)) && !asleep && !unconscious)
             {
-                //pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
-                GlobalTextureAtlasManager.TryMarkPawnFrameSetDirty(pawn);
+                Cutebold_Patch_Body.SetDirty(pawn);
             }
 
-            if (EyeGlowEnabled && EyeBlink && LightLevel < 0.3f)
+            if (EyeGlowEnabled && EyeBlink && LightLevel < 0.3f && !asleep && !unconscious)
             {
-                var offsetTicks = Math.Abs(pawn.HashOffsetTicks());
-                var blinkValue = Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89)));
+                int offsetTicks = Math.Abs(pawn.HashOffsetTicks());
+                double blinkValue = Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89)));
 
                 if ((blinkValue < 1 && blinkLastValue >= 1) || (blinkValue >= 1 && blinkLastValue < 1))
                 {
-                    //pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
-                    GlobalTextureAtlasManager.TryMarkPawnFrameSetDirty(pawn);
+                    Cutebold_Patch_Body.SetDirty(pawn);
                 }
 
                 blinkLastValue = blinkValue;
             }
 
-            if (pawn.IsHashIntervalTick(60))
+            if (Current.Game.tickManager.TicksGame > nextTickToCheck) // Used instead of checking the hash
             {
+                nextTickToCheck += 60;
+
                 if (((pawn.CurJob != null && pawn.jobs.curDriver.asleep) != asleep) ||
                 ((pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f) == !unconscious))
                 {
                     asleep = (pawn.CurJob != null && pawn.jobs.curDriver.asleep);
                     unconscious = pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f;
 
-                    pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                    Cutebold_Patch_Body.SetDirty(pawn);
                 }
 
                 UpdateCuteboldCompProperties();
@@ -391,34 +397,9 @@ namespace Cutebold_Assemblies
             if (pawn.health.hediffSet.hediffs.Find((Hediff hediff) => hediff.def.defName == "AA_MimeHediff") != null)
             {
                 pawn.TryGetComp<AlienComp>().GetChannel("eye").first = new Color(Rand.Range(0.7f, 0.8f), Rand.Range(0.5f, 0.6f), 0f);
-                pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
+                Cutebold_Patch_Body.SetDirty(pawn);
             }
-        }
-
-        /// <summary>
-        /// Checks the light level at a pawn or their caravan.
-        /// </summary>
-        /// <returns>The light level.</returns>
-        private float CheckLightLevel()
-        {
-            if (pawn.Spawned)
-            {
-                return pawn.Map.glowGrid.GameGlowAt(pawn.Position);
-            }
-            else if (pawn.CarriedBy != null)
-            {
-                return pawn.CarriedBy.Map.glowGrid.GameGlowAt(pawn.CarriedBy.Position);
-            }
-            else if (pawn.ParentHolder != null && pawn.ParentHolder is Caravan caravan)
-            {
-                var time = GenDate.HourFloat(GenTicks.TicksAbs, Find.WorldGrid.LongLatOf(caravan.Tile).x);
-
-                if (time > 19 || time < 5) return 0f; // Night
-                else if (time > 18 || time < 6) return 0.5f; // Dusk/Dawn
-                else return 1f; // Day
-            }
-
-            return 0.5f;
+            mimeChecked = true;
         }
 
         /// <summary>
@@ -469,7 +450,7 @@ namespace Cutebold_Assemblies
         /// </summary>
         private void UpdateGlowCurve()
         {
-            var lightDarkAdjustment = adaptationComp.LightDarkAdjustment[CurStageIndex];
+            Cutebold_lightDarkAdjustment lightDarkAdjustment = adaptationComp.LightDarkAdjustment[CurStageIndex];
 
             MaxLightGlobalWorkSpeed = lightDarkAdjustment.Light == -1.0f ? defaultLightglobalWorkSpeed - globalWorkSpeedDifference * lightDarkAdjustment.Multiplier : lightDarkAdjustment.Light;
             MaxDarkGlobalWorkSpeed = lightDarkAdjustment.Dark == -1.0f ? defaultDarkglobalWorkSpeed + globalWorkSpeedDifference * lightDarkAdjustment.Multiplier : lightDarkAdjustment.Dark;
@@ -545,7 +526,7 @@ namespace Cutebold_Assemblies
         {
             foreach (Apparel apparel in pawn.apparel.WornApparel)
             {
-                if (apparel.def == Cutebold_DefOf.Cutebold_Goggles)
+                if (apparel.def == Cutebold_DefOf.Cutebold_Goggles/* || apparel.def == Cutebold_DefOf.Cutebold_AdvancedGoggles*/)
                 {
                     goggles = apparel;
                     updateGlowCurve = true;
@@ -564,5 +545,48 @@ namespace Cutebold_Assemblies
         {
             ignoreSickness = Cutebold_Assemblies.CuteboldSettings.ignoreSickness;
         }
+
+        // Mod Developer: testing adaptation
+#if DEBUG
+#pragma warning disable IDE0051 // Remove unused private members
+
+        /// <summary>
+        /// Decreases dark adaptation on a pawn.
+        /// </summary>
+        /// <param name="p">Pawn to decrease the adaptation of.</param>
+#if RWPre1_4
+        [DebugAction(category: "Cutebold Mod", name: "Increase Adaptation by 20%", actionType = DebugActionType.ToolMapForPawns, allowedGameStates = AllowedGameStates.PlayingOnMap)]
+#else
+        [DebugAction(category: "Cutebold Mod", name: "Increase Adaptation by 20%", hideInSubMenu: true, actionType = DebugActionType.ToolMapForPawns, allowedGameStates = AllowedGameStates.PlayingOnMap)]
+#endif
+        private static void IncreaseAdaptation(Pawn p)
+        {
+            if (p.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) is Hediff_CuteboldDarkAdaptation hediff)
+            {
+                hediff.Severity += 0.2f;
+                DebugActionsUtility.DustPuffFrom(p);
+            }
+        }
+
+
+        /// <summary>
+        /// Decreases dark adaptation on a pawn.
+        /// </summary>
+        /// <param name="p">Pawn to increase the adaptation of.</param>
+#if RWPre1_4
+        [DebugAction(category: "Cutebold Mod", name: "Decrease Adaptation by 20%", actionType = DebugActionType.ToolMapForPawns, allowedGameStates = AllowedGameStates.PlayingOnMap)]
+#else
+        [DebugAction(category: "Cutebold Mod", name: "Decrease Adaptation by 20%", hideInSubMenu: true, actionType = DebugActionType.ToolMapForPawns, allowedGameStates = AllowedGameStates.PlayingOnMap)]
+#endif
+        private static void DecreaseAdaptation(Pawn p)
+        {
+            if (p.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) is Hediff_CuteboldDarkAdaptation hediff)
+            {
+                hediff.Severity -= 0.2f;
+                DebugActionsUtility.DustPuffFrom(p);
+            }
+        }
+#pragma warning restore IDE0051 // Remove unused private members
+#endif
     }
 }

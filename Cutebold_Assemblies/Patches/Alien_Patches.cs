@@ -1,8 +1,7 @@
-﻿using AlienRace;
-using GrowingZonePlus;
+﻿#if !RWPre1_4
+using AlienRace;
 using HarmonyLib;
 using RimWorld;
-using SomeThingsFloat;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,7 +11,6 @@ using System.Text;
 using UnityEngine;
 using Verse;
 
-#if !RWPre1_4
 namespace Cutebold_Assemblies.Patches
 {
     /// <summary>
@@ -24,7 +22,7 @@ namespace Cutebold_Assemblies.Patches
 
         public Alien_Patches(Harmony harmony)
         {
-            var thisClass = typeof(Alien_Patches);
+            Type thisClass = typeof(Alien_Patches);
 
             string alienRaceID = "rimworld.erdelf.alien_race.main";
 
@@ -54,14 +52,9 @@ namespace Cutebold_Assemblies.Patches
                 harmony.Patch(AccessTools.Method(typeof(HediffGiver), nameof(HediffGiver.TryApply)), transpiler: new HarmonyMethod(thisClass, nameof(Alien_FixBaby_Transpiler)));
             }
 
-            MethodInfo drawExtraEyeGraphicMethod = typeof(PawnRenderer).GetNestedTypes(AccessTools.all).First<Type>().GetMethods(AccessTools.all).FirstOrDefault((MethodInfo x) => x.Name.Contains("<DrawHeadHair>") && x.Name.Contains("DrawExtraEyeGraphic"));
+            //harmony.Patch(AccessTools.Method(typeof(AlienPawnRenderNodeWorker_BodyAddon), nameof(AlienPawnRenderNodeWorker_BodyAddon.ScaleFor)), prefix: new HarmonyMethod(thisClass, nameof(Alien_ScaleFor_Prefix)));
 
-            if (!Harmony.GetPatchInfo(drawExtraEyeGraphicMethod)?.Transpilers?.Any(patch => patch.owner == alienRaceID) ?? true)
-            {
-                stringBuilder.AppendLine("  Patching PawnRenderer.DrawHeadHair.DrawExtraEyeGraphic");
-                harmony.Patch(drawExtraEyeGraphicMethod, transpiler: new HarmonyMethod(thisClass, nameof(Alien_DrawExtraEyeGraphic_Transpiler)));
-            }
-
+#if RW1_4
             // If Dub's Bad Hygene isn't enabled, don't try to patch that which is not there.
             if (ModLister.GetActiveModWithIdentifier("Dubwise.DubsBadHygiene") != null && Cutebold_Assemblies.CuteboldSettings.DBH_Patches)
             {
@@ -77,101 +70,69 @@ namespace Cutebold_Assemblies.Patches
                 }
 
             }
-
+#endif
             if (!stringBuilder.ToString().Equals("Cutebold Mod Provided Alien Patches:")) Log.Message(stringBuilder.ToString().TrimEndNewlines());
-#if DEBUG   // Personal patches
-            if (ModLister.GetActiveModWithIdentifier("Mlie.SomeThingsFloat") != null)
-            {
-                new SomeThingsFloat(harmony, thisClass);
-            }
-            if (ModLister.GetActiveModWithIdentifier("babylettuce.growingzone") != null)
-            {
-                new GZP(harmony, thisClass);
-            }
-            // faster baby feeding, maybe new mod?
-            var feedBabyFoodFromInventoryMethod = AccessTools.GetDeclaredMethods(typeof(JobDriver_BottleFeedBaby)).ElementAt(13);
-            harmony.Patch(feedBabyFoodFromInventoryMethod, transpiler: new HarmonyMethod(thisClass, nameof(FasterFeeding_Transpiler)));
-            harmony.Patch(AccessTools.Method(typeof(ChildcareUtility), "SuckleFromLactatingPawn"), transpiler: new HarmonyMethod(thisClass, nameof(FasterFeeding_Transpiler)));
+
+#if DEBUG && RW1_4   // Personal patches
+            PersonalPatches(harmony, thisClass);
 #endif
         }
 
-        public static void GZP_ExposeData_Postfix(Zone_GrowingPlus __instance)
+        /*public static bool Alien_ScaleFor_Prefix(AlienPawnRenderNodeWorker_BodyAddon __instance, PawnRenderNode node, PawnDrawParms parms, ref Vector3 __result)
         {
-            var billStack = __instance.customBillStack;
-            foreach( var bill in billStack )
+            AlienPawnRenderNodeProperties_BodyAddon props = AlienPawnRenderNodeWorker_BodyAddon.PropsFromNode(node);
+            AlienPartGenerator.BodyAddon ba = props.addon;
+            
+            Vector2 scale = (parms.Portrait && ba.drawSizePortrait != Vector2.zero ? ba.drawSizePortrait : ba.drawSize) *
+                            (ba.scaleWithPawnDrawsize ?
+                                 (ba.alignWithHead ?
+                                      parms.Portrait ?
+                                          props.alienComp.customPortraitHeadDrawSize :
+                                          props.alienComp.customHeadDrawSize :
+                                      parms.Portrait ?
+                                          props.alienComp.customPortraitDrawSize :
+                                          props.alienComp.customDrawSize) *
+                                 (ModsConfig.BiotechActive ? parms.pawn.ageTracker.CurLifeStage.bodyWidth ?? 1.5f : 1.5f) :
+                                 Vector2.one * 1.5f);
+            
+            Vector2 addonDrawSize;
+            Vector2 pawnBodyDrawSize;
+            Vector2 pawnHeadDrawSize;
+
+            if (parms.Portrait)
             {
-                var UID = Traverse.Create(bill).Field("zoneUniqueID");
-                if (UID.GetValue() == null)
-                {
-                    UID.SetValue(__instance.UniqueID);
-                }
-                if (bill.zgp == null)
-                {
-                    bill.zgp = __instance;
-                }
-                
+                addonDrawSize = ba.drawSizePortrait != Vector2.zero ? ba.drawSizePortrait : ba.drawSize;
+                pawnBodyDrawSize = props.alienComp.customPortraitDrawSize;
+                pawnHeadDrawSize = props.alienComp.customPortraitHeadDrawSize;
             }
-        }
-
-        public static IEnumerable<CodeInstruction> QuickFix_SomeThingsFloat_Transpiler(IEnumerable<CodeInstruction> instructions)
-        {
-            FieldInfo map = AccessTools.Field(typeof(MapComponent), "map");
-            FieldInfo terrainGrid = AccessTools.Field(typeof(Map), "terrainGrid");
-            FieldInfo underGrid = AccessTools.Field(typeof(TerrainGrid), "underGrid");
-            FieldInfo topGrid = AccessTools.Field(typeof(TerrainGrid), "topGrid");
-
-            List<CodeInstruction> instructionList = instructions.ToList();
-            int instructionListCount = instructionList.Count;
-            int n = 0;
-
-            List<CodeInstruction> fix = new List<CodeInstruction>()
+            else
             {
-                new CodeInstruction(OpCodes.Ldarg_0),
-                new CodeInstruction(OpCodes.Ldfld, map),
-                new CodeInstruction(OpCodes.Ldfld, terrainGrid),
-                new CodeInstruction(OpCodes.Ldfld, underGrid),
-                new CodeInstruction(OpCodes.Ldloc_0),
-                new CodeInstruction(OpCodes.Ldelem_Ref),
-                new CodeInstruction(OpCodes.Brfalse, null)
-            };
-
-            for(int i = 0; i < instructionListCount; i++)
-            {
-                yield return instructionList[i];
-
-                if (i < instructionListCount && i > 4 && instructionList[i-4].Is(OpCodes.Ldfld, topGrid))
-                {
-                    if (n == 1)
-                    {
-                        foreach (CodeInstruction instruction in fix)
-                        {
-                            if (instruction.opcode == OpCodes.Brfalse) instruction.operand = instructionList[i + 8].operand;
-
-                            yield return instruction;
-                        }
-                    }
-
-                    n++;
-                }
+                addonDrawSize = ba.drawSize;
+                pawnBodyDrawSize = props.alienComp.customDrawSize;
+                pawnHeadDrawSize = props.alienComp.customHeadDrawSize;
             }
-        }
-
-        public static IEnumerable<CodeInstruction> FasterFeeding_Transpiler(IEnumerable<CodeInstruction> instructions)
-        {
-            List<CodeInstruction> instructionList = instructions.ToList();
-            int instructionListCount = instructionList.Count;
-
-            for (int i = 0; i < instructionListCount; i++)
+            if (ba.scaleWithPawnDrawsize)
             {
-
-
-                if (instructionList[i].Is(OpCodes.Ldc_R4, 5000f))
+                if (ModsConfig.BiotechActive)
                 {
-                    instructionList[i].operand = 1250f;
+                    pawnBodyDrawSize *= parms.pawn.ageTracker.CurLifeStage.bodyWidth ?? 1.5f;
+                    pawnHeadDrawSize *= Vector2.one * 0.76f;
                 }
-                yield return instructionList[i];
+                else
+                {
+                    pawnHeadDrawSize *= 1.5f;
+                    pawnBodyDrawSize *= 1.5f;
+                }
+                addonDrawSize *= ba.alignWithHead ? pawnHeadDrawSize : pawnBodyDrawSize;
             }
-        }
+            else
+            {
+                addonDrawSize *= Vector2.one * 1.5f;
+            }
+
+            __result = new Vector3(addonDrawSize.x, 1f, addonDrawSize.y);
+            return false;
+        }*/
 
         /// <summary>
         /// Replaces instances of Pawn.ageTracker.CurLifeStage == LifeStageDefOf.HumanlikeBaby with Pawn.ageTracker.CurLifeStage.developmentalStage.Baby()
@@ -242,7 +203,7 @@ namespace Cutebold_Assemblies.Patches
         public static IEnumerable<CodeInstruction> Alien_CertaintyChangeFactor_Transpiler(IEnumerable<CodeInstruction> instructions)
         {
             MethodInfo alienCertaintyChangeFactor = AccessTools.Method(typeof(Alien_Patches), nameof(Alien_Patches.CertaintyCurve));
-            var x = Traverse.Create(typeof(Pawn_IdeoTracker)).Fields()[0];
+            string x = Traverse.Create(typeof(Pawn_IdeoTracker)).Fields()[0];
             FieldInfo pawn = AccessTools.Field(typeof(Pawn_IdeoTracker), "pawn");
 
             List<CodeInstruction> instructionList = instructions.ToList();
@@ -281,7 +242,7 @@ namespace Cutebold_Assemblies.Patches
         /// <summary>
         /// Racial ideology certainty curves
         /// </summary>
-        private static Dictionary<ThingDef, SimpleCurve> ideoCurves = new Dictionary<ThingDef, SimpleCurve>();
+        private static readonly Dictionary<ThingDef, SimpleCurve> ideoCurves = new Dictionary<ThingDef, SimpleCurve>();
 
         /// <summary>
         /// Creates a certainty curve for each race. Ideology does not matter, just the pawn's child and adult ages.
@@ -297,7 +258,7 @@ namespace Cutebold_Assemblies.Patches
                 float child = -1;
                 float adult = -1;
 
-                foreach (var lifeStage in pawn.RaceProps.lifeStageAges)
+                foreach (LifeStageAge lifeStage in pawn.RaceProps.lifeStageAges)
                 {
                     if (child == -1 && lifeStage.def.developmentalStage.Child()) child = lifeStage.minAge; //Just want the first lifeStage where a pawn is a child
                     if (lifeStage.def.developmentalStage.Adult()) adult = lifeStage.minAge; //Want last life stage to match how Humans work. Does not take into account a life stage like "elder" if a custom race would have that.
@@ -317,29 +278,52 @@ namespace Cutebold_Assemblies.Patches
             return ideoCurves[pawn.def].Evaluate(pawn.ageTracker.AgeBiologicalYearsFloat);
         }
 
-        public static IEnumerable<CodeInstruction> Alien_DrawExtraEyeGraphic_Transpiler(IEnumerable<CodeInstruction> instructions)
+        #region Personal Patches
+#if DEBUG && RW1_4
+        /// <summary>
+        /// Personal Patches for various annoyances/bugs
+        /// </summary>
+        private static void PersonalPatches(Harmony harmony, Type thisClass)
         {
-            FieldInfo woundAnchors = AccessTools.Field(typeof(BodyTypeDef), "woundAnchors");
-            FieldInfo pawn = AccessTools.Field(typeof(PawnRenderer), "pawn");
-            MethodInfo findAnchorsPostfix = AccessTools.Method(typeof(HarmonyPatches), nameof(HarmonyPatches.FindAnchorsPostfix));
-
-            List<CodeInstruction> instructionList = instructions.ToList();
-
-            for (int i = 0; i < instructionList.Count; i++)
+            if (ModLister.GetActiveModWithIdentifier("Mlie.SomeThingsFloat") != null)
             {
-                CodeInstruction instruction = instructionList[i];
+                new SomeThingsFloat(harmony);
+            }
 
-                yield return instruction;
+            if (ModLister.GetActiveModWithIdentifier("Mlie.RFRumorHasIt") != null)
+            {
+                new RFRumorHasIt(harmony);
+            }
 
-                if (instruction.Is(OpCodes.Ldfld, woundAnchors))
+            if (ModLister.GetActiveModWithIdentifier("babylettuce.growingzone") != null)
+            {
+                new GZP(harmony);
+            }
+
+            // faster baby feeding, maybe new mod?
+            harmony.Patch(AccessTools.GetDeclaredMethods(typeof(JobDriver_BottleFeedBaby)).ElementAt(13), transpiler: new HarmonyMethod(thisClass, nameof(FasterFeeding_Transpiler)));
+            harmony.Patch(AccessTools.Method(typeof(ChildcareUtility), "SuckleFromLactatingPawn"), transpiler: new HarmonyMethod(thisClass, nameof(FasterFeeding_Transpiler)));
+        }
+
+   // Personal patches
+        public static IEnumerable<CodeInstruction> FasterFeeding_Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            List<CodeInstruction> instructionList = instructions.ToList();
+            int instructionListCount = instructionList.Count;
+
+            for (int i = 0; i < instructionListCount; i++)
+            {
+
+
+                if (instructionList[i].Is(OpCodes.Ldc_R4, 5000f))
                 {
-                    yield return new CodeInstruction(OpCodes.Ldarg_0);
-                    yield return new CodeInstruction(OpCodes.Ldfld, instructionList[i - 4].operand);
-                    yield return new CodeInstruction(OpCodes.Ldfld, pawn);
-                    yield return new CodeInstruction(OpCodes.Call, findAnchorsPostfix);
+                    instructionList[i].operand = 1250f;
                 }
+                yield return instructionList[i];
             }
         }
+#endif
+        #endregion
     }
 }
 #endif

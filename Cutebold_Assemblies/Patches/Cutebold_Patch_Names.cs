@@ -1,5 +1,4 @@
-﻿using Cutebold_Assemblies.Patches;
-using HarmonyLib;
+﻿using HarmonyLib;
 using RimWorld;
 using System;
 using System.Collections.Generic;
@@ -59,7 +58,7 @@ namespace Cutebold_Assemblies
             {
                 CreateBackstoryLists();
                 createdLists = true;
-                var thisClass = typeof(Cutebold_Patch_Names);
+                Type thisClass = typeof(Cutebold_Patch_Names);
 
                 // Disable Cutebold Name Validation
                 harmony.Patch(AccessTools.Method(typeof(NameGenerator), nameof(NameGenerator.GenerateName), new Type[] {
@@ -68,11 +67,11 @@ namespace Cutebold_Assemblies
                     typeof(bool),
                     typeof(string),
                     typeof(string)
-                }), prefix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_Names.CuteboldGenerateNamePrefix)));
+                }), prefix: new HarmonyMethod(thisClass, nameof(CuteboldGenerateNamePrefix)));
                 // Generate Cutebold Names
-                harmony.Patch(AccessTools.Method(typeof(PawnBioAndNameGenerator), "GeneratePawnName"), prefix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_Names.CuteboldGeneratePawnNamePrefix)));
+                harmony.Patch(AccessTools.Method(typeof(PawnBioAndNameGenerator), nameof(PawnBioAndNameGenerator.GeneratePawnName)), prefix: new HarmonyMethod(thisClass, nameof(CuteboldGeneratePawnNamePrefix)));
                 // Allow for renaming pawns that lack a first and/or last name
-                harmony.Patch(AccessTools.PropertyGetter(typeof(NameTriple), "IsValid"), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_Patch_Names.Cutebold_NameTriple_IsValidPostfix)));
+                harmony.Patch(AccessTools.PropertyGetter(typeof(NameTriple), "IsValid"), postfix: new HarmonyMethod(thisClass, nameof(Cutebold_NameTriple_IsValidPostfix)));
             }
         }
 
@@ -81,8 +80,6 @@ namespace Cutebold_Assemblies
         /// </summary>
         private void CreateBackstoryLists()
         {
-            //Log.Message("Create Backstory Lists");
-
 #if RWPre1_4
             CuteboldRegularChildBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Childhood, new BackstoryCategoryFilter { categories = new List<string> { "CuteboldRegularChildBackstories" } });
             CuteboldSlaveChildBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Childhood, new BackstoryCategoryFilter { categories = new List<string> { "CuteboldSlaveChildBackstories" } });
@@ -105,33 +102,6 @@ namespace Cutebold_Assemblies
             CuteboldServantAdultBackstories = DefDatabase<BackstoryDef>.AllDefs.Where((BackstoryDef bs) => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldServantAdultBackstories")).ToList();
             CuteboldUndergroundAdultBackstories = DefDatabase<BackstoryDef>.AllDefs.Where((BackstoryDef bs) => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldUndergroundAdultBackstories")).ToList();
 #endif
-
-            /*
-            Log.Message("Regular Child:");
-            foreach (Backstory b in CuteboldRegularChildBackstories)
-            {
-                Log.Message("  " + b);
-            }
-            Log.Message("Slave Child:");
-            foreach (Backstory b in CuteboldSlaveChildBackstories)
-            {
-                Log.Message("  " + b);
-            }
-            Log.Message("Regular Adult:");
-            foreach (Backstory b in CuteboldRegularAdultBackstories)
-            {
-                Log.Message("  " + b);
-            }
-            Log.Message("Slave Adult:");
-            foreach (Backstory b in CuteboldSlaveAdultBackstories)
-            {
-                Log.Message("  " + b);
-            }
-            Log.Message("Servant Adult:");
-            foreach (Backstory b in CuteboldServantAdultBackstories)
-            {
-                Log.Message("  " + b);
-            }*/
         }
 
         /// <summary>
@@ -139,14 +109,8 @@ namespace Cutebold_Assemblies
         /// </summary>
         /// <param name="request">The name generator request.</param>
         /// <param name="validator">The validator to use when naming the pawn.</param>
-        /// <param name="appendNumberIfNameUsed">Ignored</param>
-        /// <param name="rootKeyword">Ignored</param>
-        /// <param name="untranslatedRootKeyword">Ignored</param>
-        public static void CuteboldGenerateNamePrefix(GrammarRequest request, ref Predicate<string> validator, bool appendNumberIfNameUsed, string rootKeyword, string untranslatedRootKeyword)
+        public static void CuteboldGenerateNamePrefix(GrammarRequest request, ref Predicate<string> validator)
         {
-
-            //Log.Message("Generate Name Prefix");
-
             if (request.Includes.Any(included => included == Cutebold_DefOf.NamerPersonCutebold || included == Cutebold_DefOf.NamerPersonCuteboldSlave))
                 validator = null;
         }
@@ -162,73 +126,58 @@ namespace Cutebold_Assemblies
         [HarmonyPriority(Priority.Low)]
         public static bool CuteboldGeneratePawnNamePrefix(Pawn pawn, ref Name __result, NameStyle style = NameStyle.Full, string forcedLastName = null)
         {
+            if (pawn.def != Cutebold_Assemblies.CuteboldRaceDef || style != NameStyle.Full) return true;
 
-            //Log.Message("Generate Pawn Name Prefix");
-            //Log.Message("  pawn def=" + pawn.def.ToString() + " style=" + style.ToString());
-
-            if (pawn.def?.defName != Cutebold_Assemblies.RaceName || style != NameStyle.Full) return true;
-
-            //Log.Message("  pawn faction=" + pawn.Faction.ToString() + "  faction name maker="+((pawn.Faction != null && pawn.Faction.def.pawnNameMaker != null) ? pawn.Faction.def.pawnNameMaker.ToString() : ""));
 #if RWPre1_3
             RulePackDef rulePack = pawn.Faction?.def.pawnNameMaker;
-            var childhood = pawn.story.childhood;
-            var adulthood = pawn.story.adulthood;
+            Backstory childhood = pawn.story.childhood;
+            Backstory adulthood = pawn.story.adulthood;
 #else
             RulePackDef rulePack = pawn.Faction?.ideos?.PrimaryCulture.pawnNameMaker;
 #if RW1_3
-            var childhood = pawn.story.childhood;
-            var adulthood = pawn.story.adulthood;
-#else
-            var childhood = pawn.story.Childhood;
-            var adulthood = pawn.story.Adulthood;
-#endif
+            Backstory childhood = pawn.story.childhood;
+            Backstory adulthood = pawn.story.adulthood;
+    #else
+            BackstoryDef childhood = pawn.story.Childhood;
+            BackstoryDef adulthood = pawn.story.Adulthood;
+    #endif
 #endif
             // Cutebolds with no faction pawn name maker
             if (rulePack == null)
             {
-                //Log.Message("  Faction null or pawnNameMaker null");
                 if (childhood == null || (adulthood != null && CuteboldRegularChildBackstories.Contains(childhood) && CuteboldRegularAdultBackstories.Contains(adulthood))) // Cutebold somehow does not have a childhood or is from a cutebold tribe
                 {
-                    //Log.Message("    Regular Cutebold");
                     rulePack = Cutebold_DefOf.NamerPersonCutebold;
                 }
                 else if (CuteboldSlaveChildBackstories.Contains(childhood)) // Cutebold was a cutebold child slave
                 {
-                    //Log.Message("    Slave Child Cutebold");
                     rulePack = Cutebold_DefOf.NamerPersonCuteboldSlave;
                 }
                 else if (CuteboldRegularChildBackstories.Contains(childhood) || (adulthood != null && CuteboldRegularAdultBackstories.Contains(adulthood))) // Cutebold either joined or left a cutebold tribe during their lifetime
                 {
-                    //Log.Message("    Other Cutebold");
                     rulePack = pawn.gender == Verse.Gender.Female ? Cutebold_DefOf.NamerPersonCuteboldOtherFemale : Cutebold_DefOf.NamerPersonCuteboldOther;
                 }
                 else // Cutebold is an outsider
                 {
-                    //Log.Message("    Outsider Cutebold");
                     rulePack = pawn.gender == Verse.Gender.Female ? Cutebold_DefOf.NamerPersonCuteboldOutsiderFemale : Cutebold_DefOf.NamerPersonCuteboldOutsider;
                 }
 
                 // We want servants to have a full first and last name.
                 if (adulthood != null && CuteboldServantAdultBackstories.Contains(adulthood))
                 {
-                    //Log.Message("    Servant Cutebold");
                     rulePack = pawn.gender == Verse.Gender.Female ? Cutebold_DefOf.NamerPersonCuteboldOutsiderFemale : Cutebold_DefOf.NamerPersonCuteboldOutsider;
                 }
             }
             // Cutebold slaves/servants
             else if (adulthood != null && CuteboldServantAdultBackstories.Contains(adulthood)) // Cutebold servents get a full name
             {
-                //Log.Message("  Cutebold with faction and pawnNameMaker");
-                //Log.Message("    Servant Cutebold");
                 rulePack = pawn.gender == Gender.Female ? Cutebold_DefOf.NamerPersonCuteboldOutsiderFemale : Cutebold_DefOf.NamerPersonCuteboldOutsider;
             }
             else if (childhood != null && CuteboldSlaveChildBackstories.Contains(childhood)) // Cutebold child slaves get a simple name
             {
-                //Log.Message("  Cutebold with faction and pawnNameMaker");
-                //Log.Message("    Slave Child Cutebold");
                 rulePack = Cutebold_DefOf.NamerPersonCuteboldSlave;
             }
-            else if (childhood != null && !childhood.ToString().StartsWith("Cutebold")) // Non-Cutebold backstory, sometimes generate with a cutebold outsider name
+            else if (childhood != null && !childhood.identifier.ToString().StartsWith("Cutebold")) // Non-Cutebold backstory, sometimes generate with a cutebold outsider name
             {
                 if (rulePack == Cutebold_DefOf.NamerPersonCutebold || Rand.Range(1, 100) <= 50)
                 {
@@ -250,7 +199,6 @@ namespace Cutebold_Assemblies
             }
             else
             {
-                //Log.Message("RulePack still null, using regular name generator.");
                 return true;
             }
         }
@@ -263,7 +211,7 @@ namespace Cutebold_Assemblies
         /// <returns>Returns a new cutebold name.</returns>
         private static NameTriple CuteboldNameGenerator(RulePackDef rulePack, string forcedLastName)
         {
-            var name = CuteboldNameResolver(rulePack, forcedLastName);
+            NameTriple name = CuteboldNameResolver(rulePack, forcedLastName);
 
             for (int i = 0; i < 100; i++)
             {

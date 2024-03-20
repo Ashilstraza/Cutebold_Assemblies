@@ -1,18 +1,80 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{595E3FE8-C183-4363-83F6-03E75C56D839}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Cutebold_Assemblies</RootNamespace>
-    <AssemblyName>Cutebold_Assemblies</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <Deterministic>true</Deterministic>
-    <TargetFrameworkProfile />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.5 Release|AnyCPU'">
+    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.5\Assemblies\</OutputPath>
+    <DefineConstants>RW1_5</DefineConstants>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <Optimize>true</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.4 Release|AnyCPU'">
+    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.4\Assemblies\</OutputPath>
+    <DefineConstants>RW1_4;RWPre1_5</DefineConstants>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <Optimize>true</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == '1.3 Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <Optimize>true</Optimize>
+    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.3\Assemblies\</OutputPath>
+    <DefineConstants>RW1_3;RWPre1_5;RWPre1_4</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <DebugSymbols>false</DebugSymbols>
+    <CodeAnalysisRuleSet>
+    </CodeAnalysisRuleSet>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.2 Release|AnyCPU'">
+    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.2\Assemblies\</OutputPath>
+    <DefineConstants>RW1_2;RWPre1_5;RWPre1_4;RWPre1_3</DefineConstants>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <Optimize>true</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.1 Release|AnyCPU'">
+    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.1\Assemblies\</OutputPath>
+    <DefineConstants>RW1_1;RWPre1_5;RWPre1_4;RWPre1_3;RWPre1_2</DefineConstants>
+    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
+    <Optimize>true</Optimize>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.5 Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.5\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;RW1_5</DefineConstants>
+    <DebugType>portable</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.4 Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.4\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;RW1_4;RWPre1_5</DefineConstants>
+    <DebugType>portable</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <LangVersion>8.0</LangVersion>
+    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == '1.3 Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -20,81 +82,45 @@
     <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>8.0</LangVersion>
     <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.3\Assemblies\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;RW1_3; RWPre1_4</DefineConstants>
+    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.3\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;RW1_3;RWPre1_5;RWPre1_4</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <CodeAnalysisRuleSet>
     </CodeAnalysisRuleSet>
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == '1.3 Release|AnyCPU' ">
-    <DebugType>none</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>8.0</LangVersion>
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.3\Assemblies\</OutputPath>
-    <DefineConstants>RW1_3; RWPre1_4</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DebugSymbols>false</DebugSymbols>
-    <CodeAnalysisRuleSet>
-    </CodeAnalysisRuleSet>
-    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.1 Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.1\Assemblies\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;RW1_1; RWPre1_4; RWPre1_3</DefineConstants>
-    <DebugType>portable</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>8.0</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.1 Release|AnyCPU'">
-    <OutputPath>..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.1\Assemblies\</OutputPath>
-    <DefineConstants>RW1_1; RWPre1_4; RWPre1_3</DefineConstants>
-    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <Optimize>true</Optimize>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>8.0</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.4 Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.4\Assemblies\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;RW1_4</DefineConstants>
-    <DebugType>portable</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>8.0</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.2 Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.2\Assemblies\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;RW1_2; RWPre1_4; RWPre1_3</DefineConstants>
+    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.2\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;RW1_2;RWPre1_5;RWPre1_4;RWPre1_3</DefineConstants>
     <DebugType>portable</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>8.0</LangVersion>
     <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.2 Release|AnyCPU'">
-    <OutputPath>..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.2\Assemblies\</OutputPath>
-    <DefineConstants>RW1_2; RWPre1_4; RWPre1_3</DefineConstants>
-    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <Optimize>true</Optimize>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.1 Debug|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.1\Assemblies\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;RW1_1;RWPre1_5;RWPre1_4;RWPre1_3;RWPre1_2</DefineConstants>
+    <DebugType>portable</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>8.0</LangVersion>
     <ErrorReport>prompt</ErrorReport>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.4 Release|AnyCPU'">
-    <OutputPath>..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.4\Assemblies\</OutputPath>
-    <DefineConstants>RW1_4</DefineConstants>
-    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <Optimize>true</Optimize>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>8.0</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
+  <PropertyGroup>
+    <ProjectGuid>{595E3FE8-C183-4363-83F6-03E75C56D839}</ProjectGuid>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+  </PropertyGroup>
+  <PropertyGroup>
+    <StartupObject />
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="Hediffs\Cutebold_Hediff_LightSickness.cs" />
@@ -111,45 +137,52 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="0Harmony, Version=2.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="0Harmony">
+      <HintPath>..\..\References\$(Configuration)\0Harmony.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="AlienRace, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="AlienRace">
+      <HintPath>..\..\References\$(Configuration)\AlienRace.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Assembly-CSharp, Version=1.3.7865.21497, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="Assembly-CSharp">
+      <HintPath>..\..\References\$(Configuration)\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="BadHygiene, Version=2.7.7273.33335, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>References\1.4\BadHygiene.dll</HintPath>
+    <Reference Include="BadHygiene">
+      <HintPath>..\..\References\$(Configuration)\BadHygiene.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="GrowingZonePlus, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>References\1.4\GrowingZonePlus.dll</HintPath>
-    </Reference>
-    <Reference Include="SomeThingsFloat, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
-      <HintPath>References\1.4\SomeThingsFloat.dll</HintPath>
+    <Reference Include="GrowingZonePlus">
+      <HintPath>..\..\References\$(Configuration)\GrowingZonePlus.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="System, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089" />
-    <Reference Include="UnityEngine.CoreModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="Rainbeau%27s Rumor Has It">
+      <HintPath>..\..\References\$(Configuration)\Rainbeau's Rumor Has It.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.IMGUIModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+    <Reference Include="SomeThingsFloat">
+      <HintPath>..\..\References\$(Configuration)\SomeThingsFloat.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="UnityEngine.TextRenderingModule, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null">
+    <Reference Include="System" />
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>..\..\References\$(Configuration)\UnityEngine.CoreModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.IMGUIModule">
+      <HintPath>..\..\References\$(Configuration)\UnityEngine.IMGUIModule.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="UnityEngine.TextRenderingModule">
+      <HintPath>..\..\References\$(Configuration)\UnityEngine.TextRenderingModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>

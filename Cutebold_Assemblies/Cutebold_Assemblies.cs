@@ -85,10 +85,10 @@ namespace Cutebold_Assemblies
             }
         }
 
-        /// <summary>
-        /// Creates a list of races that give bad butcher thoughts.
-        /// </summary>
-        private static void CreateButcherRaceList()
+            /// <summary>
+            /// Creates a list of races that give bad butcher thoughts.
+            /// </summary>
+            private static void CreateButcherRaceList()
         {
             HashSet<string> butcherList = new HashSet<string>();
 

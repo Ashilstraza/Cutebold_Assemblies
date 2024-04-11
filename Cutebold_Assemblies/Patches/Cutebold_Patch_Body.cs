@@ -121,7 +121,7 @@ namespace Cutebold_Assemblies
             if(pawn == null)
             {
                 foreach (Pawn p in PawnsFinder.All_AliveOrDead)
-        {
+                {
                     SetDirty(p);
                 }
             }

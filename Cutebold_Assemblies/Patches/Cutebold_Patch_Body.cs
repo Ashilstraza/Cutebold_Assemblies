@@ -109,9 +109,16 @@ namespace Cutebold_Assemblies
         /// <summary>
         /// Sets the given pawn's graphics as dirty to have it redrawn.
         /// </summary>
-        /// <param name="pawn">The pawn to dirty</param>
-        public static void SetDirty(Pawn pawn)
+        /// <param name="pawn">The pawn to dirty, leave empty to set all pawns dirty.</param>
+        public static void SetDirty(Pawn pawn = null)
         {
+            if(pawn == null)
+            {
+                foreach (Pawn p in PawnsFinder.All_AliveOrDead)
+        {
+                    SetDirty(p);
+                }
+            }
 #if RWPre1_3
             pawn.Drawer.renderer.graphics.SetAllGraphicsDirty();
 #elif RWPre1_5

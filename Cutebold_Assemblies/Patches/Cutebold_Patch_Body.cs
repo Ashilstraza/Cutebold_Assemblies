@@ -86,6 +86,12 @@ namespace Cutebold_Assemblies
             }
         }
 
+        public static void HotReload()
+        {
+            raceAddons = new List<BodyAddon>(Cutebold_Assemblies.CuteboldRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons);
+            CuteboldAddonModifier(Cutebold_Assemblies.CuteboldSettings);
+        }
+
         /// <summary>
         /// Handles disabling and enabling of the various body addons.
         /// </summary>

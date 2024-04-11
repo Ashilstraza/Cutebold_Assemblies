@@ -53,8 +53,7 @@ namespace Cutebold_Assemblies
         {
             CuteboldSettings = LoadedModManager.GetMod<CuteboldMod>().GetSettings<Cutebold_Settings>();
 
-            CreateButcherRaceList();
-            CreateHumanoidLeatherList();
+            BuildLists();
 
             Type thisClass = typeof(Cutebold_Assemblies);
 
@@ -74,6 +73,16 @@ namespace Cutebold_Assemblies
 #if !RWPre1_4
             new Alien_Patches(harmony); // Patches for allowing custom LifeStageDefs along with patches for other mods
 #endif
+        }
+        public static void BuildLists(bool hotReload = false)
+        {
+            CreateButcherRaceList();
+            CreateHumanoidLeatherList();
+
+            if(hotReload)
+            {
+                Cutebold_Patch_Body.HotReload();
+            }
         }
 
         /// <summary>

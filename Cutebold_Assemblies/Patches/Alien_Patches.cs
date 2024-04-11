@@ -52,6 +52,9 @@ namespace Cutebold_Assemblies.Patches
                 harmony.Patch(AccessTools.Method(typeof(HediffGiver), nameof(HediffGiver.TryApply)), transpiler: new HarmonyMethod(thisClass, nameof(Alien_FixBaby_Transpiler)));
             }
 
+            harmony.Patch(AccessTools.Method(typeof(PlayDataLoader), nameof(PlayDataLoader.HotReloadDefs)), postfix: new HarmonyMethod(thisClass, nameof(Alien_HotReloadNotify)));
+            harmony.Patch(AccessTools.Method(typeof(MapDrawer), nameof(MapDrawer.RegenerateEverythingNow)), postfix: new HarmonyMethod(thisClass, nameof(Alien_HotReload)));
+
             //harmony.Patch(AccessTools.Method(typeof(AlienPawnRenderNodeWorker_BodyAddon), nameof(AlienPawnRenderNodeWorker_BodyAddon.ScaleFor)), prefix: new HarmonyMethod(thisClass, nameof(Alien_ScaleFor_Prefix)));
 
 #if RW1_4
@@ -133,6 +136,210 @@ namespace Cutebold_Assemblies.Patches
             __result = new Vector3(addonDrawSize.x, 1f, addonDrawSize.y);
             return false;
         }*/
+
+        /// <summary>If Rimworld is starting to hot reload.</summary>
+        private static bool isHotReload = false;
+
+        /// <summary>
+        /// Sets isHotReload to true after the Dev function is called and before the reload happens.
+        /// </summary>
+        public static void Alien_HotReloadNotify()
+        {
+            isHotReload = true;
+        }
+
+        /// <summary>
+        /// Hooks the map drawer's RegenerateEverythingNow() to make the call to rebuild HAR's lists if it is a hot reload.
+        /// 
+        /// Also rebuild the Cutebold lists.
+        /// </summary>
+        public static void Alien_HotReload()
+        {
+            if (!isHotReload) return;
+
+            AlienPartGenerator apg = Cutebold_Assemblies.CuteboldRaceDef.alienRace.generalSettings.alienPartGenerator; // Peek to see if HAR is handling HotReloading properly; if it isn't then we do it ourselves.
+            if (!apg.alienProps.alienRace.graphicPaths.head.GetSubGraphics().Any()) Alien_HotReloadLists();
+
+            isHotReload = false;
+
+            Cutebold_Assemblies.BuildLists(hotReload: true);
+        }
+
+        /// <summary>
+        /// Rebuilds HAR's various restriction lists after a HotReload, handles everything except workGivers.
+        /// </summary>
+        private static void Alien_HotReloadLists()
+        {
+            //AlienHarmony harmony = new(id: "rimworld.erdelf.alien_race.main");
+            ThoughtSettings.thoughtRestrictionDict = [];
+            RaceRestrictionSettings.apparelRestricted = [];
+            RaceRestrictionSettings.weaponRestricted = [];
+            RaceRestrictionSettings.buildingRestricted = [];
+            RaceRestrictionSettings.recipeRestricted = [];
+            RaceRestrictionSettings.plantRestricted = [];
+            RaceRestrictionSettings.traitRestricted = [];
+            RaceRestrictionSettings.foodRestricted = [];
+            RaceRestrictionSettings.petRestricted = [];
+            RaceRestrictionSettings.researchRestrictionDict = [];
+            RaceRestrictionSettings.geneRestricted = [];
+            RaceRestrictionSettings.geneRestrictedEndo = [];
+            RaceRestrictionSettings.geneRestrictedXeno = [];
+            RaceRestrictionSettings.xenotypeRestricted = [];
+            RaceRestrictionSettings.reproductionRestricted = [];
+
+            foreach (ThingDef_AlienRace ar in DefDatabase<ThingDef_AlienRace>.AllDefsListForReading)
+            {
+                foreach (ThoughtDef thoughtDef in ar.alienRace.thoughtSettings.restrictedThoughts)
+                {
+                    if (!ThoughtSettings.thoughtRestrictionDict.ContainsKey(thoughtDef))
+                        ThoughtSettings.thoughtRestrictionDict.Add(thoughtDef, new List<ThingDef_AlienRace>());
+                    ThoughtSettings.thoughtRestrictionDict[thoughtDef].Add(ar);
+                }
+
+                foreach (ThingDef thingDef in ar.alienRace.raceRestriction.apparelList)
+                {
+                    RaceRestrictionSettings.apparelRestricted.Add(thingDef);
+                    ar.alienRace.raceRestriction.whiteApparelList.Add(thingDef);
+                }
+
+                foreach (ThingDef thingDef in ar.alienRace.raceRestriction.weaponList)
+                {
+                    RaceRestrictionSettings.weaponRestricted.Add(thingDef);
+                    ar.alienRace.raceRestriction.whiteWeaponList.Add(thingDef);
+                }
+
+                foreach (ThingDef thingDef in ar.alienRace.raceRestriction.buildingList)
+                {
+                    RaceRestrictionSettings.buildingRestricted.Add(thingDef);
+                    ar.alienRace.raceRestriction.whiteBuildingList.Add(thingDef);
+                }
+
+                foreach (RecipeDef recipeDef in ar.alienRace.raceRestriction.recipeList)
+                {
+                    RaceRestrictionSettings.recipeRestricted.Add(recipeDef);
+                    ar.alienRace.raceRestriction.whiteRecipeList.Add(recipeDef);
+                }
+
+                foreach (ThingDef thingDef in ar.alienRace.raceRestriction.plantList)
+                {
+                    RaceRestrictionSettings.plantRestricted.Add(thingDef);
+                    ar.alienRace.raceRestriction.whitePlantList.Add(thingDef);
+                }
+
+                foreach (TraitDef traitDef in ar.alienRace.raceRestriction.traitList)
+                {
+                    RaceRestrictionSettings.traitRestricted.Add(traitDef);
+                    ar.alienRace.raceRestriction.whiteTraitList.Add(traitDef);
+                }
+
+                foreach (ThingDef thingDef in ar.alienRace.raceRestriction.foodList)
+                {
+                    RaceRestrictionSettings.foodRestricted.Add(thingDef);
+                    ar.alienRace.raceRestriction.whiteFoodList.Add(thingDef);
+                }
+
+                foreach (ThingDef thingDef in ar.alienRace.raceRestriction.petList)
+                {
+                    RaceRestrictionSettings.petRestricted.Add(thingDef);
+                    ar.alienRace.raceRestriction.whitePetList.Add(thingDef);
+                }
+
+                foreach (ResearchProjectDef projectDef in ar.alienRace.raceRestriction.researchList.SelectMany(selector: rl => rl?.projects))
+                {
+                    if (!RaceRestrictionSettings.researchRestrictionDict.ContainsKey(projectDef))
+                        RaceRestrictionSettings.researchRestrictionDict.Add(projectDef, new List<ThingDef_AlienRace>());
+                    RaceRestrictionSettings.researchRestrictionDict[projectDef].Add(ar);
+                }
+
+                foreach (GeneDef geneDef in ar.alienRace.raceRestriction.geneList)
+                {
+                    RaceRestrictionSettings.geneRestricted.Add(geneDef);
+                    ar.alienRace.raceRestriction.whiteGeneList.Add(geneDef);
+                }
+
+                foreach (GeneDef geneDef in ar.alienRace.raceRestriction.geneListEndo)
+                {
+                    RaceRestrictionSettings.geneRestrictedEndo.Add(geneDef);
+                    ar.alienRace.raceRestriction.whiteGeneListEndo.Add(geneDef);
+                }
+
+                foreach (GeneDef geneDef in ar.alienRace.raceRestriction.geneListXeno)
+                {
+                    RaceRestrictionSettings.geneRestrictedXeno.Add(geneDef);
+                    ar.alienRace.raceRestriction.whiteGeneListXeno.Add(geneDef);
+                }
+
+                foreach (XenotypeDef xenotypeDef in ar.alienRace.raceRestriction.xenotypeList)
+                {
+                    RaceRestrictionSettings.xenotypeRestricted.Add(xenotypeDef);
+                    ar.alienRace.raceRestriction.whiteXenotypeList.Add(xenotypeDef);
+                }
+
+                foreach (ThingDef thingDef in ar.alienRace.raceRestriction.reproductionList)
+                {
+                    RaceRestrictionSettings.reproductionRestricted.Add(thingDef);
+                    ar.alienRace.raceRestriction.whiteReproductionList.Add(thingDef);
+                }
+
+                if (ar.alienRace.generalSettings.corpseCategory != ThingCategoryDefOf.CorpsesHumanlike)
+                {
+                    ThingCategoryDefOf.CorpsesHumanlike.childThingDefs.Remove(ar.race.corpseDef);
+                    if (ar.alienRace.generalSettings.corpseCategory != null)
+                    {
+                        ar.race.corpseDef.thingCategories = new List<ThingCategoryDef> { ar.alienRace.generalSettings.corpseCategory };
+                        ar.alienRace.generalSettings.corpseCategory.childThingDefs.Add(ar.race.corpseDef);
+                        ar.alienRace.generalSettings.corpseCategory.ResolveReferences();
+                    }
+                    ThingCategoryDefOf.CorpsesHumanlike.ResolveReferences();
+                }
+
+                ar.alienRace.generalSettings.alienPartGenerator.GenerateMeshsAndMeshPools();
+
+                if (ar.alienRace.generalSettings.humanRecipeImport && ar != ThingDefOf.Human)
+                {
+                    (ar.recipes ??= new List<RecipeDef>()).AddRange(ThingDefOf.Human.recipes.Where(predicate: rd => !rd.targetsBodyPart ||
+                                                                                                                                  rd.appliedOnFixedBodyParts.NullOrEmpty() ||
+                                                                                                                                  rd.appliedOnFixedBodyParts.Any(predicate: bpd => ar.race.body.AllParts.Any(predicate: bpr => bpr.def == bpd))));
+
+                    DefDatabase<RecipeDef>.AllDefsListForReading.ForEach(action: rd =>
+                    {
+                        if (rd.recipeUsers?.Contains(ThingDefOf.Human) ?? false)
+                            rd.recipeUsers.Add(ar);
+                        if (!rd.defaultIngredientFilter?.Allows(ThingDefOf.Meat_Human) ?? false)
+                            rd.defaultIngredientFilter.SetAllow(ar.race.meatDef, allow: false);
+                    });
+                    ar.recipes.RemoveDuplicates();
+                }
+
+                // TODO: Nicely patch workGiverList
+
+                /*ar.alienRace.raceRestriction?.workGiverList?.ForEach(action: wgd =>
+                {
+                    if (wgd == null)
+                        return;
+                    harmony.Patch(AccessTools.Method(wgd.giverClass, name: "JobOnThing"),
+                                  postfix: new HarmonyMethod(patchType, nameof(GenericJobOnThingPostfix)));
+                    MethodInfo hasJobOnThingInfo = AccessTools.Method(wgd.giverClass, name: "HasJobOnThing");
+                    if (hasJobOnThingInfo?.IsDeclaredMember() ?? false)
+                        harmony.Patch(hasJobOnThingInfo, postfix: new HarmonyMethod(patchType, nameof(GenericHasJobOnThingPostfix)));
+                });*/
+            }
+
+            foreach (ThingDef def in DefDatabase<ThingDef>.AllDefs)
+            {
+                AnimalBodyAddons extension = def.GetModExtension<AnimalBodyAddons>();
+                if (extension != null)
+                {
+                    extension.GenerateAddonData(def);
+                    def.comps.Add(new CompProperties(typeof(AnimalComp)));
+                }
+            }
+
+            HairDefOf.Bald.styleTags.Add(item: "alienNoStyle");
+            BeardDefOf.NoBeard.styleTags.Add(item: "alienNoStyle");
+            TattooDefOf.NoTattoo_Body.styleTags.Add(item: "alienNoStyle");
+            TattooDefOf.NoTattoo_Face.styleTags.Add(item: "alienNoStyle");
+        }
 
         /// <summary>
         /// Replaces instances of Pawn.ageTracker.CurLifeStage == LifeStageDefOf.HumanlikeBaby with Pawn.ageTracker.CurLifeStage.developmentalStage.Baby()

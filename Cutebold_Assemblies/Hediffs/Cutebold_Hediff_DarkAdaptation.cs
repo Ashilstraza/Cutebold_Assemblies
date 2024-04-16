@@ -264,6 +264,8 @@ namespace Cutebold_Assemblies
         /// <summary>Minimum work speed in the darkness.</summary>
         private static readonly float minimumDarkWorkSpeed = 0.5f;
 
+        private bool dirtyCache = false;
+
         /// <summary>If the current hediff stage should be visible.</summary>
         public override bool Visible => CurStage.becomeVisible;
         /// <summary>Global work speed glow curve depending on hediff.</summary>
@@ -330,7 +332,7 @@ namespace Cutebold_Assemblies
 
             if (((lastLightLevel >= 0.3f) && (LightLevel < 0.3f)) || ((lastLightLevel <= 0.3f) && (LightLevel > 0.3f)) && !asleep && !unconscious)
             {
-                Cutebold_Patch_Body.SetDirty(pawn);
+                dirtyCache = true;
             }
 
             if (EyeGlowEnabled && EyeBlink && LightLevel < 0.3f && !asleep && !unconscious)
@@ -340,7 +342,7 @@ namespace Cutebold_Assemblies
 
                 if ((blinkValue < 1 && blinkLastValue >= 1) || (blinkValue >= 1 && blinkLastValue < 1))
                 {
-                    Cutebold_Patch_Body.SetDirty(pawn);
+                    dirtyCache = true;
                 }
 
                 blinkLastValue = blinkValue;
@@ -356,7 +358,7 @@ namespace Cutebold_Assemblies
                     asleep = (pawn.CurJob != null && pawn.jobs.curDriver.asleep);
                     unconscious = pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f;
 
-                    Cutebold_Patch_Body.SetDirty(pawn);
+                    dirtyCache = true;
                 }
 
                 UpdateCuteboldCompProperties();
@@ -369,6 +371,12 @@ namespace Cutebold_Assemblies
                 }
 
                 if (!ignoreSickness) UpdateLightSickness();
+            }
+
+            if (dirtyCache)
+            {
+                Cutebold_Patch_Body.SetDirty(pawn);
+                dirtyCache = false;
             }
         }
 
@@ -397,7 +405,7 @@ namespace Cutebold_Assemblies
             if (pawn.health.hediffSet.hediffs.Find((Hediff hediff) => hediff.def.defName == "AA_MimeHediff") != null)
             {
                 pawn.TryGetComp<AlienComp>().GetChannel("eye").first = new Color(Rand.Range(0.7f, 0.8f), Rand.Range(0.5f, 0.6f), 0f);
-                Cutebold_Patch_Body.SetDirty(pawn);
+                dirtyCache = true;
             }
             mimeChecked = true;
         }

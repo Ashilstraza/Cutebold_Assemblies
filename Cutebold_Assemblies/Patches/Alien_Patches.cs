@@ -18,7 +18,7 @@ namespace Cutebold_Assemblies.Patches
     /// </summary>
     public class Alien_Patches
     {
-        public static List<string> RaceList { get; private set; } = new List<string>();
+        public static List<string> RaceList { get; private set; } = [];
 
         public Alien_Patches(Harmony harmony)
         {
@@ -26,7 +26,7 @@ namespace Cutebold_Assemblies.Patches
 
             string alienRaceID = "rimworld.erdelf.alien_race.main";
 
-            StringBuilder stringBuilder = new StringBuilder("Cutebold Mod Provided Alien Patches:");
+            StringBuilder stringBuilder = new("Cutebold Mod Provided Alien Patches:");
 
             if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(IncidentWorker_Disease), "CanAddHediffToAnyPartOfDef"))?.Transpilers?.Any(patch => patch.owner == alienRaceID) ?? true)
             {
@@ -192,7 +192,7 @@ namespace Cutebold_Assemblies.Patches
                 foreach (ThoughtDef thoughtDef in ar.alienRace.thoughtSettings.restrictedThoughts)
                 {
                     if (!ThoughtSettings.thoughtRestrictionDict.ContainsKey(thoughtDef))
-                        ThoughtSettings.thoughtRestrictionDict.Add(thoughtDef, new List<ThingDef_AlienRace>());
+                        ThoughtSettings.thoughtRestrictionDict.Add(thoughtDef, []);
                     ThoughtSettings.thoughtRestrictionDict[thoughtDef].Add(ar);
                 }
 
@@ -247,7 +247,7 @@ namespace Cutebold_Assemblies.Patches
                 foreach (ResearchProjectDef projectDef in ar.alienRace.raceRestriction.researchList.SelectMany(selector: rl => rl?.projects))
                 {
                     if (!RaceRestrictionSettings.researchRestrictionDict.ContainsKey(projectDef))
-                        RaceRestrictionSettings.researchRestrictionDict.Add(projectDef, new List<ThingDef_AlienRace>());
+                        RaceRestrictionSettings.researchRestrictionDict.Add(projectDef, []);
                     RaceRestrictionSettings.researchRestrictionDict[projectDef].Add(ar);
                 }
 
@@ -286,7 +286,7 @@ namespace Cutebold_Assemblies.Patches
                     ThingCategoryDefOf.CorpsesHumanlike.childThingDefs.Remove(ar.race.corpseDef);
                     if (ar.alienRace.generalSettings.corpseCategory != null)
                     {
-                        ar.race.corpseDef.thingCategories = new List<ThingCategoryDef> { ar.alienRace.generalSettings.corpseCategory };
+                        ar.race.corpseDef.thingCategories = [ar.alienRace.generalSettings.corpseCategory];
                         ar.alienRace.generalSettings.corpseCategory.childThingDefs.Add(ar.race.corpseDef);
                         ar.alienRace.generalSettings.corpseCategory.ResolveReferences();
                     }
@@ -297,7 +297,7 @@ namespace Cutebold_Assemblies.Patches
 
                 if (ar.alienRace.generalSettings.humanRecipeImport && ar != ThingDefOf.Human)
                 {
-                    (ar.recipes ??= new List<RecipeDef>()).AddRange(ThingDefOf.Human.recipes.Where(predicate: rd => !rd.targetsBodyPart ||
+                    (ar.recipes ??= []).AddRange(ThingDefOf.Human.recipes.Where(predicate: rd => !rd.targetsBodyPart ||
                                                                                                                                   rd.appliedOnFixedBodyParts.NullOrEmpty() ||
                                                                                                                                   rd.appliedOnFixedBodyParts.Any(predicate: bpd => ar.race.body.AllParts.Any(predicate: bpr => bpr.def == bpd))));
 
@@ -362,12 +362,12 @@ namespace Cutebold_Assemblies.Patches
              * Replaces == LifeStageDefOf.HumanlikeBaby with .developmentalStage.Baby()
              * 
              */
-            List<CodeInstruction> babyFix = new List<CodeInstruction>()
-            {
-                new CodeInstruction(OpCodes.Ldfld, developmentalStage), // Load developmentStage
-                new CodeInstruction(OpCodes.Call, baby), // Call Baby() on the loaded development stage
-                new CodeInstruction(OpCodes.Brtrue, null) // Branches if true, Operand label to be replaced on runtime
-            };
+            List<CodeInstruction> babyFix =
+            [
+                new(OpCodes.Ldfld, developmentalStage), // Load developmentStage
+                new(OpCodes.Call, baby), // Call Baby() on the loaded development stage
+                new(OpCodes.Brtrue, null) // Branches if true, Operand label to be replaced on runtime
+            ];
 
             for (int i = 0; i < instructionListCount; i++)
             {
@@ -379,7 +379,7 @@ namespace Cutebold_Assemblies.Patches
                     {
                         if (codeInstruction.opcode == OpCodes.Brtrue)
                         {
-                            CodeInstruction tempInstruction = new CodeInstruction(codeInstruction);
+                            CodeInstruction tempInstruction = new(codeInstruction);
                             // Check if the branch instruction is branching when not equal
                             if (instructionList[i + 1].opcode == OpCodes.Bne_Un_S)
                             {
@@ -419,13 +419,13 @@ namespace Cutebold_Assemblies.Patches
             /*
              * See drSpy decompile of PawnIdeo_Tracker.get_CertaintyChangeFactor() for variable references 
              */
-            List<CodeInstruction> racialCertainty = new List<CodeInstruction>()
-            {
-                new CodeInstruction(OpCodes.Ldarg_0), // Load this
-                new CodeInstruction(OpCodes.Ldfld, pawn), // Load this.pawn
-                new CodeInstruction(OpCodes.Call, alienCertaintyChangeFactor), // Call Alien_CertaintyChangeFactor(pawn)
-                new CodeInstruction(OpCodes.Ret), // Returns the adjusted float from the previous call
-            };
+            List<CodeInstruction> racialCertainty =
+            [
+                new(OpCodes.Ldarg_0), // Load this
+                new(OpCodes.Ldfld, pawn), // Load this.pawn
+                new(OpCodes.Call, alienCertaintyChangeFactor), // Call Alien_CertaintyChangeFactor(pawn)
+                new(OpCodes.Ret), // Returns the adjusted float from the previous call
+            ];
 
             for (int i = 0; i < instructionListCount; i++)
             {

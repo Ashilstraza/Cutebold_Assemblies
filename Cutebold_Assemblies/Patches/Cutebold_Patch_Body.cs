@@ -41,7 +41,7 @@ namespace Cutebold_Assemblies
         });
 #endif
         /// <summary>Our prefix to the CanDrawAddon method.</summary>
-        private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new HarmonyMethod(typeof(Cutebold_Patch_Body), nameof(CuteboldCanDrawAddonPrefix));
+        private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new(typeof(Cutebold_Patch_Body), nameof(CuteboldCanDrawAddonPrefix));
 
         /// <summary>What kind of modification we want to do to the addons.</summary>
         private enum Modification : byte
@@ -51,7 +51,7 @@ namespace Cutebold_Assemblies
         }
 
         /// <summary>Dictionary with the various paths.</summary>
-        private static readonly Dictionary<String, String> paths = new Dictionary<string, string>(){
+        private static readonly Dictionary<String, String> paths = new(){
             {"headPath",  "Cutebold/Heads/"},
             {"simpleHeadPath", "Cutebold/Heads/Simple/"},
             {"bodyPath", "Cutebold/Bodies/"},
@@ -459,7 +459,7 @@ namespace Cutebold_Assemblies
                     ConditionGender genderCondition = (ConditionGender)genderedBody.conditions.Find(gender => gender is ConditionGender);
                     genderedBody.path = $"{graphicsPaths.body.path}{genderCondition.gender}_Naked_{(bodyTypeCondition.bodyType == BodyTypeDefOf.Baby ? BodyTypeDefOf.Child : bodyTypeCondition.bodyType)}";
                 }
-                bodyType.paths = new List<string>() { bodyType.path }; //TODO Fix this maybe?
+                bodyType.paths = [bodyType.path]; //TODO Fix this maybe?
 
             }
         }
@@ -478,7 +478,7 @@ namespace Cutebold_Assemblies
                 {
                     generedHead.path = graphicsPaths.head.path + System.IO.Path.GetFileName(generedHead.path);
                 }
-                headType.paths = new List<string>() { headType.path }; //TODO Fix this maybe?
+                headType.paths = [headType.path]; //TODO Fix this maybe?
             }
         }
     } // Close Cutebold_Patch_Body Class

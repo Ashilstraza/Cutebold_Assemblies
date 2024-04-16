@@ -134,7 +134,7 @@ namespace Cutebold_Assemblies
         /// <param name="inRect"></param>
         public override void DoSettingsWindowContents(Rect inRect)
         {
-            Cutebold_Listing settingEntries = new Cutebold_Listing();
+            Cutebold_Listing settingEntries = new();
 
             settingEntries.Begin(inRect);
             settingEntries.SectionLabel("Cutebold_Settings_GeneralLabel".Translate());
@@ -153,10 +153,10 @@ namespace Cutebold_Assemblies
 #if !RWPre1_3
                 if (settingEntries.AltButtonTextLabeled("Cutebold_Settings_Ideology_Darkness".Translate(), settings.darknessOptions.ToStringHuman(), tooltip: (ModLister.IdeologyInstalled ? "Cutebold_Settings_Ideology_Darkness_ToolTip".Translate() : "Cutebold_Settings_Ideology_Darkness_ToolTip_NoIdeology".Translate()), disabled: !ModLister.IdeologyInstalled))
                 {
-                    List<FloatMenuOption> options = new List<FloatMenuOption>();
+                    List<FloatMenuOption> options = [];
                     foreach (Cutebold_DarknessOptions option in Enum.GetValues(typeof(Cutebold_DarknessOptions)))
                     {
-                        FloatMenuOption floatOption = new FloatMenuOption(option.ToStringHuman(), delegate
+                        FloatMenuOption floatOption = new(option.ToStringHuman(), delegate
                         {
                             settings.darknessOptions = option;
                         })

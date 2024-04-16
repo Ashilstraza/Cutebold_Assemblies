@@ -41,7 +41,7 @@ namespace Cutebold_Assemblies
         /// <summary>Cutebold Harmony ID.</summary>
         public static readonly string HarmonyID = "rimworld.ashilstraza.races.cute.main";
         /// <summary>Reference to harmony.</summary>
-        private static readonly Harmony harmony = new Harmony(HarmonyID);
+        private static readonly Harmony harmony = new(HarmonyID);
         /// <summary>Reference to the settings.</summary>
         public static readonly Cutebold_Settings CuteboldSettings = null;
 
@@ -90,7 +90,7 @@ namespace Cutebold_Assemblies
             /// </summary>
             private static void CreateButcherRaceList()
         {
-            HashSet<string> butcherList = new HashSet<string>();
+            HashSet<string> butcherList = [];
 
 #if RW1_1
             foreach (String race in CuteboldRaceDef.alienRace.thoughtSettings.butcherThoughtSpecific.FirstOrDefault().raceList)
@@ -112,8 +112,8 @@ namespace Cutebold_Assemblies
         /// </summary>
         private static void CreateHumanoidLeatherList()
         {
-            HashSet<ThingDef> aliens = new HashSet<ThingDef>();
-            HashSet<ThingDef> animals = new HashSet<ThingDef>();
+            HashSet<ThingDef> aliens = [];
+            HashSet<ThingDef> animals = [];
 
             foreach (ThingDef thingDef in DefDatabase<ThingDef>.AllDefs.Where(thingDef => thingDef.race?.leatherDef != null))
             {
@@ -148,7 +148,7 @@ namespace Cutebold_Assemblies
                 {
                     if (butcherRaceList.Contains(__instance.def.ingestible.sourceDef.defName))
                     {
-                        TaleRecorder.RecordTale(Cutebold_DefOf.AteRawCuteboldMeatTale, new object[]
+                        TaleRecorder.RecordTale(Cutebold_DefOf.AteRawCuteboldMeatTale, new []
                         {
                         ingester
                         });
@@ -182,7 +182,7 @@ namespace Cutebold_Assemblies
                 {
                     if (butcherRaceList.Contains(__instance.def.ingestible.sourceDef.defName))
                     {
-                        TaleRecorder.RecordTale(Cutebold_DefOf.ButcheredCuteboldCorpseTale, new object[]
+                        TaleRecorder.RecordTale(Cutebold_DefOf.ButcheredCuteboldCorpseTale, new []
                         {
                     butcher
                         });
@@ -238,7 +238,7 @@ namespace Cutebold_Assemblies
         /// </summary>
         public static void CheckPatchedMethods(bool allMethods = false)
         {
-            StringBuilder stringBuilder = new StringBuilder();
+            StringBuilder stringBuilder = new();
 
             IEnumerable<MethodBase> patchedMethods = allMethods ? Harmony.GetAllPatchedMethods() : harmony.GetPatchedMethods();
 

@@ -61,7 +61,7 @@ namespace Cutebold_Assemblies
                     // Adjust layer offset for cutebold goggles before ideology got released.
 
 #if RWPre1_3
-                    harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", new[] {
+                    harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", [
                                         typeof(Vector3),
                                         typeof(float),
                                         typeof(bool),
@@ -71,7 +71,7 @@ namespace Cutebold_Assemblies
                                         typeof(bool),
                                         typeof(bool),
                                         typeof(bool)
-                                    }), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
+                                    ]), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
 #endif
                 }
             }
@@ -320,33 +320,33 @@ namespace Cutebold_Assemblies
                     //     modified = true;
                     // }
                     //
-                    List<CodeInstruction> checkForGoggles = new List<CodeInstruction>() {
-                        new CodeInstruction(OpCodes.Ldc_I4_0), // Load zero
-                        new CodeInstruction(OpCodes.Stloc_S, modified), // Set modified to zero (false)
+                    List<CodeInstruction> checkForGoggles = [
+                        new(OpCodes.Ldc_I4_0), // Load zero
+                        new(OpCodes.Stloc_S, modified), // Set modified to zero (false)
 
-                        new CodeInstruction(OpCodes.Ldloc_S, 14), // Loads apparelGraphics
-                        new CodeInstruction(OpCodes.Ldloc_S, 15), // Loads j (apparel number)
-                        new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(List<ApparelGraphicRecord>), "get_Item")), // Get the apparel graphic
-                        new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ApparelGraphicRecord), "sourceApparel")), // Get the apparel
-                        new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Thing), "def")), // Get the def of the apparel
+                        new(OpCodes.Ldloc_S, 14), // Loads apparelGraphics
+                        new(OpCodes.Ldloc_S, 15), // Loads j (apparel number)
+                        new(OpCodes.Callvirt, AccessTools.Method(typeof(List<ApparelGraphicRecord>), "get_Item")), // Get the apparel graphic
+                        new(OpCodes.Ldfld, AccessTools.Field(typeof(ApparelGraphicRecord), "sourceApparel")), // Get the apparel
+                        new(OpCodes.Ldfld, AccessTools.Field(typeof(Thing), "def")), // Get the def of the apparel
 
-                        new CodeInstruction(OpCodes.Ldsfld, AccessTools.Field(typeof(Cutebold_DefOf), "Cutebold_Goggles")), // Load the def for cutebold goggles
+                        new(OpCodes.Ldsfld, AccessTools.Field(typeof(Cutebold_DefOf), "Cutebold_Goggles")), // Load the def for cutebold goggles
 
-                        new CodeInstruction(OpCodes.Ceq), // Checks if the apparel are cutebold goggles
-                        new CodeInstruction(OpCodes.Brfalse, notGoggles), // If not, jump to regular execution
+                        new(OpCodes.Ceq), // Checks if the apparel are cutebold goggles
+                        new(OpCodes.Brfalse, notGoggles), // If not, jump to regular execution
 
-                            new CodeInstruction(OpCodes.Ldloca_S, 11), // Loads loc2 (apparel drawing offset)
-                            new CodeInstruction(OpCodes.Ldflda, AccessTools.Field(typeof(Vector3), "y")), // Gets the address to loc2.y
-                            new CodeInstruction(OpCodes.Dup), // Copy it
-                            new CodeInstruction(OpCodes.Ldind_R4), // Load the loc2.y value
-                            new CodeInstruction(OpCodes.Ldc_R4, offset), // Loads the offset
-                            new CodeInstruction(OpCodes.Sub), // Subtract offset from loc2.y
-                            new CodeInstruction(OpCodes.Stind_R4), // Store new value at address of loc2.y
+                            new(OpCodes.Ldloca_S, 11), // Loads loc2 (apparel drawing offset)
+                            new(OpCodes.Ldflda, AccessTools.Field(typeof(Vector3), "y")), // Gets the address to loc2.y
+                            new(OpCodes.Dup), // Copy it
+                            new(OpCodes.Ldind_R4), // Load the loc2.y value
+                            new(OpCodes.Ldc_R4, offset), // Loads the offset
+                            new(OpCodes.Sub), // Subtract offset from loc2.y
+                            new(OpCodes.Stind_R4), // Store new value at address of loc2.y
 
-                            new CodeInstruction(OpCodes.Ldc_I4_1), // Load one
-                            new CodeInstruction(OpCodes.Stloc_S, modified), // Set modified to one (true)
+                            new(OpCodes.Ldc_I4_1), // Load one
+                            new(OpCodes.Stloc_S, modified), // Set modified to one (true)
 
-                    };
+                    ];
 
                     //
                     // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
@@ -358,19 +358,19 @@ namespace Cutebold_Assemblies
                     //     loc2.y += offset;
                     // }
                     //
-                    List<CodeInstruction> revertChange = new List<CodeInstruction>()
-                    {
-                        new CodeInstruction(OpCodes.Ldloc_S, modified), // Load modified
-                        new CodeInstruction(OpCodes.Brfalse, null), // Check if modified is false and if it is, jump to the end (null to be replaced)
+                    List<CodeInstruction> revertChange =
+                    [
+                        new(OpCodes.Ldloc_S, modified), // Load modified
+                        new(OpCodes.Brfalse, null), // Check if modified is false and if it is, jump to the end (null to be replaced)
 
-                            new CodeInstruction(OpCodes.Ldloca_S, 11), // Loads loc2 (apparel drawing offset)
-                            new CodeInstruction(OpCodes.Ldflda, AccessTools.Field(typeof(Vector3), "y")), // Gets the address to loc2.y
-                            new CodeInstruction(OpCodes.Dup), // Copy it
-                            new CodeInstruction(OpCodes.Ldind_R4), // Load the loc2.y value
-                            new CodeInstruction(OpCodes.Ldc_R4, offset), // Loads the offset
-                            new CodeInstruction(OpCodes.Add), // Subtract offset from loc2.y
-                            new CodeInstruction(OpCodes.Stind_R4) // Store new value at address of loc2.y
-                    };
+                            new(OpCodes.Ldloca_S, 11), // Loads loc2 (apparel drawing offset)
+                            new(OpCodes.Ldflda, AccessTools.Field(typeof(Vector3), "y")), // Gets the address to loc2.y
+                            new(OpCodes.Dup), // Copy it
+                            new(OpCodes.Ldind_R4), // Load the loc2.y value
+                            new(OpCodes.Ldc_R4, offset), // Loads the offset
+                            new(OpCodes.Add), // Subtract offset from loc2.y
+                            new(OpCodes.Stind_R4) // Store new value at address of loc2.y
+                    ];
 
                     int x = -1;
 
@@ -452,33 +452,33 @@ namespace Cutebold_Assemblies
             //     modified = true;
             // }
             //
-            List<CodeInstruction> checkForGoggles = new List<CodeInstruction>() {
-                        new CodeInstruction(OpCodes.Ldc_I4_0), // Load zero
-                        new CodeInstruction(OpCodes.Stloc_S, modified), // Set modified to zero (false)
+            List<CodeInstruction> checkForGoggles = [
+                        new(OpCodes.Ldc_I4_0), // Load zero
+                        new(OpCodes.Stloc_S, modified), // Set modified to zero (false)
 
-                        new CodeInstruction(OpCodes.Ldloc_S, 5), // Loads apparelGraphics
-                        new CodeInstruction(OpCodes.Ldloc_S, 16), // Loads j (apparel number)
-                        new CodeInstruction(OpCodes.Callvirt, AccessTools.Method(typeof(List<ApparelGraphicRecord>), "get_Item")), // Get the apparel graphic
-                        new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(ApparelGraphicRecord), "sourceApparel")), // Get the apparel
-                        new CodeInstruction(OpCodes.Ldfld, AccessTools.Field(typeof(Thing), "def")), // Get the def of the apparel
+                        new(OpCodes.Ldloc_S, 5), // Loads apparelGraphics
+                        new(OpCodes.Ldloc_S, 16), // Loads j (apparel number)
+                        new(OpCodes.Callvirt, AccessTools.Method(typeof(List<ApparelGraphicRecord>), "get_Item")), // Get the apparel graphic
+                        new(OpCodes.Ldfld, AccessTools.Field(typeof(ApparelGraphicRecord), "sourceApparel")), // Get the apparel
+                        new(OpCodes.Ldfld, AccessTools.Field(typeof(Thing), "def")), // Get the def of the apparel
 
-                        new CodeInstruction(OpCodes.Ldsfld, gogglesDef), // Load the def for cutebold goggles
+                        new(OpCodes.Ldsfld, gogglesDef), // Load the def for cutebold goggles
 
-                        new CodeInstruction(OpCodes.Ceq), // Checks if the apparel are cutebold goggles
-                        new CodeInstruction(OpCodes.Brfalse, notGoggles), // If not, jump to regular execution
+                        new(OpCodes.Ceq), // Checks if the apparel are cutebold goggles
+                        new(OpCodes.Brfalse, notGoggles), // If not, jump to regular execution
 
-                            new CodeInstruction(OpCodes.Ldloca_S, 13), // Loads loc2 (apparel drawing offset)
-                            new CodeInstruction(OpCodes.Ldflda, AccessTools.Field(typeof(Vector3), "y")), // Gets the address to loc2.y
-                            new CodeInstruction(OpCodes.Dup), // Copy it
-                            new CodeInstruction(OpCodes.Ldind_R4), // Load the loc2.y value
-                            new CodeInstruction(OpCodes.Ldc_R4, offset), // Loads the offset
-                            new CodeInstruction(OpCodes.Sub), // Subtract offset from loc2.y
-                            new CodeInstruction(OpCodes.Stind_R4), // Store new value at address of loc2.y
+                            new(OpCodes.Ldloca_S, 13), // Loads loc2 (apparel drawing offset)
+                            new(OpCodes.Ldflda, AccessTools.Field(typeof(Vector3), "y")), // Gets the address to loc2.y
+                            new(OpCodes.Dup), // Copy it
+                            new(OpCodes.Ldind_R4), // Load the loc2.y value
+                            new(OpCodes.Ldc_R4, offset), // Loads the offset
+                            new(OpCodes.Sub), // Subtract offset from loc2.y
+                            new(OpCodes.Stind_R4), // Store new value at address of loc2.y
 
-                            new CodeInstruction(OpCodes.Ldc_I4_1), // Load one
-                            new CodeInstruction(OpCodes.Stloc_S, modified), // Set modified to one (true)
+                            new(OpCodes.Ldc_I4_1), // Load one
+                            new(OpCodes.Stloc_S, modified), // Set modified to one (true)
 
-                    };
+                    ];
 
             //
             // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
@@ -490,19 +490,19 @@ namespace Cutebold_Assemblies
             //     loc2.y += offset;
             // }
             //
-            List<CodeInstruction> revertChange = new List<CodeInstruction>()
-                    {
-                        new CodeInstruction(OpCodes.Ldloc_S, modified), // Load modified
-                        new CodeInstruction(OpCodes.Brfalse, null), // Check if modified is false and if it is, jump to the end (null to be replaced)
+            List<CodeInstruction> revertChange =
+                    [
+                        new(OpCodes.Ldloc_S, modified), // Load modified
+                        new(OpCodes.Brfalse, null), // Check if modified is false and if it is, jump to the end (null to be replaced)
 
-                            new CodeInstruction(OpCodes.Ldloca_S, 13), // Loads loc2 (apparel drawing offset)
-                            new CodeInstruction(OpCodes.Ldflda, AccessTools.Field(typeof(Vector3), "y")), // Gets the address to loc2.y
-                            new CodeInstruction(OpCodes.Dup), // Copy it
-                            new CodeInstruction(OpCodes.Ldind_R4), // Load the loc2.y value
-                            new CodeInstruction(OpCodes.Ldc_R4, offset), // Loads the offset
-                            new CodeInstruction(OpCodes.Add), // Subtract offset from loc2.y
-                            new CodeInstruction(OpCodes.Stind_R4) // Store new value at address of loc2.y
-                    };
+                            new(OpCodes.Ldloca_S, 13), // Loads loc2 (apparel drawing offset)
+                            new(OpCodes.Ldflda, AccessTools.Field(typeof(Vector3), "y")), // Gets the address to loc2.y
+                            new(OpCodes.Dup), // Copy it
+                            new(OpCodes.Ldind_R4), // Load the loc2.y value
+                            new(OpCodes.Ldc_R4, offset), // Loads the offset
+                            new(OpCodes.Add), // Subtract offset from loc2.y
+                            new(OpCodes.Stind_R4) // Store new value at address of loc2.y
+                    ];
 
             //int x = -1;
 

@@ -187,7 +187,7 @@ namespace Cutebold_Assemblies
         /// <returns>String with the information.</returns>
         public override string CompDebugString()
         {
-            StringBuilder stringBuilder = new StringBuilder();
+            StringBuilder stringBuilder = new();
             stringBuilder.Append(base.CompDebugString());
 
             if (!base.Pawn.Dead) stringBuilder.AppendLine($"Severity/day in current light level: {SeverityChangePerDay():F3}");
@@ -242,11 +242,11 @@ namespace Cutebold_Assemblies
         private bool mimeChecked = false;
 
         /// <summary>The defualt glow curve.</summary>
-        private static readonly SimpleCurve defaultGlowCurve = new SimpleCurve(new List<CurvePoint>()
-        {
+        private static readonly SimpleCurve defaultGlowCurve = new(
+        [
             new CurvePoint(0.0f,0.8f),
             new CurvePoint(0.3f,1.0f)
-        });
+        ]);
         /// <summary>Default rimworld global work speed in 100% light.</summary>
         private static readonly float defaultLightglobalWorkSpeed = 1.0f;
         /// <summary>Default rimworld global work speed in 0% light</summary>
@@ -290,7 +290,7 @@ namespace Cutebold_Assemblies
         {
             get
             {
-                StringBuilder stringBuilder = new StringBuilder();
+                StringBuilder stringBuilder = new();
                 stringBuilder.Append(base.TipStringExtra);
                 stringBuilder.AppendLine("Cutebold_Adaptation_String".Translate() + this.Severity.ToStringPercent());
                 if (goggles != null) stringBuilder.AppendLine("Cutebold_Adaptation_WearingGoggles".Translate());
@@ -307,7 +307,7 @@ namespace Cutebold_Assemblies
         /// <returns>String with the information.</returns>
         public override string DebugString()
         {
-            StringBuilder debugString = new StringBuilder();
+            StringBuilder debugString = new();
             debugString.Append(base.DebugString());
 
             debugString.AppendLine(($"LightLevel: {LightLevel}\nmaxLightGlobalWorkSpeed: {MaxLightGlobalWorkSpeed}\nmaxDarkGlobalWorkSpeed: {MaxDarkGlobalWorkSpeed}").Indented());
@@ -464,19 +464,19 @@ namespace Cutebold_Assemblies
             }
             else if (IgnoreLightLevel)
             {
-                GlowCurve.SetPoints(new List<CurvePoint>()
-                                {
+                GlowCurve.SetPoints(
+                                [
                                     new CurvePoint(0.0f,MaxDarkGlobalWorkSpeed),
                                     new CurvePoint(1.0f,MaxDarkGlobalWorkSpeed)
-                                });
+                                ]);
             }
             else
             {
-                GlowCurve.SetPoints(new List<CurvePoint>()
-                                {
+                GlowCurve.SetPoints(
+                                [
                                     new CurvePoint(adaptationComp.MaxLightLevel,MaxDarkGlobalWorkSpeed),
                                     new CurvePoint(1.0f,MaxLightGlobalWorkSpeed)
-                                });
+                                ]);
             }
         }
 

@@ -53,13 +53,13 @@ namespace Cutebold_Assemblies.Patches
 
             List<CodeInstruction> fix = new List<CodeInstruction>()
             {
-                new CodeInstruction(OpCodes.Ldarg_0),
-                new CodeInstruction(OpCodes.Ldfld, map),
-                new CodeInstruction(OpCodes.Ldfld, terrainGrid),
-                new CodeInstruction(OpCodes.Ldfld, underGrid),
-                new CodeInstruction(OpCodes.Ldloc_0),
-                new CodeInstruction(OpCodes.Ldelem_Ref),
-                new CodeInstruction(OpCodes.Brfalse, null)
+                new(OpCodes.Ldarg_0),
+                new(OpCodes.Ldfld, map),
+                new(OpCodes.Ldfld, terrainGrid),
+                new(OpCodes.Ldfld, underGrid),
+                new(OpCodes.Ldloc_0),
+                new(OpCodes.Ldelem_Ref),
+                new(OpCodes.Brfalse, null)
             };
 
             for (int i = 0; i < instructionListCount; i++)

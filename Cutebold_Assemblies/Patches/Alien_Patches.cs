@@ -51,11 +51,11 @@ namespace Cutebold_Assemblies.Patches
                 stringBuilder.AppendLine("  Patching HediffGiver.TryApply");
                 harmony.Patch(AccessTools.Method(typeof(HediffGiver), nameof(HediffGiver.TryApply)), transpiler: new HarmonyMethod(thisClass, nameof(Alien_FixBaby_Transpiler)));
             }
-
+#if !RWPre1_5
+            stringBuilder.AppendLine("  Adding HotReload support to HAR");
             harmony.Patch(AccessTools.Method(typeof(PlayDataLoader), nameof(PlayDataLoader.HotReloadDefs)), postfix: new HarmonyMethod(thisClass, nameof(Alien_HotReloadNotify)));
             harmony.Patch(AccessTools.Method(typeof(MapDrawer), nameof(MapDrawer.RegenerateEverythingNow)), postfix: new HarmonyMethod(thisClass, nameof(Alien_HotReload)));
-
-            //harmony.Patch(AccessTools.Method(typeof(AlienPawnRenderNodeWorker_BodyAddon), nameof(AlienPawnRenderNodeWorker_BodyAddon.ScaleFor)), prefix: new HarmonyMethod(thisClass, nameof(Alien_ScaleFor_Prefix)));
+#endif
 
 #if RW1_4
             // If Dub's Bad Hygene isn't enabled, don't try to patch that which is not there.
@@ -81,61 +81,7 @@ namespace Cutebold_Assemblies.Patches
 #endif
         }
 
-        /*public static bool Alien_ScaleFor_Prefix(AlienPawnRenderNodeWorker_BodyAddon __instance, PawnRenderNode node, PawnDrawParms parms, ref Vector3 __result)
-        {
-            AlienPawnRenderNodeProperties_BodyAddon props = AlienPawnRenderNodeWorker_BodyAddon.PropsFromNode(node);
-            AlienPartGenerator.BodyAddon ba = props.addon;
-            
-            Vector2 scale = (parms.Portrait && ba.drawSizePortrait != Vector2.zero ? ba.drawSizePortrait : ba.drawSize) *
-                            (ba.scaleWithPawnDrawsize ?
-                                 (ba.alignWithHead ?
-                                      parms.Portrait ?
-                                          props.alienComp.customPortraitHeadDrawSize :
-                                          props.alienComp.customHeadDrawSize :
-                                      parms.Portrait ?
-                                          props.alienComp.customPortraitDrawSize :
-                                          props.alienComp.customDrawSize) *
-                                 (ModsConfig.BiotechActive ? parms.pawn.ageTracker.CurLifeStage.bodyWidth ?? 1.5f : 1.5f) :
-                                 Vector2.one * 1.5f);
-            
-            Vector2 addonDrawSize;
-            Vector2 pawnBodyDrawSize;
-            Vector2 pawnHeadDrawSize;
-
-            if (parms.Portrait)
-            {
-                addonDrawSize = ba.drawSizePortrait != Vector2.zero ? ba.drawSizePortrait : ba.drawSize;
-                pawnBodyDrawSize = props.alienComp.customPortraitDrawSize;
-                pawnHeadDrawSize = props.alienComp.customPortraitHeadDrawSize;
-            }
-            else
-            {
-                addonDrawSize = ba.drawSize;
-                pawnBodyDrawSize = props.alienComp.customDrawSize;
-                pawnHeadDrawSize = props.alienComp.customHeadDrawSize;
-            }
-            if (ba.scaleWithPawnDrawsize)
-            {
-                if (ModsConfig.BiotechActive)
-                {
-                    pawnBodyDrawSize *= parms.pawn.ageTracker.CurLifeStage.bodyWidth ?? 1.5f;
-                    pawnHeadDrawSize *= Vector2.one * 0.76f;
-                }
-                else
-                {
-                    pawnHeadDrawSize *= 1.5f;
-                    pawnBodyDrawSize *= 1.5f;
-                }
-                addonDrawSize *= ba.alignWithHead ? pawnHeadDrawSize : pawnBodyDrawSize;
-            }
-            else
-            {
-                addonDrawSize *= Vector2.one * 1.5f;
-            }
-
-            __result = new Vector3(addonDrawSize.x, 1f, addonDrawSize.y);
-            return false;
-        }*/
+#if !RWPre1_5
 
         /// <summary>If Rimworld is starting to hot reload.</summary>
         private static bool isHotReload = false;
@@ -315,13 +261,13 @@ namespace Cutebold_Assemblies.Patches
 
                 /*ar.alienRace.raceRestriction?.workGiverList?.ForEach(action: wgd =>
                 {
-                    if (wgd == null)
-                        return;
+                    if (wgd == null) return;
+
                     harmony.Patch(AccessTools.Method(wgd.giverClass, name: "JobOnThing"),
-                                  postfix: new HarmonyMethod(patchType, nameof(GenericJobOnThingPostfix)));
+                                  postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.GenericHasJobOnThingPostfix)));
                     MethodInfo hasJobOnThingInfo = AccessTools.Method(wgd.giverClass, name: "HasJobOnThing");
                     if (hasJobOnThingInfo?.IsDeclaredMember() ?? false)
-                        harmony.Patch(hasJobOnThingInfo, postfix: new HarmonyMethod(patchType, nameof(GenericHasJobOnThingPostfix)));
+                        harmony.Patch(hasJobOnThingInfo, postfix: new HarmonyMethod(typeof(HarmonyPatches), nameof(HarmonyPatches.GenericHasJobOnThingPostfix)));
                 });*/
             }
 
@@ -340,6 +286,7 @@ namespace Cutebold_Assemblies.Patches
             TattooDefOf.NoTattoo_Body.styleTags.Add(item: "alienNoStyle");
             TattooDefOf.NoTattoo_Face.styleTags.Add(item: "alienNoStyle");
         }
+#endif
 
         /// <summary>
         /// Replaces instances of Pawn.ageTracker.CurLifeStage == LifeStageDefOf.HumanlikeBaby with Pawn.ageTracker.CurLifeStage.developmentalStage.Baby()
@@ -424,7 +371,7 @@ namespace Cutebold_Assemblies.Patches
                 new(OpCodes.Ldarg_0), // Load this
                 new(OpCodes.Ldfld, pawn), // Load this.pawn
                 new(OpCodes.Call, alienCertaintyChangeFactor), // Call Alien_CertaintyChangeFactor(pawn)
-                new(OpCodes.Ret), // Returns the adjusted float from the previous call
+                new CodeInstruction(OpCodes.Ret), // Returns the adjusted float from the previous call
             ];
 
             for (int i = 0; i < instructionListCount; i++)
@@ -446,10 +393,10 @@ namespace Cutebold_Assemblies.Patches
             }
         }
 
-        /// <summary>
-        /// Racial ideology certainty curves
-        /// </summary>
-        private static readonly Dictionary<ThingDef, SimpleCurve> ideoCurves = new Dictionary<ThingDef, SimpleCurve>();
+        /// <summary>Racial ideology certainty curves</summary>
+        private static readonly Dictionary<ThingDef, SimpleCurve> ideoCurves = [];
+        /// <summary>Curve from ideoCurves that is going to be evaluated</summary>
+        private static SimpleCurve certaintyCurveTemp;
 
         /// <summary>
         /// Creates a certainty curve for each race. Ideology does not matter, just the pawn's child and adult ages.
@@ -460,27 +407,29 @@ namespace Cutebold_Assemblies.Patches
         {
             if (pawn == null) return 1f;
 
-            if (!ideoCurves.ContainsKey(pawn.def))
+            if (ideoCurves.TryGetValue(pawn.def, out certaintyCurveTemp))
             {
-                float child = -1;
-                float adult = -1;
-
-                foreach (LifeStageAge lifeStage in pawn.RaceProps.lifeStageAges)
-                {
-                    if (child == -1 && lifeStage.def.developmentalStage.Child()) child = lifeStage.minAge; //Just want the first lifeStage where a pawn is a child
-                    if (lifeStage.def.developmentalStage.Adult()) adult = lifeStage.minAge; //Want last life stage to match how Humans work. Does not take into account a life stage like "elder" if a custom race would have that.
-                }
-
-                //If for some reason a stage is not found, set the ages to be extremely low.
-                if (child == -1) child = 0;
-                if (adult < child) adult = child + 0.001f; //Add 0.001 to the child to prevent an inverted curve if the adult age is less than the child age.
-
-                ideoCurves.Add(pawn.def, new SimpleCurve
-                    {
-                        new CurvePoint(child, 2f),
-                        new CurvePoint(adult, 1f)
-                    });
+                return certaintyCurveTemp.Evaluate(pawn.ageTracker.AgeBiologicalYearsFloat);
             }
+
+            float child = -1;
+            float adult = -1;
+
+            foreach (LifeStageAge lifeStage in pawn.RaceProps.lifeStageAges)
+            {
+                if (child == -1 && lifeStage.def.developmentalStage.Child()) child = lifeStage.minAge; //Just want the first lifeStage where a pawn is a child
+                if (lifeStage.def.developmentalStage.Adult()) adult = lifeStage.minAge; //Want last life stage to match how Humans work. Does not take into account a life stage like "elder" if a custom race would have that.
+            }
+
+            //If for some reason a stage is not found, set the ages to be extremely low.
+            if (child == -1) child = 0;
+            if (adult < child) adult = child + 0.001f; //Add 0.001 to the child to prevent an inverted curve if the adult age is less than the child age.
+
+            ideoCurves.Add(pawn.def,
+                [
+                    new CurvePoint(child, 2f),
+                        new CurvePoint(adult, 1f)
+                ]);
 
             return ideoCurves[pawn.def].Evaluate(pawn.ageTracker.AgeBiologicalYearsFloat);
         }

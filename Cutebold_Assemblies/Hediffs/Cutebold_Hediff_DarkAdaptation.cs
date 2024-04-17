@@ -2,6 +2,7 @@
 using LudeonTK;
 #endif
 
+using AlienRace.ExtendedGraphics;
 using RimWorld;
 using System;
 using System.Collections.Generic;
@@ -597,4 +598,32 @@ namespace Cutebold_Assemblies
 #pragma warning restore IDE0051 // Remove unused private members
 #endif
     }
+
+#if !RWPre1_5
+    public class CuteboldEyeBlink : Condition
+    {
+        public new const string XmlNameParseKey = "CuteboldBlink";
+
+        public override bool Satisfied(ExtendedGraphicsPawnWrapper pawn, ref ResolveData data)
+        {
+            Pawn p = pawn.WrappedPawn;
+            if (p.Dead ||
+                Cutebold_Patch_HediffRelated.CuteboldGlowHandler(p) >= 0.3f ||
+                (pawn.CurJob != null && p.jobs.curDriver.asleep) ||
+                p.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f ||
+                p.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f)
+            {
+                return false;
+            }
+            else if (Cutebold_Patch_Body.EyeBlink)
+            {
+                // Blink Fucntion; somewhat regular blinking, but not exactly even nor completely random.
+                int offsetTicks = Math.Abs(p.HashOffsetTicks());
+                if (Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89))) < 1) return false;
+            }
+
+            return true;
+        }
+    }
+#endif
 }

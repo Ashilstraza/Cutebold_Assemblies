@@ -481,31 +481,6 @@ namespace Cutebold_Assemblies
                 headType.paths = [headType.path]; //TODO Fix this maybe?
             }
         }
-    } // Close Cutebold_Patch_Body Class
-    public class CuteboldEyeBlink : Condition
-    {
-        public new const string XmlNameParseKey = "CuteboldBlink";
-
-        public override bool Satisfied(ExtendedGraphicsPawnWrapper pawn, ref ResolveData data)
-        {
-            Pawn p = pawn.WrappedPawn;
-            if (p.Dead ||
-                Cutebold_Patch_HediffRelated.CuteboldGlowHandler(p) >= 0.3f ||
-                (pawn.CurJob != null && p.jobs.curDriver.asleep) ||
-                p.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f ||
-                p.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f)
-            {
-                return false;
-            }
-            else if (Cutebold_Patch_Body.EyeBlink)
-            {
-                // Blink Fucntion; somewhat regular blinking, but not exactly even nor completely random.
-                int offsetTicks = Math.Abs(p.HashOffsetTicks());
-                if (Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89))) < 1) return false;
-            }
-
-            return true;
-        } 
     }
 #endif
 #endregion

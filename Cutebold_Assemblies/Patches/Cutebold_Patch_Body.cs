@@ -32,17 +32,16 @@ namespace Cutebold_Assemblies
         private static bool glowEyes = true;
         /// <summary>If detachable parts are enabled.</summary>
         private static bool detachableParts = true;
+#if RWPre1_5
         /// <summary>Reference to our harmony instance.</summary>
         private static Harmony harmonyRef;
-#if RWPre1_5
         /// <summary>Reference to the CanDrawAddon method.</summary>
         private static readonly MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), nameof(AlienPartGenerator.BodyAddon.CanDrawAddon), new[] {
             typeof(Pawn)
         });
-#endif
         /// <summary>Our prefix to the CanDrawAddon method.</summary>
         private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new(typeof(Cutebold_Patch_Body), nameof(CuteboldCanDrawAddonPrefix));
-
+#endif
         /// <summary>What kind of modification we want to do to the addons.</summary>
         private enum Modification : byte
         {
@@ -71,9 +70,10 @@ namespace Cutebold_Assemblies
             if (!initialized)
             {
                 raceAddons = new List<BodyAddon>(Cutebold_Assemblies.CuteboldRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons);
-                harmonyRef = harmony;
+                
                 CuteboldAddonModifier(Cutebold_Assemblies.CuteboldSettings);
 #if RWPre1_5
+                harmonyRef = harmony;
                 harmonyRef.Patch(canDrawAddonRef, prefix: cuteboldCanDrawAddonPrefixRef);
 #endif
 
@@ -287,6 +287,7 @@ namespace Cutebold_Assemblies
             }
         }
 
+#if RWPre1_5
         /// <summary>
         /// Used Pre 1.5
         /// Checks a body addon if it should be drawn. This checks if the pawn is:
@@ -335,8 +336,9 @@ namespace Cutebold_Assemblies
 #if RWPre1_4
     } // Close Cutebold_Patch_Body Class
 #endif
+#endif
 
-        #region 1.4 Only Code
+#region 1.4 Only Code
 #if RW1_4
         /// <summary>
         /// Updates the paths for the body graphic variations
@@ -439,7 +441,7 @@ namespace Cutebold_Assemblies
         }
     } // Close Cutebold_Patch_Body Class
 #endif
-        #endregion
+#endregion
 
         #region 1.5 Only Code
 #if RW1_5

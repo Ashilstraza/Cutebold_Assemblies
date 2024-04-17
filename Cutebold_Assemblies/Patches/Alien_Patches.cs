@@ -26,7 +26,7 @@ namespace Cutebold_Assemblies.Patches
 
             string alienRaceID = "rimworld.erdelf.alien_race.main";
 
-            StringBuilder stringBuilder = new("Cutebold Mod Provided Alien Patches:");
+            StringBuilder stringBuilder = new("Cutebold Mod Provided Alien Patches:\n");
 
             if (!Harmony.GetPatchInfo(AccessTools.Method(typeof(IncidentWorker_Disease), "CanAddHediffToAnyPartOfDef"))?.Transpilers?.Any(patch => patch.owner == alienRaceID) ?? true)
             {
@@ -57,7 +57,7 @@ namespace Cutebold_Assemblies.Patches
             harmony.Patch(AccessTools.Method(typeof(MapDrawer), nameof(MapDrawer.RegenerateEverythingNow)), postfix: new HarmonyMethod(thisClass, nameof(Alien_HotReload)));
 #endif
 
-#if RW1_4
+#if !RWPre1_4
             // If Dub's Bad Hygene isn't enabled, don't try to patch that which is not there.
             if (ModLister.GetActiveModWithIdentifier("Dubwise.DubsBadHygiene") != null && Cutebold_Assemblies.CuteboldSettings.DBH_Patches)
             {

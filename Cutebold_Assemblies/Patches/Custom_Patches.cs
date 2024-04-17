@@ -9,7 +9,7 @@ using System.Linq;
 using Verse;
 #endif
 
-#if RW1_4
+#if !RWPre1_4
 using DubsBadHygiene;
 using HarmonyLib;
 using System;
@@ -32,7 +32,7 @@ namespace Cutebold_Assemblies.Patches
         }
     }
     // Personal Patches
-#if DEBUG
+#if DEBUG && RW1_4
     internal class SomeThingsFloat
     {
         public SomeThingsFloat(Harmony harmony)
@@ -51,8 +51,8 @@ namespace Cutebold_Assemblies.Patches
             int instructionListCount = instructionList.Count;
             int n = 0;
 
-            List<CodeInstruction> fix = new List<CodeInstruction>()
-            {
+            List<CodeInstruction> fix =
+            [
                 new(OpCodes.Ldarg_0),
                 new(OpCodes.Ldfld, map),
                 new(OpCodes.Ldfld, terrainGrid),
@@ -60,7 +60,7 @@ namespace Cutebold_Assemblies.Patches
                 new(OpCodes.Ldloc_0),
                 new(OpCodes.Ldelem_Ref),
                 new(OpCodes.Brfalse, null)
-            };
+            ];
 
             for (int i = 0; i < instructionListCount; i++)
             {

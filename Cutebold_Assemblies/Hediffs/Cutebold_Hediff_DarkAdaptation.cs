@@ -1,8 +1,10 @@
 ﻿#if RW1_5 && DEBUG
 using LudeonTK;
 #endif
-
+#if !RWPre1_4
 using AlienRace.ExtendedGraphics;
+#endif
+
 using RimWorld;
 using System;
 using System.Collections.Generic;

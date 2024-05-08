@@ -1,7 +1,6 @@
 ﻿#if !RWPre1_4
-using Cutebold_Assemblies.Patches;
+using AlienPatches.Patches;
 #endif
-
 using AlienRace;
 using HarmonyLib;
 using RimWorld;
@@ -72,6 +71,10 @@ namespace Cutebold_Assemblies
 
 #if !RWPre1_4
             new Alien_Patches(harmony); // Patches for allowing custom LifeStageDefs along with patches for other mods
+#endif
+
+#if !RWPre1_5
+            Alien_Patches.Alien_HotReloadAddMethod(BuildLists);
 #endif
         }
         public static void BuildLists(bool hotReload = false)

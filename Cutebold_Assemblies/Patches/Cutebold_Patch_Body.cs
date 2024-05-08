@@ -25,7 +25,7 @@ namespace Cutebold_Assemblies
         /// <summary>If we already initialized the body addon patches.</summary>
         private static bool initialized = false;
         /// <summary>Copy of the body addons.</summary>
-        private static List<AlienPartGenerator.BodyAddon> raceAddons;
+        private static List<BodyAddon> raceAddons;
         /// <summary>If dark adaptation are enabled.</summary>
         private static bool eyeAdaptation = true;
         /// <summary>If eye glow are enabled.</summary>

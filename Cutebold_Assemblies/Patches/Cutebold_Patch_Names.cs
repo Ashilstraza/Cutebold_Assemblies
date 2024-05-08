@@ -61,13 +61,13 @@ namespace Cutebold_Assemblies
                 Type thisClass = typeof(Cutebold_Patch_Names);
 
                 // Disable Cutebold Name Validation
-                harmony.Patch(AccessTools.Method(typeof(NameGenerator), nameof(NameGenerator.GenerateName), new Type[] {
+                harmony.Patch(AccessTools.Method(typeof(NameGenerator), nameof(NameGenerator.GenerateName), [
                     typeof(GrammarRequest),
                     typeof(Predicate<string>),
                     typeof(bool),
                     typeof(string),
                     typeof(string)
-                }), prefix: new HarmonyMethod(thisClass, nameof(CuteboldGenerateNamePrefix)));
+                ]), prefix: new HarmonyMethod(thisClass, nameof(CuteboldGenerateNamePrefix)));
                 // Generate Cutebold Names
                 harmony.Patch(AccessTools.Method(typeof(PawnBioAndNameGenerator), nameof(PawnBioAndNameGenerator.GeneratePawnName)), prefix: new HarmonyMethod(thisClass, nameof(CuteboldGeneratePawnNamePrefix)));
                 // Allow for renaming pawns that lack a first and/or last name
@@ -81,13 +81,13 @@ namespace Cutebold_Assemblies
         private void CreateBackstoryLists()
         {
 #if RWPre1_4
-            CuteboldRegularChildBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Childhood, new BackstoryCategoryFilter { categories = new List<string> { "CuteboldRegularChildBackstories" } });
-            CuteboldSlaveChildBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Childhood, new BackstoryCategoryFilter { categories = new List<string> { "CuteboldSlaveChildBackstories" } });
-            CuteboldUndergroundChildBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Childhood, new BackstoryCategoryFilter { categories = new List<string> { "CuteboldUndergroundChildBackstories" } });
-            CuteboldRegularAdultBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Adulthood, new BackstoryCategoryFilter { categories = new List<string> { "CuteboldRegularAdultBackstories" } });
-            CuteboldSlaveAdultBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Adulthood, new BackstoryCategoryFilter { categories = new List<string> { "CuteboldSlaveAdultBackstories" } });
-            CuteboldServantAdultBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Adulthood, new BackstoryCategoryFilter { categories = new List<string> { "CuteboldServantAdultBackstories" } });
-            CuteboldUndergroundAdultBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Adulthood, new BackstoryCategoryFilter { categories = new List<string> { "CuteboldUndergroundAdultBackstories" } });
+            CuteboldRegularChildBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Childhood, new BackstoryCategoryFilter { categories = ["CuteboldRegularChildBackstories"] });
+            CuteboldSlaveChildBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Childhood, new BackstoryCategoryFilter { categories = ["CuteboldSlaveChildBackstories"] });
+            CuteboldUndergroundChildBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Childhood, new BackstoryCategoryFilter { categories = ["CuteboldUndergroundChildBackstories"] });
+            CuteboldRegularAdultBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Adulthood, new BackstoryCategoryFilter { categories = ["CuteboldRegularAdultBackstories"] });
+            CuteboldSlaveAdultBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Adulthood, new BackstoryCategoryFilter { categories = ["CuteboldSlaveAdultBackstories"] });
+            CuteboldServantAdultBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Adulthood, new BackstoryCategoryFilter { categories = ["CuteboldServantAdultBackstories"] });
+            CuteboldUndergroundAdultBackstories = BackstoryDatabase.ShuffleableBackstoryList(BackstorySlot.Adulthood, new BackstoryCategoryFilter { categories = ["CuteboldUndergroundAdultBackstories"] });
 #else
             BackstorySlot slot = BackstorySlot.Childhood;
 
@@ -223,10 +223,10 @@ namespace Cutebold_Assemblies
                 name = CuteboldNameResolver(rulePack, forcedLastName);
             }
 
-            Log.Warning(string.Format("{0}: Failed at creating a unique name, using {1}.", new object[] {
+            Log.Warning(string.Format("{0}: Failed at creating a unique name, using {1}.", [
                     Cutebold_Assemblies.ModName,
                     name.ToStringFull
-                }));
+                ]));
             return name;
         }
 

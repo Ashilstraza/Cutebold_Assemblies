@@ -1,5 +1,5 @@
 ﻿#if !RWPre1_4
-using AlienPatches.Patches;
+using Ashs_Alien_Patches;
 #endif
 using AlienRace;
 using HarmonyLib;

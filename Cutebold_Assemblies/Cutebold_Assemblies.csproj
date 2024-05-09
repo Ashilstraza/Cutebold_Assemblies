@@ -11,9 +11,9 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
     <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.dll"
+	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
 copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-del "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
+del "$(TargetDir)*.pdb"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.4 Release|AnyCPU'">
     <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.4\Assemblies\</OutputPath>
@@ -25,9 +25,9 @@ del "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
     <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.dll"
+	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
 copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-del "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
+del "$(TargetDir)*.pdb"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == '1.3 Release|AnyCPU' ">
     <DebugType>none</DebugType>
@@ -44,9 +44,9 @@ del "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
     <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
     <Prefer32Bit>false</Prefer32Bit>
     <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.dll"
+	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
 copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-del "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
+del "$(TargetDir)*.pdb"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.2 Release|AnyCPU'">
     <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.2\Assemblies\</OutputPath>
@@ -58,9 +58,9 @@ del "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
     <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.dll"
+	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
 copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-del "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
+del "$(TargetDir)*.pdb"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.1 Release|AnyCPU'">
     <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.1\Assemblies\</OutputPath>
@@ -72,9 +72,9 @@ del "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
     <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.dll"
+	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
 copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-del "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
+del "$(TargetDir)*.pdb"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.5 Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
@@ -86,7 +86,7 @@ del "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
     <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.dll"
+	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
 copy /y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
 copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
   </PropertyGroup>
@@ -100,7 +100,7 @@ copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(Tar
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
     <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.dll"
+	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
 copy /y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
 copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
   </PropertyGroup>
@@ -119,7 +119,7 @@ copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(Tar
     <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
     <Prefer32Bit>false</Prefer32Bit>
     <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.dll"
+	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
 copy /y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
 copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
   </PropertyGroup>
@@ -133,7 +133,7 @@ copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(Tar
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
     <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.dll"
+	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
 copy /y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
 copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
   </PropertyGroup>
@@ -147,7 +147,7 @@ copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(Tar
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>false</Prefer32Bit>
     <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.dll"
+	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
 copy /y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
 copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
   </PropertyGroup>

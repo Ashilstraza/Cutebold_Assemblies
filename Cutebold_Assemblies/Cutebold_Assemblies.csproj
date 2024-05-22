@@ -224,6 +224,6 @@ copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(Tar
       <Private>False</Private>
     </Reference>
   </ItemGroup>
-  <Import Project="..\..\Alien Patches\Alien Patches.projitems" Label="Shared" />
+  <Import Project="..\..\Ash Patch Manager\Alien Patches\Alien Patches.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

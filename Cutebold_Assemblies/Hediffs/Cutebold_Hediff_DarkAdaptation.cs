@@ -13,6 +13,9 @@ using System.Text;
 using UnityEngine;
 using Verse;
 using static AlienRace.AlienPartGenerator;
+using AlienRace;
+using HarmonyLib;
+using System.Collections.Concurrent;
 
 namespace Cutebold_Assemblies
 {
@@ -143,7 +146,7 @@ namespace Cutebold_Assemblies
         private HediffCompProperties_CuteboldDarkAdaptation Props => (HediffCompProperties_CuteboldDarkAdaptation)props;
 
         /// <summary>Light level of the pawn at the current location.</summary>
-        public float LightLevel = 0f;
+        public float CurrentLightLevel = 0f;
         /// <summary>If the pawn can be affected by light.</summary>
         public bool CanSee = true;
         /// <summary>If the pawn should ignore the light level.</summary>
@@ -179,8 +182,8 @@ namespace Cutebold_Assemblies
         protected virtual float SeverityChangePerDay()
         {
             if (!CanSee) return 0f;
-            if (IgnoreLightLevel || LightLevel < MinLightLevel) return Props.MaxSeverityGainPerDay;
-            else if (LightLevel > MaxLightLevel) return Props.MaxSeverityLossPerDay;
+            if (IgnoreLightLevel || CurrentLightLevel < MinLightLevel) return Props.MaxSeverityGainPerDay;
+            else if (CurrentLightLevel > MaxLightLevel) return Props.MaxSeverityLossPerDay;
             else return 0f;
         }
 
@@ -217,7 +220,7 @@ namespace Cutebold_Assemblies
         private HediffComp_CuteboldDarkAdaptation adaptationComp;
 
         /// <summary>Light level of the pawn at the current location.</summary>
-        private float LightLevel => adaptationComp.LightLevel;
+        private float CurrentLightLevel => adaptationComp.CurrentLightLevel;
         /// <summary>If the pawn has eyes that overcome adaptation sickness.</summary>
         private bool IgnoreLightLevel => adaptationComp.IgnoreLightLevel;
 
@@ -228,21 +231,17 @@ namespace Cutebold_Assemblies
         /// <summary>Reference to the lightSickness Hediff</summary>
         private readonly HediffDef lightSickness = Cutebold_DefOf.CuteboldLightSickness;
         /// <summary>Hediff stage index on last update.</summary>
-        private int lastIndex = -1;
-        /// <summary>Previous blink value in determening eyes being closed or open.</summary>
+        private int lastHediffStageIndex = -1;
+        /// <summary>Previous blink value in determening eyes being closed or open. Negative is closed.</summary>
         private double blinkLastValue = -1;
-        /// <summary>If cutebold is asleep.</summary>
-        private bool asleep = false;
-        /// <summary>If cutebold is unconscious.</summary>
-        private bool unconscious = false;
-        /// <summary>If the pawn's eyes are missing.</summary>
-        private bool eyesMissing = false;
         /// <summary>If the glow curve should be updated.</summary>
         private bool updateGlowCurve = true;
         /// <summary>Check ticks without all the overhead.</summary>
-        private int nextTickToCheck = Current.Game.tickManager.TicksGame;
+        private int nextTickToCheck;
+        /// <summary>Pawn's HashOffsetTick without having to constantly peek it.</summary>
+        private int pawnHashOffsetTicks;
         /// <summary>If we have checked if the pawn is a mime.</summary>
-        private bool mimeChecked = false;
+        private bool initCheck = false;
 
         /// <summary>The defualt glow curve.</summary>
         private static readonly SimpleCurve defaultGlowCurve = new(
@@ -278,6 +277,34 @@ namespace Cutebold_Assemblies
         /// <summary>Maximum global work speed in 100% light.</summary>
         public float MaxLightGlobalWorkSpeed { get; private set; } = 0f;
 
+        /// <summary>If eyes should not glow.</summary>
+        private bool noGlow = false;
+        /// <summary>If cutebold is asleep.</summary>
+        private bool isAsleep = false;
+        /// <summary>If cutebold is unconscious.</summary>
+        private bool isUnconscious = false;
+        /// <summary>If the pawn's eyes are both missing.</summary>
+        private bool eyesMissing = false;
+
+        /// <summary>If eyes should not glow.</summary>
+        public bool NoGlow {
+            get {
+                return noGlow;
+            }
+            private set {
+                if ((noGlow != value && !dirtyCache) || (noGlow != value && !noGlow)) // set if value is different and we haven't dirtied already, otherwise only set if it switches to true
+                {
+                    noGlow = value;
+                    if(!eyesMissing) dirtyCache = true;
+                }
+            }
+        }
+        /// <summary>If cutebold is asleep.</summary>
+        public bool IsAsleep { get; private set; }
+        /// <summary>If cutebold is unconscious.</summary>
+        public bool IsUnconscious { get; private set; }
+        /// <summary>If the pawn's eyes are both missing.</summary>
+        public bool EyesMissing { get; private set; }
         /// <summary>Returns true if the cutebold is wearing goggles.</summary>
         public bool WearingGoggles
         {
@@ -315,7 +342,7 @@ namespace Cutebold_Assemblies
             StringBuilder debugString = new();
             debugString.Append(base.DebugString());
 
-            debugString.AppendLine(($"LightLevel: {LightLevel}\nmaxLightGlobalWorkSpeed: {MaxLightGlobalWorkSpeed}\nmaxDarkGlobalWorkSpeed: {MaxDarkGlobalWorkSpeed}").Indented());
+            debugString.AppendLine(($"LightLevel: {CurrentLightLevel}\nmaxLightGlobalWorkSpeed: {MaxLightGlobalWorkSpeed}\nmaxDarkGlobalWorkSpeed: {MaxDarkGlobalWorkSpeed}").Indented());
             debugString.AppendLine($"WearingGoggles: {WearingGoggles}");
 
             return debugString.ToString();
@@ -328,47 +355,61 @@ namespace Cutebold_Assemblies
         {
             base.PostTick();
 
-            if (!mimeChecked) CheckdMime();
+            if (!initCheck) InitCheck();
 
-            lastLightLevel = LightLevel;
-            adaptationComp.LightLevel = Cutebold_Patch_HediffRelated.CuteboldGlowHandler(pawn);
+            pawnHashOffsetTicks++;
+            lastLightLevel = CurrentLightLevel;
+            adaptationComp.CurrentLightLevel = Cutebold_Patch_HediffRelated.GlowHandler(pawn);
 
-            if (((lastLightLevel >= 0.3f) && (LightLevel < 0.3f)) || ((lastLightLevel <= 0.3f) && (LightLevel > 0.3f)) && !asleep && !unconscious)
+            if(!isAsleep && !isUnconscious && !eyesMissing)
             {
-                dirtyCache = true;
-            }
-
-            if (EyeGlowEnabled && EyeBlink && LightLevel < 0.3f && !asleep && !unconscious)
-            {
-                int offsetTicks = Math.Abs(pawn.HashOffsetTicks());
-                double blinkValue = Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89)));
-
-                if ((blinkValue < 1 && blinkLastValue >= 1) || (blinkValue >= 1 && blinkLastValue < 1))
+                if ((lastLightLevel <= 0.3f) && (CurrentLightLevel > 0.3f))
                 {
-                    dirtyCache = true;
+                    NoGlow = true;
+                }
+                else if((lastLightLevel >= 0.3f) && (CurrentLightLevel < 0.3f))
+                {
+                    NoGlow = false;
                 }
 
-                blinkLastValue = blinkValue;
+                if (EyeGlowEnabled && EyeBlink && CurrentLightLevel < 0.3f)
+                {
+                    int offsetTicks = Math.Abs(pawnHashOffsetTicks);
+                    double blinkValue = Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89)));
+
+                    if (blinkValue < 1 && blinkLastValue >= 1)
+                    {
+                        NoGlow = true;
+                    }
+                    else if (blinkValue >= 1 && blinkLastValue < 1)
+                    {
+                        NoGlow = false;
+                    }
+
+                    blinkLastValue = blinkValue;
+                }
             }
 
-            if (Current.Game.tickManager.TicksGame > nextTickToCheck) // Used instead of checking the hash
+            if (pawnHashOffsetTicks > nextTickToCheck) // Used instead of checking the hash
             {
                 nextTickToCheck += 60;
+                bool asleep = (pawn.CurJob != null && pawn.jobs.curDriver.asleep);
+                bool conscious = pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f;
 
-                if (((pawn.CurJob != null && pawn.jobs.curDriver.asleep) != asleep) ||
-                ((pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f) == !unconscious))
+                if (asleep != isAsleep)
                 {
-                    asleep = (pawn.CurJob != null && pawn.jobs.curDriver.asleep);
-                    unconscious = pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f;
-
-                    dirtyCache = true;
+                    NoGlow = isAsleep = asleep;
                 }
 
-                UpdateCuteboldCompProperties();
+                if (conscious == !isUnconscious){
+                    NoGlow = isUnconscious = conscious;
+                }
 
-                if (updateGlowCurve || (lastIndex != CurStageIndex))
+                UpdateAdaptationCompProperties();
+
+                if (updateGlowCurve || (lastHediffStageIndex != CurStageIndex))
                 {
-                    lastIndex = CurStageIndex;
+                    lastHediffStageIndex = CurStageIndex;
 
                     UpdateGlowCurve();
                 }
@@ -401,22 +442,30 @@ namespace Cutebold_Assemblies
         }
 
         /// <summary>
-        /// Changes the eye glow to an orange-red color on mimes from Alpha Animals.
+        /// Does a set of initial checks:
+        /// <para>-Changes the eye glow to an orange-red color on mimes from Alpha Animals.</para>
         /// </summary>
-        private void CheckdMime()
+        private void InitCheck()
         {
+            // Make sure pawn render nodes are initialized.
+            pawn.TryGetComp<AlienComp>().CompRenderNodes();
+
+            pawnHashOffsetTicks = pawn.HashOffsetTicks();
+            nextTickToCheck = pawnHashOffsetTicks - 1;
+
+            // Change eye color on Mimes
             if (pawn.health.hediffSet.hediffs.Find((Hediff hediff) => hediff.def.defName == "AA_MimeHediff") != null)
             {
                 pawn.TryGetComp<AlienComp>().GetChannel("eye").first = new Color(Rand.Range(0.7f, 0.8f), Rand.Range(0.5f, 0.6f), 0f);
                 dirtyCache = true;
             }
-            mimeChecked = true;
+            initCheck = true;
         }
 
         /// <summary>
         /// Updates the dark adaptation component.
         /// </summary>
-        private void UpdateCuteboldCompProperties()
+        private void UpdateAdaptationCompProperties()
         {
             if (WearingGoggles || eyesMissing || pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f)
             {
@@ -438,7 +487,7 @@ namespace Cutebold_Assemblies
         /// </summary>
         private void UpdateLightSickness()
         {
-            if (adaptationComp.CanSee && !IgnoreLightLevel && LightLevel > adaptationComp.MaxLightLevel && CurStageIndex > 0 && !pawn.health.hediffSet.HasHediff(lightSickness))
+            if (adaptationComp.CanSee && !IgnoreLightLevel && CurrentLightLevel > adaptationComp.MaxLightLevel && CurStageIndex > 0 && !pawn.health.hediffSet.HasHediff(lightSickness))
             {
                 Hediff hediff = HediffMaker.MakeHediff(lightSickness, pawn);
                 hediff.Severity = this.Severity;
@@ -448,7 +497,7 @@ namespace Cutebold_Assemblies
             else if (pawn.IsHashIntervalTick(480) && pawn.health.hediffSet.HasHediff(lightSickness)) // Check to see if we want to adjust lightSickness far less often than adding it.
             {
                 Hediff_CuteboldLightSickness hediff = (Hediff_CuteboldLightSickness)pawn.health.hediffSet.GetFirstHediffOfDef(lightSickness);
-                if (LightLevel > adaptationComp.MaxLightLevel && CurStageIndex != 0)
+                if (CurrentLightLevel > adaptationComp.MaxLightLevel && CurStageIndex != 0)
                 {
                     hediff.Severity = this.Severity;
                     hediff.ResetTicksToDisappear();
@@ -606,25 +655,24 @@ namespace Cutebold_Assemblies
     {
         public new const string XmlNameParseKey = "CuteboldBlink";
 
+        private static readonly ConcurrentDictionary<Pawn, Hediff_CuteboldDarkAdaptation> darkAdaptationList = [];
+
         public override bool Satisfied(ExtendedGraphicsPawnWrapper pawn, ref ResolveData data)
         {
-            Pawn p = pawn.WrappedPawn;
-            if (p.Dead ||
-                Cutebold_Patch_HediffRelated.CuteboldGlowHandler(p) >= 0.3f ||
-                (pawn.CurJob != null && p.jobs.curDriver.asleep) ||
-                p.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f ||
-                p.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f)
-            {
-                return false;
-            }
-            else if (Cutebold_Patch_Body.EyeBlink)
-            {
-                // Blink Fucntion; somewhat regular blinking, but not exactly even nor completely random.
-                int offsetTicks = Math.Abs(p.HashOffsetTicks());
-                if (Math.Abs((offsetTicks % 182) / 1.8 - Math.Abs(80 * Math.Sin(offsetTicks / 89))) < 1) return false;
-            }
+            if (pawn.WrappedPawn.Dead) return false;
 
-            return true;
+            if (darkAdaptationList.TryGetValue(pawn.WrappedPawn, out Hediff_CuteboldDarkAdaptation hediff))
+            {
+                return !hediff.NoGlow;
+            }
+            
+            hediff = pawn.WrappedPawn.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) as Hediff_CuteboldDarkAdaptation;
+
+            if (pawn.WrappedPawn.def != Cutebold_Assemblies.CuteboldRaceDef || hediff == null) return false;
+
+            darkAdaptationList.TryAdd(pawn.WrappedPawn, hediff);
+
+            return !hediff.NoGlow;
         }
     }
 #endif

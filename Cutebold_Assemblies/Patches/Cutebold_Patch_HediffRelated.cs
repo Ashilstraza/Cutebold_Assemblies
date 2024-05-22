@@ -97,7 +97,7 @@ namespace Cutebold_Assemblies
                     case "SurgerySuccessChanceFactor":
                     case "WorkSpeedGlobal":
                         Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)((Pawn)t).health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
-                        if (hediff != null) __result = hediff.GlowCurve.Evaluate(CuteboldGlowHandler((Pawn)t));
+                        if (hediff != null) __result = hediff.GlowCurve.Evaluate(GlowHandler((Pawn)t));
                         break;
                     default:
                         break;
@@ -137,7 +137,7 @@ namespace Cutebold_Assemblies
         /// </summary>
         /// <param name="t">The thing to assess the glow level</param>
         /// <returns>The glow level</returns>
-        public static float CuteboldGlowHandler(Pawn p)
+        public static float GlowHandler(Pawn p)
         {
             if (p is null) return 0.5f;
             if (p.Spawned) return p.Map.glowGrid.GroundGlowAt(p.Position);

@@ -6,11 +6,15 @@ using System.Reflection.Emit;
 using UnityEngine;
 #endif
 
+using AlienRace;
 using HarmonyLib;
 using RimWorld;
 using RimWorld.Planet;
 using System;
+using System.Collections.Generic;
+using UnityEngine;
 using Verse;
+using static AlienRace.AlienPartGenerator;
 
 namespace Cutebold_Assemblies
 {
@@ -236,12 +240,58 @@ namespace Cutebold_Assemblies
 
                 hediff.Severity = new FloatRange(minSeverity, maxSeverity).RandomInRange;
 
-                __instance.health.AddHediff(hediff);
+                Cutebold_AddHediff_Handler(__instance, hediff);
+                if (!waitingForSpawn)
+                {
+                    waitingForSpawn = true;
+                    LongEventHandler.QueueLongEvent(delegate
+                    {
+                        Cutebold_AddHediff_Handler();
+                    }, "Adding Cutebold Hediffs Cause Threads Are Fun", doAsynchronously: false, null);
+                }
             }
+        }
 
-            Hediff_CuteboldDarkAdaptation darkAdaptation = __instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) as Hediff_CuteboldDarkAdaptation;
-            darkAdaptation.UpdateGoggles();
-            darkAdaptation.UpdateEyes();
+        private static Dictionary<Pawn, Hediff_CuteboldDarkAdaptation> applyHediffList = [];
+        private static bool waitingForSpawn = false;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="pawn"></param>
+        /// <param name="hediff"></param>
+        private static void Cutebold_AddHediff_Handler(Pawn pawn, Hediff_CuteboldDarkAdaptation hediff)
+        {
+            Cutebold_Patch_HediffRelated.applyHediffList.Add(pawn, hediff);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static void Cutebold_AddHediff_Handler()
+        {
+            if (waitingForSpawn) return;
+            foreach (var pawnHediff in applyHediffList)
+            {
+                Pawn pawn = pawnHediff.Key;
+                Hediff_CuteboldDarkAdaptation darkAdaptation = pawnHediff.Value;
+                pawn.health.AddHediff(darkAdaptation);
+                darkAdaptation.UpdateGoggles();
+
+                // Make sure pawn render nodes are initialized.
+#if RW1_5
+                pawn.TryGetComp<AlienComp>().CompRenderNodes();
+#endif
+
+                // Change eye color on Mimes
+                if (pawn.health.hediffSet.hediffs.Find((Hediff hediff) => hediff.def.defName == "AA_MimeHediff") != null)
+                {
+                    pawn.TryGetComp<AlienComp>().GetChannel("eye").first = new Color(Rand.Range(0.7f, 0.8f), Rand.Range(0.5f, 0.6f), 0f);
+                    Cutebold_Patch_Body.SetDirty(pawn);
+                }
+            }
+            waitingForSpawn = false;
+            applyHediffList = [];
         }
 
         /// <summary>
@@ -415,7 +465,7 @@ namespace Cutebold_Assemblies
                     }
                 }
 #endif
-        #endregion
+#endregion
 
         #region 1.2 Goggle Layer Transpiler
 #if RW1_2
@@ -547,6 +597,6 @@ namespace Cutebold_Assemblies
             }
         }
 #endif
-        #endregion
+#endregion
     }
 }

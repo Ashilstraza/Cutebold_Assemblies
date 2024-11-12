@@ -355,7 +355,12 @@ namespace Cutebold_Assemblies
         {
             base.PostTick();
 
-            if (!initCheck) InitCheck();
+            if (!initCheck)
+            {
+                pawnHashOffsetTicks = pawn.HashOffsetTicks();
+                nextTickToCheck = pawnHashOffsetTicks - 1;
+                initCheck = true;
+            }
 
             pawnHashOffsetTicks++;
             lastLightLevel = CurrentLightLevel;
@@ -439,27 +444,6 @@ namespace Cutebold_Assemblies
                     }
                 }
             }
-        }
-
-        /// <summary>
-        /// Does a set of initial checks:
-        /// <para>-Changes the eye glow to an orange-red color on mimes from Alpha Animals.</para>
-        /// </summary>
-        private void InitCheck()
-        {
-            // Make sure pawn render nodes are initialized.
-            pawn.TryGetComp<AlienComp>().CompRenderNodes();
-
-            pawnHashOffsetTicks = pawn.HashOffsetTicks();
-            nextTickToCheck = pawnHashOffsetTicks - 1;
-
-            // Change eye color on Mimes
-            if (pawn.health.hediffSet.hediffs.Find((Hediff hediff) => hediff.def.defName == "AA_MimeHediff") != null)
-            {
-                pawn.TryGetComp<AlienComp>().GetChannel("eye").first = new Color(Rand.Range(0.7f, 0.8f), Rand.Range(0.5f, 0.6f), 0f);
-                dirtyCache = true;
-            }
-            initCheck = true;
         }
 
         /// <summary>

@@ -316,7 +316,7 @@ namespace Cutebold_Assemblies
 #pragma warning restore IDE0079 // Remove unnecessary suppression
 
             if (pawn.Dead ||
-                Cutebold_Patch_HediffRelated.CuteboldGlowHandler(pawn) >= 0.3f ||
+                Cutebold_Patch_HediffRelated.GlowHandler(pawn) >= 0.3f ||
                 (pawn.CurJob != null && pawn.jobs.curDriver.asleep) ||
                 pawn.health.capacities.GetLevel(PawnCapacityDefOf.Sight) == 0f ||
                 pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f)

@@ -112,7 +112,7 @@ namespace Cutebold_Assemblies
         /// </summary>
         /// <param name="t">The thing to assess the glow level</param>
         /// <returns>The glow level</returns>
-        public static float CuteboldGlowHandler(Pawn p)
+        public static float GlowHandler(Pawn p)
         {
             if (p is null) return 0.5f;
             if (p.Spawned) return p.Map.glowGrid.GameGlowAt(p.Position);

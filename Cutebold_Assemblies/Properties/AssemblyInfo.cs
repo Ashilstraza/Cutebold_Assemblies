@@ -27,8 +27,9 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.5.4")]
+[assembly: AssemblyVersion("1.5.5")]
 
+// 1.5.5 Fixed Cutebold Spawning, added error checking for patch handler
 // 1.5.4 Switched cutebold blinking to be more centralized.
 // 1.5.3 Split alien patches off into their own project, external patch handler
 // 1.5.2 A few tweaks, re-enabled DBH patches, changed version stuff to be: Major Version, RW Version, Update Number.

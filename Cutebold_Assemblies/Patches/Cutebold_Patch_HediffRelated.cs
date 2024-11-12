@@ -270,7 +270,7 @@ namespace Cutebold_Assemblies
         /// </summary>
         public static void Cutebold_AddHediff_Handler()
         {
-            if (waitingForSpawn) return;
+            if (!waitingForSpawn) return;
             foreach (var pawnHediff in applyHediffList)
             {
                 Pawn pawn = pawnHediff.Key;

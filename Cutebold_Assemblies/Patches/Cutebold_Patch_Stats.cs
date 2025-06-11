@@ -1,13 +1,13 @@
 ﻿#if RWPre1_3
 using Verse.AI;
 using Verse.Sound;
+using System.Linq;
 #endif
 
 using HarmonyLib;
 using RimWorld;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Text;
@@ -65,8 +65,8 @@ namespace Cutebold_Assemblies
             {
                 if (!settings.altYield)
                 {
-#if RW1_5
-                        harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield",
+#if !RWPre1_5
+                    harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield",
                         [
                             typeof(Map),
                             typeof(bool),
@@ -86,7 +86,7 @@ namespace Cutebold_Assemblies
             {
                 if (miningAltYield || settings.altYield)
                 {
-#if RW1_5
+#if !RWPre1_5
                         harmony.Patch(AccessTools.Method(typeof(Mineable), "TrySpawnYield",
                         [
                             typeof(Map),
@@ -166,7 +166,7 @@ namespace Cutebold_Assemblies
             OpCode storeNum = OpCodes.Stloc_1;
 #endif
 
-            List<CodeInstruction> instructionList = instructions.ToList();
+            List<CodeInstruction> instructionList = [.. instructions];
             int instructionListCount = instructionList.Count;
 
             /*
@@ -345,7 +345,7 @@ namespace Cutebold_Assemblies
 
             LocalBuilder statRequestVar = ilGenerator.DeclareLocal(typeof(StatRequest));
 
-            List<CodeInstruction> instructionList = instructions.ToList();
+            List<CodeInstruction> instructionList = [.. instructions];
             int instructionListCount = instructionList.Count;
 
             /*

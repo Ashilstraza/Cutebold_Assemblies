@@ -1,12 +1,8 @@
 ﻿#if RWPre1_3
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
-using UnityEngine;
 #endif
 
-using AlienRace;
 using HarmonyLib;
 using RimWorld;
 using RimWorld.Planet;
@@ -284,7 +280,7 @@ namespace Cutebold_Assemblies
 #endif
 
                 // Change eye color on Mimes
-                if (pawn.health.hediffSet.hediffs.Find((Hediff hediff) => hediff.def.defName == "AA_MimeHediff") != null)
+                if (pawn.health.hediffSet.hediffs.Find(hediff => hediff.def.defName == "AA_MimeHediff") != null)
                 {
                     pawn.TryGetComp<AlienComp>().GetChannel("eye").first = new Color(Rand.Range(0.7f, 0.8f), Rand.Range(0.5f, 0.6f), 0f);
                     Cutebold_Patch_Body.SetDirty(pawn);
@@ -355,7 +351,7 @@ namespace Cutebold_Assemblies
                     Label notGoggles = ilGenerator.DefineLabel();
                     LocalBuilder modified = ilGenerator.DeclareLocal(typeof(bool));
 
-                    List<CodeInstruction> instructionList = instructions.ToList();
+                    List<CodeInstruction> instructionList = [.. instructions];
 
                     //
                     // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
@@ -487,7 +483,7 @@ namespace Cutebold_Assemblies
             Label notGoggles = ilGenerator.DefineLabel();
             LocalBuilder modified = ilGenerator.DeclareLocal(typeof(bool));
 
-            List<CodeInstruction> instructionList = instructions.ToList();
+            List<CodeInstruction> instructionList = [.. instructions];
 
             //
             // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references

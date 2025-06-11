@@ -91,16 +91,16 @@ namespace Cutebold_Assemblies
 #else
             BackstorySlot slot = BackstorySlot.Childhood;
 
-            CuteboldRegularChildBackstories = DefDatabase<BackstoryDef>.AllDefs.Where((BackstoryDef bs) => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldRegularChildBackstories")).ToList();
-            CuteboldSlaveChildBackstories = DefDatabase<BackstoryDef>.AllDefs.Where((BackstoryDef bs) => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldSlaveChildBackstories")).ToList();
-            CuteboldUndergroundChildBackstories = DefDatabase<BackstoryDef>.AllDefs.Where((BackstoryDef bs) => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldUndergroundChildBackstories")).ToList();
+            CuteboldRegularChildBackstories = [.. DefDatabase<BackstoryDef>.AllDefs.Where(bs => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldRegularChildBackstories"))];
+            CuteboldSlaveChildBackstories = [.. DefDatabase<BackstoryDef>.AllDefs.Where( bs => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldSlaveChildBackstories"))];
+            CuteboldUndergroundChildBackstories = [.. DefDatabase<BackstoryDef>.AllDefs.Where(bs => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldUndergroundChildBackstories"))];
 
             slot = BackstorySlot.Adulthood;
 
-            CuteboldRegularAdultBackstories = DefDatabase<BackstoryDef>.AllDefs.Where((BackstoryDef bs) => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldRegularAdultBackstories")).ToList();
-            CuteboldSlaveAdultBackstories = DefDatabase<BackstoryDef>.AllDefs.Where((BackstoryDef bs) => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldSlaveAdultBackstories")).ToList();
-            CuteboldServantAdultBackstories = DefDatabase<BackstoryDef>.AllDefs.Where((BackstoryDef bs) => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldServantAdultBackstories")).ToList();
-            CuteboldUndergroundAdultBackstories = DefDatabase<BackstoryDef>.AllDefs.Where((BackstoryDef bs) => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldUndergroundAdultBackstories")).ToList();
+            CuteboldRegularAdultBackstories = [.. DefDatabase<BackstoryDef>.AllDefs.Where(bs => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldRegularAdultBackstories"))];
+            CuteboldSlaveAdultBackstories = [.. DefDatabase<BackstoryDef>.AllDefs.Where(bs => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldSlaveAdultBackstories"))];
+            CuteboldServantAdultBackstories = [.. DefDatabase<BackstoryDef>.AllDefs.Where(bs => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldServantAdultBackstories"))];
+            CuteboldUndergroundAdultBackstories = [.. DefDatabase<BackstoryDef>.AllDefs.Where(bs => bs.shuffleable && bs.slot == slot && bs.spawnCategories.Contains("CuteboldUndergroundAdultBackstories"))];
 #endif
         }
 

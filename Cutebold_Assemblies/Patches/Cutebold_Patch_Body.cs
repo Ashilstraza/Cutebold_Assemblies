@@ -1,4 +1,4 @@
-﻿#if RW1_5
+﻿#if !RWPre1_5
 using AlienRace.ExtendedGraphics;
 #elif RW1_4
 using UnityEngine;
@@ -11,7 +11,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-
 using Verse;
 using static AlienRace.AlienPartGenerator;
 
@@ -36,9 +35,9 @@ namespace Cutebold_Assemblies
         /// <summary>Reference to our harmony instance.</summary>
         private static Harmony harmonyRef;
         /// <summary>Reference to the CanDrawAddon method.</summary>
-        private static readonly MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), nameof(AlienPartGenerator.BodyAddon.CanDrawAddon), new[] {
+        private static readonly MethodBase canDrawAddonRef = AccessTools.Method(typeof(AlienPartGenerator.BodyAddon), nameof(AlienPartGenerator.BodyAddon.CanDrawAddon), [
             typeof(Pawn)
-        });
+        ]);
         /// <summary>Our prefix to the CanDrawAddon method.</summary>
         private static readonly HarmonyMethod cuteboldCanDrawAddonPrefixRef = new(typeof(Cutebold_Patch_Body), nameof(CuteboldCanDrawAddonPrefix));
 #endif
@@ -69,8 +68,8 @@ namespace Cutebold_Assemblies
         {
             if (!initialized)
             {
-                raceAddons = new List<BodyAddon>(Cutebold_Assemblies.CuteboldRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons);
-                
+                raceAddons = [.. Cutebold_Assemblies.CuteboldRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons];
+
                 CuteboldAddonModifier(Cutebold_Assemblies.CuteboldSettings);
 #if RWPre1_5
                 harmonyRef = harmony;
@@ -88,7 +87,7 @@ namespace Cutebold_Assemblies
 
         public static void HotReload()
         {
-            raceAddons = new List<BodyAddon>(Cutebold_Assemblies.CuteboldRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons);
+            raceAddons = [.. Cutebold_Assemblies.CuteboldRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons];
             CuteboldAddonModifier(Cutebold_Assemblies.CuteboldSettings);
         }
 
@@ -118,7 +117,7 @@ namespace Cutebold_Assemblies
         /// <param name="pawn">The pawn to dirty, leave empty to set all pawns dirty.</param>
         public static void SetDirty(Pawn pawn = null)
         {
-            if(pawn == null)
+            if (pawn == null)
             {
                 foreach (Pawn p in PawnsFinder.All_AliveOrDead)
                 {
@@ -162,10 +161,10 @@ namespace Cutebold_Assemblies
                         harmonyRef.Patch(canDrawAddonRef, prefix: cuteboldCanDrawAddonPrefixRef);
 #endif
 
-                    foreach (BodyAddon bodyAddon in raceAddons)
-                    {
-                        CheckModifyPart(true, ref currentAddons, bodyAddon, Modification.Add);
-                    }
+                        foreach (BodyAddon bodyAddon in raceAddons)
+                        {
+                            CheckModifyPart(true, ref currentAddons, bodyAddon, Modification.Add);
+                        }
 
                 }
                 else if (!glowEyes || !eyeAdaptation)
@@ -175,10 +174,10 @@ namespace Cutebold_Assemblies
                         harmonyRef.Unpatch(canDrawAddonRef, cuteboldCanDrawAddonPrefixRef.method);
 #endif
 
-                    foreach (BodyAddon bodyAddon in raceAddons)
-                    {
-                        CheckModifyPart(true, ref currentAddons, bodyAddon, Modification.Remove);
-                    }
+                        foreach (BodyAddon bodyAddon in raceAddons)
+                        {
+                            CheckModifyPart(true, ref currentAddons, bodyAddon, Modification.Remove);
+                        }
                 }
 
                 return true;
@@ -218,7 +217,7 @@ namespace Cutebold_Assemblies
 
                 return true;
             }
-            
+
             return false;
         }
 
@@ -262,7 +261,7 @@ namespace Cutebold_Assemblies
 #elif RW1_4
                     shouldModify = bodyAddon.bodyPart.defName == "Eye";
 #else
-                    shouldModify = ((ConditionBodyPart)bodyAddon.conditions.Find(condition => condition is ConditionBodyPart))?.bodyPart.defName == "Eye";
+                shouldModify = ((ConditionBodyPart)bodyAddon.conditions.Find(condition => condition is ConditionBodyPart))?.bodyPart.defName == "Eye";
 #endif
             }
             else
@@ -272,7 +271,7 @@ namespace Cutebold_Assemblies
 #elif RW1_4
                     shouldModify = bodyAddon.bodyPart.defName != "Eye";
 #else
-                    shouldModify = ((ConditionBodyPart)bodyAddon.conditions.Find(condition => condition is ConditionBodyPart))?.bodyPart.defName != "Eye";
+                shouldModify = ((ConditionBodyPart)bodyAddon.conditions.Find(condition => condition is ConditionBodyPart))?.bodyPart.defName != "Eye";
 #endif
             }
             if (modify == Modification.Add)
@@ -338,7 +337,7 @@ namespace Cutebold_Assemblies
 #endif
 #endif
 
-#region 1.4 Only Code
+        #region 1.4 Only Code
 #if RW1_4
         /// <summary>
         /// Updates the paths for the body graphic variations
@@ -354,7 +353,7 @@ namespace Cutebold_Assemblies
                 {
                     genderedBody.path = $"{graphicsPaths.body.path}{genderedBody.gender}Naked_{body.bodytype}";
                 }
-                body.paths = new List<string>() { body.path };
+                body.paths = [body.path];
             }
         }
 
@@ -373,7 +372,7 @@ namespace Cutebold_Assemblies
                 {
                     generedHead.path = graphicsPaths.head.path + headTypePath;
                 }
-                head.paths = new List<string>() { head.path };
+                head.paths = [head.path];
             }
         }
 
@@ -388,7 +387,7 @@ namespace Cutebold_Assemblies
             if (pawn.gender == Gender.Female && __result != BodyTypeDefOf.Thin && pawn.story.Childhood.defName.StartsWith("Cutebold")) replacementBodyType = BodyTypeDefOf.Female;
 
             List<Gene> genesListForReading = pawn.genes.GenesListForReading;
-            HashSet<BodyTypeDef> geneBodyTypes = new HashSet<BodyTypeDef>();
+            HashSet<BodyTypeDef> geneBodyTypes = [];
 
             for (int index = 0; index < genesListForReading.Count; ++index)
             {
@@ -407,16 +406,15 @@ namespace Cutebold_Assemblies
                 }
             }
 
-            BodyTypeDef randomGeneBody;
-            if (geneBodyTypes.TryRandomElement<BodyTypeDef>(out randomGeneBody))
+            if (geneBodyTypes.TryRandomElement<BodyTypeDef>(out BodyTypeDef randomGeneBody))
                 replacementBodyType = randomGeneBody;
 
             __result = replacementBodyType;
         }
 
-        public static Vector2 Cutebold_MaleDrawSize_Adjust = new Vector2(-0.2f, 0.0f);
-        public static Vector2 Cutebold_FatDrawSize_Adjust = new Vector2(-0.2f, 0.0f);
-        public static Vector2 Cutebold_HulkDrawSize_Adjust = new Vector2(-0.2f, -0.1f);
+        public static Vector2 Cutebold_MaleDrawSize_Adjust = new(-0.2f, 0.0f);
+        public static Vector2 Cutebold_FatDrawSize_Adjust = new(-0.2f, 0.0f);
+        public static Vector2 Cutebold_HulkDrawSize_Adjust = new(-0.2f, -0.1f);
 
         public static void Cutebold_ResolveAllGraphics_Postfix(PawnGraphicSet __instance)
         {
@@ -441,10 +439,10 @@ namespace Cutebold_Assemblies
         }
     } // Close Cutebold_Patch_Body Class
 #endif
-#endregion
+        #endregion
 
         #region 1.5 Only Code
-#if RW1_5
+#if !RWPre1_5
         /// <summary>
         /// Updates the paths for the body graphic variations
         /// </summary>
@@ -485,5 +483,5 @@ namespace Cutebold_Assemblies
         }
     }
 #endif
-#endregion
+    #endregion
 }

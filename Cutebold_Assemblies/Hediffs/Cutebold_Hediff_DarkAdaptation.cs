@@ -1,7 +1,9 @@
-﻿#if RW1_5 && DEBUG
+﻿#if !RWPre1_5
+#if DEBUG
 using LudeonTK;
 #endif
-#if !RWPre1_4
+
+using System.Collections.Concurrent;
 using AlienRace.ExtendedGraphics;
 #endif
 
@@ -10,12 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using UnityEngine;
 using Verse;
-using static AlienRace.AlienPartGenerator;
-using AlienRace;
-using HarmonyLib;
-using System.Collections.Concurrent;
 
 namespace Cutebold_Assemblies
 {
@@ -271,7 +268,7 @@ namespace Cutebold_Assemblies
         /// <summary>If the current hediff stage should be visible.</summary>
         public override bool Visible => CurStage.becomeVisible;
         /// <summary>Global work speed glow curve depending on hediff.</summary>
-        public SimpleCurve GlowCurve { get; private set; } = new SimpleCurve(defaultGlowCurve);
+        public SimpleCurve GlowCurve { get; private set; } = [.. defaultGlowCurve];
         /// <summary>Maximum global work speed in 0% light.</summary>
         public float MaxDarkGlobalWorkSpeed { get; private set; } = 0f;
         /// <summary>Maximum global work speed in 100% light.</summary>
@@ -504,7 +501,7 @@ namespace Cutebold_Assemblies
 
             if (WearingGoggles || (MaxLightGlobalWorkSpeed == defaultLightglobalWorkSpeed && MaxDarkGlobalWorkSpeed == defaultDarkglobalWorkSpeed))
             {
-                GlowCurve = new SimpleCurve(defaultGlowCurve);
+                GlowCurve = [.. defaultGlowCurve];
             }
             else if (IgnoreLightLevel)
             {

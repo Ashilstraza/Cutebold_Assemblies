@@ -138,7 +138,7 @@ namespace Cutebold_Assemblies
                 }
             }
 
-            humanoidLeathers = new HashSet<ThingDef>(aliens.Except(animals).AsEnumerable()); // We only want the list of leathers unique to humanoids.
+            humanoidLeathers = [.. aliens.Except(animals).AsEnumerable()]; // We only want the list of leathers unique to humanoids.
         }
 
         /// <summary>
@@ -158,10 +158,10 @@ namespace Cutebold_Assemblies
                 {
                     if (butcherRaceList.Contains(__instance.def.ingestible.sourceDef.defName))
                     {
-                        TaleRecorder.RecordTale(Cutebold_DefOf.AteRawCuteboldMeatTale, new []
-                        {
+                        TaleRecorder.RecordTale(Cutebold_DefOf.AteRawCuteboldMeatTale,
+                        [
                         ingester
-                        });
+                        ]);
                     }
                 }
                 catch (NullReferenceException)
@@ -192,10 +192,10 @@ namespace Cutebold_Assemblies
                 {
                     if (butcherRaceList.Contains(__instance.def.ingestible.sourceDef.defName))
                     {
-                        TaleRecorder.RecordTale(Cutebold_DefOf.ButcheredCuteboldCorpseTale, new []
-                        {
+                        TaleRecorder.RecordTale(Cutebold_DefOf.ButcheredCuteboldCorpseTale,
+                        [
                     butcher
-                        });
+                        ]);
                     }
                 }
                 catch (NullReferenceException)

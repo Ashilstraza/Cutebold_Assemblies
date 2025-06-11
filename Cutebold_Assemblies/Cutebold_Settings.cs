@@ -274,7 +274,11 @@ namespace Cutebold_Assemblies
         public Rect SectionLabel(string label, float maxHeight = -1f, string tooltip = null)
         {
             Text.Font = GameFont.Medium;
+#if RWPre1_6
+            Rect rect = Label(label, maxHeight, tooltip);
+#else
             Rect rect = Label(label, maxHeight, (TipSignal?)(TipSignal)tooltip);
+#endif
             Text.Font = GameFont.Small;
             GapLine(1f);
             rect.height += 1f;

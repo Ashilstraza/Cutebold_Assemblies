@@ -18,7 +18,7 @@ del "$(TargetDir)*.pdb"</PostBuildEvent>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.6 Debug|AnyCPU'">
     <DebugSymbols>true</DebugSymbols>
     <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.6\Assemblies\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;RW1_5</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;RW1_6</DefineConstants>
     <DebugType>portable</DebugType>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <LangVersion>latest</LangVersion>

@@ -284,15 +284,18 @@ namespace Cutebold_Assemblies
         private bool eyesMissing = false;
 
         /// <summary>If eyes should not glow.</summary>
-        public bool NoGlow {
-            get {
+        public bool NoGlow
+        {
+            get
+            {
                 return noGlow;
             }
-            private set {
+            private set
+            {
                 if ((noGlow != value && !dirtyCache) || (noGlow != value && !noGlow)) // set if value is different and we haven't dirtied already, otherwise only set if it switches to true
                 {
                     noGlow = value;
-                    if(!eyesMissing) dirtyCache = true;
+                    if (!eyesMissing) dirtyCache = true;
                 }
             }
         }
@@ -363,13 +366,13 @@ namespace Cutebold_Assemblies
             lastLightLevel = CurrentLightLevel;
             adaptationComp.CurrentLightLevel = Cutebold_Patch_HediffRelated.GlowHandler(pawn);
 
-            if(!isAsleep && !isUnconscious && !eyesMissing)
+            if (!isAsleep && !isUnconscious && !eyesMissing)
             {
                 if ((lastLightLevel <= 0.3f) && (CurrentLightLevel > 0.3f))
                 {
                     NoGlow = true;
                 }
-                else if((lastLightLevel >= 0.3f) && (CurrentLightLevel < 0.3f))
+                else if ((lastLightLevel >= 0.3f) && (CurrentLightLevel < 0.3f))
                 {
                     NoGlow = false;
                 }
@@ -403,7 +406,8 @@ namespace Cutebold_Assemblies
                     NoGlow = isAsleep = asleep;
                 }
 
-                if (conscious == !isUnconscious){
+                if (conscious == !isUnconscious)
+                {
                     NoGlow = isUnconscious = conscious;
                 }
 

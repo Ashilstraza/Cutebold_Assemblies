@@ -387,7 +387,7 @@ namespace Cutebold_Assemblies
             }
         }
 #endif
-#endregion
+        #endregion
 
         /// <summary>
         /// Changes the value of certain stats when they exceed the vanilla maximum on purpose.

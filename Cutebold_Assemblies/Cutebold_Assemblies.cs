@@ -89,16 +89,16 @@ namespace Cutebold_Assemblies
             CreateButcherRaceList();
             CreateHumanoidLeatherList();
 
-            if(hotReload)
+            if (hotReload)
             {
                 Cutebold_Patch_Body.HotReload();
             }
         }
 
-            /// <summary>
-            /// Creates a list of races that give bad butcher thoughts.
-            /// </summary>
-            private static void CreateButcherRaceList()
+        /// <summary>
+        /// Creates a list of races that give bad butcher thoughts.
+        /// </summary>
+        private static void CreateButcherRaceList()
         {
             HashSet<string> butcherList = [];
 
@@ -134,7 +134,7 @@ namespace Cutebold_Assemblies
                 else
                 {
                     // Ignore animals that have human leather as their type
-                    if(thingDef.race.leatherDef.defName != "Leather_Human") animals.Add(thingDef.race.leatherDef);
+                    if (thingDef.race.leatherDef.defName != "Leather_Human") animals.Add(thingDef.race.leatherDef);
                 }
             }
 
@@ -239,7 +239,7 @@ namespace Cutebold_Assemblies
             if (num == 0) newThoughtState = ThoughtState.Inactive;
             else if (num >= 5) newThoughtState = ThoughtState.ActiveAtStage(4, text);
             else newThoughtState = ThoughtState.ActiveAtStage(num - 1, text);
-            
+
             __result = newThoughtState;
         }
 
@@ -309,7 +309,7 @@ namespace Cutebold_Assemblies
 
             void writeLine(string text, ref StringBuilder stringBuilder)
             {
-                if(!allMethods) Log.Message(text);
+                if (!allMethods) Log.Message(text);
                 stringBuilder.AppendLine(text.StripTags());
             }
         }

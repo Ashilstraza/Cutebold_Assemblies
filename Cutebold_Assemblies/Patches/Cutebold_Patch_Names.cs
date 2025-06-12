@@ -137,7 +137,7 @@ namespace Cutebold_Assemblies
 #if RW1_3
             Backstory childhood = pawn.story.childhood;
             Backstory adulthood = pawn.story.adulthood;
-    #else
+#else
             BackstoryDef childhood = pawn.story.Childhood;
             BackstoryDef adulthood = pawn.story.Adulthood;
 #endif

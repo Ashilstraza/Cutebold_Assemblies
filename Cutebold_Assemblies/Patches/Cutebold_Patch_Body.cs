@@ -161,10 +161,10 @@ namespace Cutebold_Assemblies
                         harmonyRef.Patch(canDrawAddonRef, prefix: cuteboldCanDrawAddonPrefixRef);
 #endif
 
-                        foreach (BodyAddon bodyAddon in raceAddons)
-                        {
-                            CheckModifyPart(true, ref currentAddons, bodyAddon, Modification.Add);
-                        }
+                    foreach (BodyAddon bodyAddon in raceAddons)
+                    {
+                        CheckModifyPart(true, ref currentAddons, bodyAddon, Modification.Add);
+                    }
 
                 }
                 else if (!glowEyes || !eyeAdaptation)
@@ -174,10 +174,10 @@ namespace Cutebold_Assemblies
                         harmonyRef.Unpatch(canDrawAddonRef, cuteboldCanDrawAddonPrefixRef.method);
 #endif
 
-                        foreach (BodyAddon bodyAddon in raceAddons)
-                        {
-                            CheckModifyPart(true, ref currentAddons, bodyAddon, Modification.Remove);
-                        }
+                    foreach (BodyAddon bodyAddon in raceAddons)
+                    {
+                        CheckModifyPart(true, ref currentAddons, bodyAddon, Modification.Remove);
+                    }
                 }
 
                 return true;
@@ -337,7 +337,7 @@ namespace Cutebold_Assemblies
 #endif
 #endif
 
-        #region 1.4 Only Code
+    #region 1.4 Only Code
 #if RW1_4
         /// <summary>
         /// Updates the paths for the body graphic variations
@@ -439,9 +439,9 @@ namespace Cutebold_Assemblies
         }
     } // Close Cutebold_Patch_Body Class
 #endif
-        #endregion
+    #endregion
 
-        #region 1.5 Only Code
+    #region 1.5 Only Code
 #if !RWPre1_5
         /// <summary>
         /// Updates the paths for the body graphic variations

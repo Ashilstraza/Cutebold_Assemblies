@@ -128,7 +128,7 @@ namespace Cutebold_Assemblies
             return 0.5f;
         }
 #endif
-#endregion
+        #endregion
 
         #region Post 1.5 Glow Handler
 #if !RWPre1_5
@@ -153,7 +153,7 @@ namespace Cutebold_Assemblies
             return 0.5f;
         }
 #endif
-#endregion
+        #endregion
 
 
         /// <summary>
@@ -342,32 +342,32 @@ namespace Cutebold_Assemblies
         /// <param name="ilGenerator">The IDGenerator that allows us to create local variables and labels.</param>
         /// <returns>All the code!</returns>
         private static IEnumerable<CodeInstruction> CuteboldGogglesFixTranspiler(IEnumerable<CodeInstruction> instructions, ILGenerator ilGenerator)
-                {
-                    FieldInfo hatInFront = AccessTools.Field(typeof(ApparelProperties), "hatRenderedFrontOfFace");
-                    MethodInfo drawMeshNowOrLater = AccessTools.Method(typeof(GenDraw), "DrawMeshNowOrLater");
+        {
+            FieldInfo hatInFront = AccessTools.Field(typeof(ApparelProperties), "hatRenderedFrontOfFace");
+            MethodInfo drawMeshNowOrLater = AccessTools.Method(typeof(GenDraw), "DrawMeshNowOrLater");
 
-                    bool nextDraw = false;
-                    float offset = 0.001f;
-                    Label notGoggles = ilGenerator.DefineLabel();
-                    LocalBuilder modified = ilGenerator.DeclareLocal(typeof(bool));
+            bool nextDraw = false;
+            float offset = 0.001f;
+            Label notGoggles = ilGenerator.DefineLabel();
+            LocalBuilder modified = ilGenerator.DeclareLocal(typeof(bool));
 
-                    List<CodeInstruction> instructionList = [.. instructions];
+            List<CodeInstruction> instructionList = [.. instructions];
 
-                    //
-                    // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
-                    // 
-                    // Adjusts the y offset to put goggles below other headgear.
-                    // 
-                    // modified = false;
-                    // 
-                    // if (apparelGraphics[j].sourceApparel.def == Cutebold_DefOf.Cutebold_Goggles)
-                    // {
-                    //     loc2.y -= offset;
-                    //     modified = true;
-                    // }
-                    //
-                    List<CodeInstruction> checkForGoggles = [
-                        new(OpCodes.Ldc_I4_0), // Load zero
+            //
+            // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
+            // 
+            // Adjusts the y offset to put goggles below other headgear.
+            // 
+            // modified = false;
+            // 
+            // if (apparelGraphics[j].sourceApparel.def == Cutebold_DefOf.Cutebold_Goggles)
+            // {
+            //     loc2.y -= offset;
+            //     modified = true;
+            // }
+            //
+            List<CodeInstruction> checkForGoggles = [
+                new(OpCodes.Ldc_I4_0), // Load zero
                         new(OpCodes.Stloc_S, modified), // Set modified to zero (false)
 
                         new(OpCodes.Ldloc_S, 14), // Loads apparelGraphics
@@ -394,19 +394,19 @@ namespace Cutebold_Assemblies
 
                     ];
 
-                    //
-                    // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
-                    // 
-                    // Reverts the y offset for other headgear.
-                    // 
-                    // if(modified)
-                    // {
-                    //     loc2.y += offset;
-                    // }
-                    //
-                    List<CodeInstruction> revertChange =
-                    [
-                        new(OpCodes.Ldloc_S, modified), // Load modified
+            //
+            // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
+            // 
+            // Reverts the y offset for other headgear.
+            // 
+            // if(modified)
+            // {
+            //     loc2.y += offset;
+            // }
+            //
+            List<CodeInstruction> revertChange =
+            [
+                new(OpCodes.Ldloc_S, modified), // Load modified
                         new(OpCodes.Brfalse, null), // Check if modified is false and if it is, jump to the end (null to be replaced)
 
                             new(OpCodes.Ldloca_S, 11), // Loads loc2 (apparel drawing offset)
@@ -416,52 +416,52 @@ namespace Cutebold_Assemblies
                             new(OpCodes.Ldc_R4, offset), // Loads the offset
                             new(OpCodes.Add), // Subtract offset from loc2.y
                             new(OpCodes.Stind_R4) // Store new value at address of loc2.y
-                    ];
+            ];
 
-                    int x = -1;
+            int x = -1;
 
-                    for (int i = 0; i < instructionList.Count; i++)
+            for (int i = 0; i < instructionList.Count; i++)
+            {
+                CodeInstruction instruction = instructionList[i];
+
+                if (i > 4 && instructionList[i - 4].OperandIs(hatInFront))
+                {
+                    x = 30;
+
+                    foreach (CodeInstruction codeInstruction in checkForGoggles)
                     {
-                        CodeInstruction instruction = instructionList[i];
-
-                        if (i > 4 && instructionList[i - 4].OperandIs(hatInFront))
-                        {
-                            x = 30;
-
-                            foreach (CodeInstruction codeInstruction in checkForGoggles)
-                            {
-                                //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
-                                yield return codeInstruction;
-                            }
-
-                            instruction.labels.Add(notGoggles);
-                            nextDraw = true;
-                        }
-
-                        if (nextDraw && instructionList[i - 1].OperandIs(drawMeshNowOrLater))
-                        {
-                            revertChange[1].operand = instruction.operand; // Sets the jump value
-
-                            foreach (CodeInstruction codeInstruction in revertChange)
-                            {
-                               //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
-                                yield return codeInstruction;
-                            }
-
-                            nextDraw = false;
-                        }
-
-                        if (x > 0)
-                        {
-                            //Log.Message("    "+instruction.ToString() + (instruction.labels.Count > 0 ? instruction.labels[0].ToString() : ""));
-                            x--;
-                        }
-
-                        yield return instruction;
+                        //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
+                        yield return codeInstruction;
                     }
+
+                    instruction.labels.Add(notGoggles);
+                    nextDraw = true;
                 }
+
+                if (nextDraw && instructionList[i - 1].OperandIs(drawMeshNowOrLater))
+                {
+                    revertChange[1].operand = instruction.operand; // Sets the jump value
+
+                    foreach (CodeInstruction codeInstruction in revertChange)
+                    {
+                        //Log.Message("    +" + codeInstruction.ToString() + (codeInstruction.labels.Count > 0 ? codeInstruction.labels[0].ToString() : ""));
+                        yield return codeInstruction;
+                    }
+
+                    nextDraw = false;
+                }
+
+                if (x > 0)
+                {
+                    //Log.Message("    "+instruction.ToString() + (instruction.labels.Count > 0 ? instruction.labels[0].ToString() : ""));
+                    x--;
+                }
+
+                yield return instruction;
+            }
+        }
 #endif
-#endregion
+        #endregion
 
         #region 1.2 Goggle Layer Transpiler
 #if RW1_2
@@ -593,6 +593,6 @@ namespace Cutebold_Assemblies
             }
         }
 #endif
-#endregion
+        #endregion
     }
 }

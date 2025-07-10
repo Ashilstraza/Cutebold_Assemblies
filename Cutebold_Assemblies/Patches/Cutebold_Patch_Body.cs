@@ -99,12 +99,14 @@ namespace Cutebold_Assemblies
         {
             List<BodyAddon> currentAddons = Cutebold_Assemblies.CuteboldRaceDef.alienRace.generalSettings.alienPartGenerator.bodyAddons;
 
-            if (UpdateEyes(settings, ref currentAddons) || UpdateBodiesAndHeads(settings, ref currentAddons))
+            if ((UpdateEyes(settings, ref currentAddons) || UpdateBodiesAndHeads(settings, ref currentAddons)) && Current.ProgramState == ProgramState.Playing)
             {
                 foreach (Pawn pawn in PawnsFinder.All_AliveOrDead)
                 {
                     if (pawn.def == Cutebold_Assemblies.CuteboldRaceDef)
                     {
+                        AlienComp comp = pawn.TryGetComp<AlienComp>();
+                        Traverse.Create(comp).Field("nodeProps").SetValue(null);
                         SetDirty(pawn);
                     }
                 }
@@ -117,7 +119,7 @@ namespace Cutebold_Assemblies
         /// <param name="pawn">The pawn to dirty, leave empty to set all pawns dirty.</param>
         public static void SetDirty(Pawn pawn = null)
         {
-            if (pawn == null)
+            if (pawn == null && Current.ProgramState == ProgramState.Playing)
             {
                 foreach (Pawn p in PawnsFinder.All_AliveOrDead)
                 {
@@ -286,6 +288,12 @@ namespace Cutebold_Assemblies
             }
         }
 
+        public static void ReplaceHelper(ref string edit, string replaceThis, string withThat)
+        {
+            edit = edit.Replace(replaceThis, withThat);
+            return;
+        }
+
 #if RWPre1_5
         /// <summary>
         /// Used Pre 1.5
@@ -337,7 +345,7 @@ namespace Cutebold_Assemblies
 #endif
 #endif
 
-    #region 1.4 Only Code
+        #region 1.4 Only Code
 #if RW1_4
         /// <summary>
         /// Updates the paths for the body graphic variations
@@ -439,9 +447,9 @@ namespace Cutebold_Assemblies
         }
     } // Close Cutebold_Patch_Body Class
 #endif
-    #endregion
+        #endregion
 
-    #region 1.5 Only Code
+        #region 1.5+ Code
 #if !RWPre1_5
         /// <summary>
         /// Updates the paths for the body graphic variations
@@ -449,19 +457,21 @@ namespace Cutebold_Assemblies
         /// <param name="graphicsPaths">Reference to the graphic paths.</param>
         private static void UpdateBodyGraphics(ref GraphicPaths graphicsPaths)
         {
+            string replaceThis = detachableParts ? paths["simpleBodyPath"] : paths["bodyPath"];
+            string withThat = detachableParts ? paths["bodyPath"] : paths["simpleBodyPath"];
+
             foreach (ExtendedConditionGraphic bodyType in graphicsPaths.body.extendedGraphics.Cast<ExtendedConditionGraphic>())
             {
-                ConditionBodyType bodyTypeCondition = (ConditionBodyType)bodyType.conditions.Find(body => body is ConditionBodyType);
-                bodyType.path = $"{graphicsPaths.body.path}Naked_{(bodyTypeCondition.bodyType == BodyTypeDefOf.Baby ? BodyTypeDefOf.Child : bodyTypeCondition.bodyType)}";
+                ReplaceHelper(ref bodyType.path, replaceThis, withThat);
 
                 foreach (ExtendedConditionGraphic genderedBody in bodyType.extendedGraphics.Cast<ExtendedConditionGraphic>())
                 {
-                    ConditionGender genderCondition = (ConditionGender)genderedBody.conditions.Find(gender => gender is ConditionGender);
-                    genderedBody.path = $"{graphicsPaths.body.path}{genderCondition.gender}_Naked_{(bodyTypeCondition.bodyType == BodyTypeDefOf.Baby ? BodyTypeDefOf.Child : bodyTypeCondition.bodyType)}";
+                    ReplaceHelper(ref genderedBody.path, replaceThis, withThat);
+                    genderedBody.paths = [genderedBody.path];
                 }
-                bodyType.paths = [bodyType.path]; //TODO Fix this maybe?
-
+                bodyType.paths = [bodyType.path];
             }
+            graphicsPaths.body.paths = [graphicsPaths.body.path];
         }
 
         /// <summary>
@@ -470,18 +480,23 @@ namespace Cutebold_Assemblies
         /// <param name="graphicsPaths">Reference to the graphic paths.</param>
         private static void UpdateHeadGraphics(ref GraphicPaths graphicsPaths)
         {
+            string replaceThis = detachableParts ? paths["simpleHeadPath"] : paths["headPath"];
+            string withThat = detachableParts ? paths["headPath"] : paths["simpleHeadPath"];
+
             foreach (ExtendedConditionGraphic headType in graphicsPaths.head.extendedGraphics.Cast<ExtendedConditionGraphic>())
             {
-                headType.path = graphicsPaths.head.path + System.IO.Path.GetFileName(headType.path);
+                ReplaceHelper(ref headType.path, replaceThis, withThat);
 
                 foreach (ExtendedConditionGraphic generedHead in headType.extendedGraphics.Cast<ExtendedConditionGraphic>())
                 {
-                    generedHead.path = graphicsPaths.head.path + System.IO.Path.GetFileName(generedHead.path);
+                    ReplaceHelper(ref generedHead.path, replaceThis, withThat);
+                    generedHead.paths = [generedHead.path];
                 }
-                headType.paths = [headType.path]; //TODO Fix this maybe?
+                headType.paths = [headType.path];
             }
+            graphicsPaths.head.paths = [graphicsPaths.head.path];
         }
-    }
+    } // Close Cutebold_Patch_Body Class
 #endif
-    #endregion
-}
+        #endregion
+} // Close Namespace

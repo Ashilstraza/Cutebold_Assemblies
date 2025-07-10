@@ -350,6 +350,7 @@ namespace Cutebold_Assemblies
 
         /// <summary>
         /// Is called at the end of each hediff tick. This updates the saved light variables, component properties, light sickness hediff, and glow curve, and sets the pawn's texture cache to be dirty.
+        /// (Some things moved to PostTickInterval in 1.6)
         /// </summary>
         public override void PostTick()
         {
@@ -394,7 +395,7 @@ namespace Cutebold_Assemblies
                     blinkLastValue = blinkValue;
                 }
             }
-
+#if RWPre1_6
             if (pawnHashOffsetTicks > nextTickToCheck) // Used instead of checking the hash
             {
                 nextTickToCheck += 60;
@@ -422,13 +423,50 @@ namespace Cutebold_Assemblies
 
                 if (!ignoreSickness) UpdateLightSickness();
             }
-
+#endif
             if (dirtyCache)
             {
                 Cutebold_Patch_Body.SetDirty(pawn);
                 dirtyCache = false;
             }
         }
+
+#if !RWPre1_6
+        /// <summary>
+        /// Is called at the end of each hediff interval tick. This updates the component properties, light sickness hediff, and sets the pawn's texture cache to be dirty.
+        /// </summary>
+        public override void PostTickInterval(int delta)
+        {
+            base.PostTickInterval(delta);
+            if (pawnHashOffsetTicks > nextTickToCheck) // Used instead of checking the hash
+            {
+                nextTickToCheck += 60;
+                bool asleep = (pawn.CurJob != null && pawn.jobs.curDriver.asleep);
+                bool conscious = pawn.health.capacities.GetLevel(PawnCapacityDefOf.Consciousness) <= 0.1f;
+
+                if (asleep != isAsleep)
+                {
+                    NoGlow = isAsleep = asleep;
+                }
+
+                if (conscious == !isUnconscious)
+                {
+                    NoGlow = isUnconscious = conscious;
+                }
+
+                UpdateAdaptationCompProperties();
+
+                if (updateGlowCurve || (lastHediffStageIndex != CurStageIndex))
+                {
+                    lastHediffStageIndex = CurStageIndex;
+
+                    UpdateGlowCurve();
+                }
+
+                if (!ignoreSickness) UpdateLightSickness();
+            }
+        }
+#endif
 
         /// <summary>
         /// Grabs the adaptation hediff comp.

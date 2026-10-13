@@ -1,4 +1,7 @@
-﻿using RimWorld;
+﻿#nullable disable
+
+using RimWorld;
+
 using Verse;
 
 namespace Cutebold_Assemblies
@@ -19,12 +22,15 @@ namespace Cutebold_Assemblies
 
         // RaceDef
         public static readonly ThingDef Alien_Cutebold;
+
         // Opinion ThoughtDefs
         public static readonly ThoughtDef ButcheredCuteboldCorpseOpinion;
         public static readonly ThoughtDef AteRawCuteboldMeat;
+
         // TaleDefs
         public static readonly TaleDef AteRawCuteboldMeatTale;
         public static readonly TaleDef ButcheredCuteboldCorpseTale;
+
         // RulePackDefs
         public static readonly RulePackDef NamerPersonCutebold;
         public static readonly RulePackDef NamerPersonCuteboldSlave;
@@ -32,11 +38,15 @@ namespace Cutebold_Assemblies
         public static readonly RulePackDef NamerPersonCuteboldOtherFemale;
         public static readonly RulePackDef NamerPersonCuteboldOutsider;
         public static readonly RulePackDef NamerPersonCuteboldOutsiderFemale;
+
         // HediffDefs
         public static readonly HediffDef CuteboldDarkAdaptation;
         public static readonly HediffDef CuteboldLightSickness;
+
         // ApparelDefs
         public static readonly ThingDef Cutebold_Goggles;
         //public static readonly ThingDef Cutebold_AdvancedGoggles;
     }
 }
+
+#nullable restore

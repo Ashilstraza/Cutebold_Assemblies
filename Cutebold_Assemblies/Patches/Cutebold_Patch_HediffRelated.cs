@@ -4,61 +4,66 @@ using System.Reflection.Emit;
 #endif
 
 using HarmonyLib;
+
 using RimWorld;
 using RimWorld.Planet;
+
 using System;
 using System.Collections.Generic;
+
 using UnityEngine;
+
 using Verse;
+
 using static AlienRace.AlienPartGenerator;
 
-namespace Cutebold_Assemblies
+namespace Cutebold_Assemblies;
+
+/// <summary>
+/// Conatins various harmony patches that the various cutebold hediffs touch.
+/// </summary>
+internal sealed class Cutebold_Patch_HediffRelated
 {
     /// <summary>
-    /// Conatins various harmony patches that the various cutebold hediffs touch. 
+    /// Enables patches governing Dark Adaptation related methods depending on various options or other mods.
     /// </summary>
-    class Cutebold_Patch_HediffRelated
+    /// <param name="harmony">Our harmony instance.</param>
+    public Cutebold_Patch_HediffRelated(Harmony harmony)
     {
-        /// <summary>
-        /// Enables patches governing Dark Adaptation related methods depending on various options or other mods.
-        /// </summary>
-        /// <param name="harmony">Our harmony instance.</param>
-        public Cutebold_Patch_HediffRelated(Harmony harmony)
+        Type thisClass = typeof(Cutebold_Patch_HediffRelated);
+        if (Cutebold_Assemblies.CuteboldSettings.eyeAdaptation)
         {
-            Type thisClass = typeof(Cutebold_Patch_HediffRelated);
-            if (Cutebold_Assemblies.CuteboldSettings.eyeAdaptation)
+            // Allows for dark adaptation, obviously not cave adaptation since that is a different game with cute kobolds.
+            harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "FactorFromGlow"), postfix: new HarmonyMethod(thisClass, nameof(CuteboldFactorFromGlowPostfix)));
+            if (Cutebold_Assemblies.CuteboldSettings.darknessOptions != Cutebold_DarknessOptions.IdeologyDefault)
             {
-                // Allows for dark adaptation, obviously not cave adaptation since that is a different game with cute kobolds.
-                harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "FactorFromGlow"), postfix: new HarmonyMethod(thisClass, nameof(CuteboldFactorFromGlowPostfix)));
-                if (Cutebold_Assemblies.CuteboldSettings.darknessOptions != Cutebold_DarknessOptions.IdeologyDefault)
-                {
-                    // Ignores the ignoreIfPrefersDarkness flag.
-                    harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "ActiveFor"), postfix: new HarmonyMethod(thisClass, nameof(CuteboldGlowActiveForPostfix)));
-                }
-                // Applies dark adaptation to all cutebolds as they spawn.               
-                harmony.Patch(AccessTools.Method(typeof(Pawn), nameof(Pawn.SpawnSetup)), postfix: new HarmonyMethod(thisClass, nameof(CuteboldAdaptationSpawnSetupPostfix)));
-                // Update dark adaptation eye references.
-                harmony.Patch(AccessTools.Method(typeof(HediffSet), nameof(HediffSet.DirtyCache)), postfix: new HarmonyMethod(thisClass, nameof(CuteboldHediffSetDirtyCachePostfix)));
-                // Update dark adaptation goggle references.
+                // Ignores the ignoreIfPrefersDarkness flag.
+                harmony.Patch(AccessTools.Method(typeof(StatPart_Glow), "ActiveFor"), postfix: new HarmonyMethod(thisClass, nameof(CuteboldGlowActiveForPostfix)));
+            }
+            // Applies dark adaptation to all cutebolds as they spawn.
+            harmony.Patch(AccessTools.Method(typeof(Pawn), nameof(Pawn.SpawnSetup)), postfix: new HarmonyMethod(thisClass, nameof(CuteboldAdaptationSpawnSetupPostfix)));
+            // Update dark adaptation eye references.
+            harmony.Patch(AccessTools.Method(typeof(HediffSet), nameof(HediffSet.DirtyCache)), postfix: new HarmonyMethod(thisClass, nameof(CuteboldHediffSetDirtyCachePostfix)));
+            // Update dark adaptation goggle references.
 #if RWPre1_3
                 harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "Notify_ApparelAdded"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
                 harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), "Notify_ApparelRemoved"), postfix: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldApparelChangedPostfix"));
 #else
-                harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), nameof(Pawn_ApparelTracker.Notify_ApparelChanged)), postfix: new HarmonyMethod(thisClass, nameof(CuteboldApparelChangedPostfix)));
+            harmony.Patch(AccessTools.Method(typeof(Pawn_ApparelTracker), nameof(Pawn_ApparelTracker.Notify_ApparelChanged)), postfix: new HarmonyMethod(thisClass, nameof(CuteboldApparelChangedPostfix)));
 #endif
-            }
-            else
-            {
-                // Removes dark adaptation to all cutebolds as they spawn in.
-                harmony.Patch(AccessTools.Method(typeof(Pawn), nameof(Pawn.SpawnSetup)), postfix: new HarmonyMethod(thisClass, nameof(CuteboldNoAdaptationSpawnSetupPostfix)));
-            }
+        }
+        else
+        {
+            // Removes dark adaptation to all cutebolds as they spawn in.
+            harmony.Patch(AccessTools.Method(typeof(Pawn), nameof(Pawn.SpawnSetup)), postfix: new HarmonyMethod(thisClass, nameof(CuteboldNoAdaptationSpawnSetupPostfix)));
+        }
 
-            try
+        try
+        {
+            // Don't patch if CE is running, we will use that to put goggles below headgear.
+            if (ModLister.GetActiveModWithIdentifier("CETeam.CombatExtended") == null/* && ModLister.GetActiveModWithIdentifier("OskarPotocki.VanillaFactionsExpanded.Core") == null*/)
             {
-                // Don't patch if CE is running, we will use that to put goggles below headgear.
-                if (ModLister.GetActiveModWithIdentifier("CETeam.CombatExtended") == null/* && ModLister.GetActiveModWithIdentifier("OskarPotocki.VanillaFactionsExpanded.Core") == null*/)
-                {
-                    // Adjust layer offset for cutebold goggles before ideology got released.
+                // Adjust layer offset for cutebold goggles before ideology got released.
 
 #if RWPre1_3
                     harmony.Patch(AccessTools.Method(typeof(PawnRenderer), "RenderPawnInternal", [
@@ -73,39 +78,39 @@ namespace Cutebold_Assemblies
                                         typeof(bool)
                                     ]), transpiler: new HarmonyMethod(typeof(Cutebold_Patch_HediffRelated), "CuteboldGogglesFixTranspiler"));
 #endif
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"{Cutebold_Assemblies.ModName}: Exception when trying to apply CuteboldGogglesFixTranspiler. Please notify the author for the cutebold mod with the logs. Thanks!\n{e}");
             }
         }
-
-        /// <summary>
-        /// Overrides the regular glow curve for cutebolds to allow for dark adaptation.
-        /// </summary>
-        /// <param name="__result">The previous glow curve result.</param>
-        /// <param name="t">The thing that is being evaluated.</param>
-        private static void CuteboldFactorFromGlowPostfix(StatPart_Glow __instance, ref float __result, Thing t)
+        catch (Exception e)
         {
-            if (t.def == Cutebold_Assemblies.CuteboldRaceDef)
-            {
+            Log.Error($"{Cutebold_Assemblies.ModName}: Exception when trying to apply CuteboldGogglesFixTranspiler. Please notify the author for the cutebold mod with the logs. Thanks!\n{e}");
+        }
+    }
 
-                switch (__instance.parentStat.defName)
-                {
-                    case "MoveSpeed":
-                    case "SurgerySuccessChanceFactor":
-                    case "WorkSpeedGlobal":
-                        Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)((Pawn)t).health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
-                        if (hediff != null) __result = hediff.GlowCurve.Evaluate(GlowHandler((Pawn)t));
-                        break;
-                    default:
-                        break;
-                }
+    /// <summary>
+    /// Overrides the regular glow curve for cutebolds to allow for dark adaptation.
+    /// </summary>
+    /// <param name="__result">The previous glow curve result.</param>
+    /// <param name="t">The thing that is being evaluated.</param>
+    private static void CuteboldFactorFromGlowPostfix(StatPart_Glow __instance, ref float __result, Thing t)
+    {
+        if (t.def == Cutebold_Assemblies.CuteboldRaceDef)
+        {
+            switch (__instance.parentStat.defName)
+            {
+                case "MoveSpeed":
+                case "SurgerySuccessChanceFactor":
+                case "WorkSpeedGlobal":
+                    Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)((Pawn)t).health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
+                    if (hediff != null) __result = hediff.GlowCurve.Evaluate(GlowHandler((Pawn)t));
+                    break;
+
+                default:
+                    break;
             }
         }
+    }
 
-        #region  Pre 1.5 Glow Handler
+    #region Pre 1.5 Glow Handler
 #if RWPre1_5
         /// <summary>
         /// Checks the glowGrid at the given thing's position
@@ -128,211 +133,211 @@ namespace Cutebold_Assemblies
             return 0.5f;
         }
 #endif
-        #endregion
+    #endregion Pre 1.5 Glow Handler
 
-        #region Post 1.5 Glow Handler
+    #region Post 1.5 Glow Handler
 #if !RWPre1_5
-/// <summary>
-        /// Checks the glowGrid at the given thing's position
-        /// </summary>
-        /// <param name="t">The thing to assess the glow level</param>
-        /// <returns>The glow level</returns>
-        public static float GlowHandler(Pawn p)
-        {
-            if (p is null) return 0.5f;
-            if (p.Spawned) return p.Map.glowGrid.GroundGlowAt(p.Position);
-            else if (p.CarriedBy != null) return p.CarriedBy.Map.glowGrid.GroundGlowAt(p.CarriedBy.Position);
-            else if (p.ParentHolder != null && p.ParentHolder is Caravan caravan)
-            {
-                float time = GenDate.HourFloat(GenTicks.TicksAbs, Find.WorldGrid.LongLatOf(caravan.Tile).x);
 
-                if (time > 19 || time < 5) return 0f; // Night
-                else if (time > 18 || time < 6) return 0.5f; // Dusk/Dawn
-                else return 1f; // Day
-            }
-            return 0.5f;
+    /// <summary>
+    /// Checks the glowGrid at the given thing's position
+    /// </summary>
+    /// <param name="t">The thing to assess the glow level</param>
+    /// <returns>The glow level</returns>
+    public static float GlowHandler(Pawn p)
+    {
+        if (p is null) return 0.5f;
+        if (p.Spawned) return p.Map.glowGrid.GroundGlowAt(p.Position);
+        else if (p.CarriedBy != null) return p.CarriedBy.Map.glowGrid.GroundGlowAt(p.CarriedBy.Position);
+        else if (p.ParentHolder != null && p.ParentHolder is Caravan caravan)
+        {
+            float time = GenDate.HourFloat(GenTicks.TicksAbs, Find.WorldGrid.LongLatOf(caravan.Tile).x);
+
+            if (time > 19 || time < 5) return 0f; // Night
+            else if (time > 18 || time < 6) return 0.5f; // Dusk/Dawn
+            else return 1f; // Day
         }
+        return 0.5f;
+    }
 #endif
-        #endregion
+    #endregion Post 1.5 Glow Handler
 
-
-        /// <summary>
-        /// Overrides if cutebolds ignore darkness ignores.
-        /// </summary>
-        /// <param name="__result">If the glow curve should be ignored.</param>
-        /// <param name="t">The thing that is being evaluated.</param>
-        private static void CuteboldGlowActiveForPostfix(ref bool __result, Thing t)
+    /// <summary>
+    /// Overrides if cutebolds ignore darkness ignores.
+    /// </summary>
+    /// <param name="__result">If the glow curve should be ignored.</param>
+    /// <param name="t">The thing that is being evaluated.</param>
+    private static void CuteboldGlowActiveForPostfix(ref bool __result, Thing t)
+    {
+        if (t.def == Cutebold_Assemblies.CuteboldRaceDef)
         {
-            if (t.def == Cutebold_Assemblies.CuteboldRaceDef)
-            {
-                __result = t.Spawned;
-            }
+            __result = t.Spawned;
         }
+    }
 
-        /// <summary>
-        /// Applies the dark adaptation hediff to cutebolds as they spawn if they don't have it.
-        /// </summary>
-        /// <param name="__instance">The pawn</param>
-        /// <param name="map">The map they are located on. (unused)</param>
-        /// <param name="respawningAfterLoad">If the pawn is spawning after a reload.</param>
-        private static void CuteboldAdaptationSpawnSetupPostfix(Pawn __instance, Map map, bool respawningAfterLoad)
+    /// <summary>
+    /// Applies the dark adaptation hediff to cutebolds as they spawn if they don't have it.
+    /// </summary>
+    /// <param name="__instance">The pawn</param>
+    /// <param name="map">The map they are located on. (unused)</param>
+    /// <param name="respawningAfterLoad">If the pawn is spawning after a reload.</param>
+    private static void CuteboldAdaptationSpawnSetupPostfix(Pawn __instance, Map map, bool respawningAfterLoad)
+    {
+        if (__instance.Dead || __instance?.def != Cutebold_Assemblies.CuteboldRaceDef || __instance.kindDef == null) return;
+
+        if (__instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) == null)
         {
-            if (__instance.Dead || __instance?.def != Cutebold_Assemblies.CuteboldRaceDef || __instance.kindDef == null) return;
+            Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)HediffMaker.MakeHediff(Cutebold_DefOf.CuteboldDarkAdaptation, __instance);
+            float minSeverity = 0f;
+            float maxSeverity = 0.1f;
+            bool goggles = false;
 
-            if (__instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) == null)
+            foreach (Apparel apparel in __instance.apparel.WornApparel)
             {
-                Hediff_CuteboldDarkAdaptation hediff = HediffMaker.MakeHediff(Cutebold_DefOf.CuteboldDarkAdaptation, __instance) as Hediff_CuteboldDarkAdaptation;
-                float minSeverity = 0f;
-                float maxSeverity = 0.1f;
-                bool goggles = false;
-
-                foreach (Apparel apparel in __instance.apparel.WornApparel)
+                if (apparel.def == Cutebold_DefOf.Cutebold_Goggles)
                 {
-                    if (apparel.def == Cutebold_DefOf.Cutebold_Goggles)
-                    {
-                        goggles = true;
-                    }
+                    goggles = true;
                 }
+            }
 
-                if (!(__instance.story.traits.HasTrait(TraitDef.Named("Wimp")) && __instance.health.hediffSet.PainTotal > 0.0f) && __instance.health.hediffSet.PainTotal <= 0.5f && !respawningAfterLoad)
-                {
+            if (!(__instance.story.traits.HasTrait(TraitDef.Named("Wimp")) && __instance.health.hediffSet.PainTotal > 0.0f) && __instance.health.hediffSet.PainTotal <= 0.5f && !respawningAfterLoad)
+            {
 #if RWPre1_4
                     if (__instance.story.childhood != null && Cutebold_Patch_Names.CuteboldUndergroundChildBackstories.Contains(__instance.story.childhood))
 #else
-                    if (__instance.story.Childhood != null && Cutebold_Patch_Names.CuteboldUndergroundChildBackstories.Contains(__instance.story.Childhood))
+                if (__instance.story.Childhood != null && Cutebold_Patch_Names.CuteboldUndergroundChildBackstories.Contains(__instance.story.Childhood))
 #endif
-                    {
-                        minSeverity += 0.05f;
-                        maxSeverity += 0.15f;
-                    }
+                {
+                    minSeverity += 0.05f;
+                    maxSeverity += 0.15f;
+                }
 
 #if RWPre1_4
                     if (__instance.story.adulthood != null && Cutebold_Patch_Names.CuteboldUndergroundAdultBackstories.Contains(__instance.story.adulthood))
 #else
-                    if (__instance.story.Adulthood != null && Cutebold_Patch_Names.CuteboldUndergroundAdultBackstories.Contains(__instance.story.Adulthood))
+                if (__instance.story.Adulthood != null && Cutebold_Patch_Names.CuteboldUndergroundAdultBackstories.Contains(__instance.story.Adulthood))
 #endif
-                    {
-                        minSeverity += 0.20f;
-                        maxSeverity += 0.30f;
-                    }
-
-                    if (__instance.story.traits.HasTrait(TraitDefOf.Undergrounder))
-                    {
-                        minSeverity += 0.10f;
-                        maxSeverity += 0.20f;
-                    }
-
-                    if (__instance.story.traits.HasTrait(TraitDef.Named("Wimp")) && !goggles)
-                    {
-                        minSeverity = minSeverity > 0.5f ? 0.5f : minSeverity;
-                        maxSeverity = maxSeverity > 0.7f ? 0.7f : maxSeverity;
-                    }
-                    else if (goggles)
-                    {
-                        minSeverity = minSeverity * 3f + 0.3f;
-                        maxSeverity = maxSeverity * 3f + 0.4f;
-                    }
+                {
+                    minSeverity += 0.20f;
+                    maxSeverity += 0.30f;
                 }
 
-                hediff.Severity = new FloatRange(minSeverity, maxSeverity).RandomInRange;
-
-                Cutebold_AddHediff_Handler(__instance, hediff);
-                if (!waitingForSpawn)
+                if (__instance.story.traits.HasTrait(TraitDefOf.Undergrounder))
                 {
-                    waitingForSpawn = true;
-                    LongEventHandler.QueueLongEvent(delegate
-                    {
-                        Cutebold_AddHediff_Handler();
-                    }, "Adding Cutebold Hediffs Cause Threads Are Fun", doAsynchronously: false, null);
+                    minSeverity += 0.10f;
+                    maxSeverity += 0.20f;
+                }
+
+                if (__instance.story.traits.HasTrait(TraitDef.Named("Wimp")) && !goggles)
+                {
+                    minSeverity = minSeverity > 0.5f ? 0.5f : minSeverity;
+                    maxSeverity = maxSeverity > 0.7f ? 0.7f : maxSeverity;
+                }
+                else if (goggles)
+                {
+                    minSeverity = minSeverity * 3f + 0.3f;
+                    maxSeverity = maxSeverity * 3f + 0.4f;
                 }
             }
-        }
 
-        private static Dictionary<Pawn, Hediff_CuteboldDarkAdaptation> applyHediffList = [];
-        private static bool waitingForSpawn = false;
+            hediff.Severity = new FloatRange(minSeverity, maxSeverity).RandomInRange;
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="pawn"></param>
-        /// <param name="hediff"></param>
-        private static void Cutebold_AddHediff_Handler(Pawn pawn, Hediff_CuteboldDarkAdaptation hediff)
-        {
-            Cutebold_Patch_HediffRelated.applyHediffList.Add(pawn, hediff);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public static void Cutebold_AddHediff_Handler()
-        {
-            if (!waitingForSpawn) return;
-            foreach (var pawnHediff in applyHediffList)
+            Cutebold_AddHediff_Handler(__instance, hediff);
+            if (!waitingForSpawn)
             {
-                Pawn pawn = pawnHediff.Key;
-                Hediff_CuteboldDarkAdaptation darkAdaptation = pawnHediff.Value;
-                pawn.health.AddHediff(darkAdaptation);
-                darkAdaptation.UpdateGoggles();
+                waitingForSpawn = true;
+                LongEventHandler.QueueLongEvent(delegate
+                {
+                    Cutebold_AddHediff_Handler();
+                }, "Adding Cutebold Hediffs Cause Threads Are Fun", doAsynchronously: false, null);
+            }
+        }
+    }
 
-                // Make sure pawn render nodes are initialized.
+    private static Dictionary<Pawn, Hediff_CuteboldDarkAdaptation> applyHediffList = [];
+    private static bool waitingForSpawn;
+
+    /// <summary>
+    ///
+    /// </summary>
+    /// <param name="pawn"></param>
+    /// <param name="hediff"></param>
+    private static void Cutebold_AddHediff_Handler(Pawn pawn, Hediff_CuteboldDarkAdaptation hediff)
+    {
+        Cutebold_Patch_HediffRelated.applyHediffList.Add(pawn, hediff);
+    }
+
+    /// <summary>
+    ///
+    /// </summary>
+    public static void Cutebold_AddHediff_Handler()
+    {
+        if (!waitingForSpawn) return;
+        foreach (var pawnHediff in applyHediffList)
+        {
+            Pawn pawn = pawnHediff.Key;
+            Hediff_CuteboldDarkAdaptation darkAdaptation = pawnHediff.Value;
+            pawn.health.AddHediff(darkAdaptation);
+            darkAdaptation.UpdateGoggles();
+
+            // Make sure pawn render nodes are initialized.
 #if RW1_5
                 pawn.TryGetComp<AlienComp>().CompRenderNodes();
 #endif
 
-                // Change eye color on Mimes
-                if (pawn.health.hediffSet.hediffs.Find(hediff => hediff.def.defName == "AA_MimeHediff") != null)
-                {
-                    pawn.TryGetComp<AlienComp>().GetChannel("eye").first = new Color(Rand.Range(0.7f, 0.8f), Rand.Range(0.5f, 0.6f), 0f);
-                    Cutebold_Patch_Body.SetDirty(pawn);
-                }
-            }
-            waitingForSpawn = false;
-            applyHediffList = [];
-        }
-
-        /// <summary>
-        /// Removes the dark adaptation hediff on cutebolds if they spawn with it.
-        /// </summary>
-        /// <param name="__instance">The pawn</param>
-        private static void CuteboldNoAdaptationSpawnSetupPostfix(Pawn __instance)
-        {
-            if (__instance.Dead || __instance?.def != Cutebold_Assemblies.CuteboldRaceDef || __instance.kindDef == null) return;
-
-            Hediff hediff = __instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
-
-            if (hediff != null)
+            // Change eye color on Mimes TODO: Revert when HAR Updates
+            /*if (pawn.health.hediffSet.hediffs.Find(hediff => hediff.def.defName == "AA_MimeHediff") != null)
             {
-                __instance.health.RemoveHediff(hediff);
-            }
+                pawn.TryGetComp<AlienComp>().GetChannel("eye").first = new Color(Rand.Range(0.7f, 0.8f), Rand.Range(0.5f, 0.6f), 0f);
+                Cutebold_Patch_Body.SetDirty(pawn);
+            }*/
         }
+        waitingForSpawn = false;
+        applyHediffList = [];
+    }
 
-        /// <summary>
-        /// Notifies the cutebold dark adaptation hediff that list of hediffs has changed.
-        /// </summary>
-        /// <param name="__instance">Instance of a pawn's hediff set.</param>
-        private static void CuteboldHediffSetDirtyCachePostfix(HediffSet __instance)
+    /// <summary>
+    /// Removes the dark adaptation hediff on cutebolds if they spawn with it.
+    /// </summary>
+    /// <param name="__instance">The pawn</param>
+    private static void CuteboldNoAdaptationSpawnSetupPostfix(Pawn __instance)
+    {
+        if (__instance.Dead || __instance?.def != Cutebold_Assemblies.CuteboldRaceDef || __instance.kindDef == null) return;
+
+        Hediff hediff = __instance.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
+
+        if (hediff != null)
         {
-            if (__instance.pawn.def != Cutebold_Assemblies.CuteboldRaceDef) return;
-
-            Hediff_CuteboldDarkAdaptation hediff = __instance.pawn.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) as Hediff_CuteboldDarkAdaptation;
-
-            hediff?.UpdateEyes();
+            __instance.health.RemoveHediff(hediff);
         }
+    }
 
-        /// <summary>
-        /// Notifies the cutebold dark adaptation hediff that the apparel has changed.
-        /// </summary>
-        /// <param name="__instance"></param>
-        private static void CuteboldApparelChangedPostfix(HediffSet __instance)
-        {
-            if (__instance.pawn.def != Cutebold_Assemblies.CuteboldRaceDef) return;
+    /// <summary>
+    /// Notifies the cutebold dark adaptation hediff that list of hediffs has changed.
+    /// </summary>
+    /// <param name="__instance">Instance of a pawn's hediff set.</param>
+    private static void CuteboldHediffSetDirtyCachePostfix(HediffSet __instance)
+    {
+        if (__instance.pawn.def != Cutebold_Assemblies.CuteboldRaceDef) return;
 
-            Hediff_CuteboldDarkAdaptation hediff = __instance.pawn.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation) as Hediff_CuteboldDarkAdaptation;
+        Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)__instance.pawn.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
 
-            hediff?.UpdateGoggles();
-        }
+        hediff?.UpdateEyes();
+    }
 
-        #region 1.1 GoggleLayerTranspiler
+    /// <summary>
+    /// Notifies the cutebold dark adaptation hediff that the apparel has changed.
+    /// </summary>
+    /// <param name="__instance"></param>
+    private static void CuteboldApparelChangedPostfix(Pawn_ApparelTracker __instance)
+    {
+        if (__instance.pawn.def != Cutebold_Assemblies.CuteboldRaceDef) return;
+
+        Hediff_CuteboldDarkAdaptation hediff = (Hediff_CuteboldDarkAdaptation)__instance.pawn.health.hediffSet.GetFirstHediffOfDef(Cutebold_DefOf.CuteboldDarkAdaptation);
+
+        hediff?.UpdateGoggles();
+    }
+
+    #region 1.1 GoggleLayerTranspiler
 #if RW1_1
         /// <summary>
         /// RW1.1
@@ -355,11 +360,11 @@ namespace Cutebold_Assemblies
 
             //
             // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
-            // 
+            //
             // Adjusts the y offset to put goggles below other headgear.
-            // 
+            //
             // modified = false;
-            // 
+            //
             // if (apparelGraphics[j].sourceApparel.def == Cutebold_DefOf.Cutebold_Goggles)
             // {
             //     loc2.y -= offset;
@@ -396,9 +401,9 @@ namespace Cutebold_Assemblies
 
             //
             // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
-            // 
+            //
             // Reverts the y offset for other headgear.
-            // 
+            //
             // if(modified)
             // {
             //     loc2.y += offset;
@@ -461,9 +466,9 @@ namespace Cutebold_Assemblies
             }
         }
 #endif
-        #endregion
+    #endregion 1.1 GoggleLayerTranspiler
 
-        #region 1.2 Goggle Layer Transpiler
+    #region 1.2 Goggle Layer Transpiler
 #if RW1_2
         /// <summary>
         /// RW1.1
@@ -487,11 +492,11 @@ namespace Cutebold_Assemblies
 
             //
             // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
-            // 
+            //
             // Adjusts the y offset to put goggles below other headgear.
-            // 
+            //
             // modified = false;
-            // 
+            //
             // if (apparelGraphics[j].sourceApparel.def == Cutebold_DefOf.Cutebold_Goggles)
             // {
             //     loc2.y -= offset;
@@ -528,9 +533,9 @@ namespace Cutebold_Assemblies
 
             //
             // See drSpy decompile of PawnRenderer.RenderPawnInternal() for variable references
-            // 
+            //
             // Reverts the y offset for other headgear.
-            // 
+            //
             // if(modified)
             // {
             //     loc2.y += offset;
@@ -593,6 +598,5 @@ namespace Cutebold_Assemblies
             }
         }
 #endif
-        #endregion
-    }
+    #endregion 1.2 Goggle Layer Transpiler
 }

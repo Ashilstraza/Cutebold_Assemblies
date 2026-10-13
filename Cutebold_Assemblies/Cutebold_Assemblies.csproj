@@ -1,209 +1,122 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.6 Release|AnyCPU'">
-    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.6\Assemblies\</OutputPath>
-    <DefineConstants>RW1_6</DefineConstants>
-    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <Optimize>true</Optimize>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>latest</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
-copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-del "$(TargetDir)*.pdb"</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.6 Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.6\Assemblies\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;RW1_6</DefineConstants>
-    <DebugType>portable</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>latest</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
-copy /y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.5 Release|AnyCPU'">
-    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.5\Assemblies\</OutputPath>
-    <DefineConstants>RW1_5;RWPre1_6</DefineConstants>
-    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <Optimize>true</Optimize>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>latest</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
-copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-del "$(TargetDir)*.pdb"</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.4 Release|AnyCPU'">
-    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.4\Assemblies\</OutputPath>
-    <DefineConstants>RW1_4;RWPre1_5;RWPre1_6</DefineConstants>
-    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <Optimize>true</Optimize>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>latest</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
-copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-del "$(TargetDir)*.pdb"</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == '1.3 Release|AnyCPU' ">
-    <DebugType>none</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>latest</LangVersion>
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.3\Assemblies\</OutputPath>
-    <DefineConstants>RW1_3;RWPre1_5;RWPre1_4;RWPre1_6</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <DebugSymbols>false</DebugSymbols>
-    <CodeAnalysisRuleSet>
-    </CodeAnalysisRuleSet>
-    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <Prefer32Bit>false</Prefer32Bit>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
-copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-del "$(TargetDir)*.pdb"</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.2 Release|AnyCPU'">
-    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.2\Assemblies\</OutputPath>
-    <DefineConstants>RW1_2;RWPre1_5;RWPre1_4;RWPre1_3;RWPre1_6</DefineConstants>
-    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <Optimize>true</Optimize>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>latest</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
-copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-del "$(TargetDir)*.pdb"</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.1 Release|AnyCPU'">
-    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.1\Assemblies\</OutputPath>
-    <DefineConstants>RW1_1;RWPre1_5;RWPre1_4;RWPre1_3;RWPre1_2;RWPre1_6</DefineConstants>
-    <CheckForOverflowUnderflow>true</CheckForOverflowUnderflow>
-    <Optimize>true</Optimize>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>latest</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
-copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-del "$(TargetDir)*.pdb"</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.5 Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.5\Assemblies\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;RW1_5;RWPre1_6</DefineConstants>
-    <DebugType>portable</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>latest</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
-copy /y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.4 Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.4\Assemblies\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;RW1_4;RWPre1_5;RWPre1_6</DefineConstants>
-    <DebugType>portable</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>latest</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
-copy /y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == '1.3 Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>portable</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>latest</LangVersion>
-    <Optimize>false</Optimize>
-    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.3\Assemblies\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;RW1_3;RWPre1_5;RWPre1_4;RWPre1_6</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <CodeAnalysisRuleSet>
-    </CodeAnalysisRuleSet>
-    <GenerateSerializationAssemblies>Auto</GenerateSerializationAssemblies>
-    <Prefer32Bit>false</Prefer32Bit>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
-copy /y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.2 Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.2\Assemblies\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;RW1_2;RWPre1_5;RWPre1_4;RWPre1_3;RWPre1_6</DefineConstants>
-    <DebugType>portable</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>latest</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
-copy /y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == '1.1 Debug|AnyCPU'">
-    <DebugSymbols>true</DebugSymbols>
-    <OutputPath>..\..\..\..\..\Rimworld Mods\LocalMods\Cutebold Race\1.1\Assemblies\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;RW1_1;RWPre1_5;RWPre1_4;RWPre1_3;RWPre1_2;RWPre1_6</DefineConstants>
-    <DebugType>portable</DebugType>
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <LangVersion>latest</LangVersion>
-    <ErrorReport>prompt</ErrorReport>
-    <Prefer32Bit>false</Prefer32Bit>
-    <UseWinFormsOutOfProcDesigner>True</UseWinFormsOutOfProcDesigner>
-	<PostBuildEvent>del "$(TargetDir)Ash Patch Manager.*"
-copy /y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.dll" "$(TargetDir)Ash Patch Manager.dll"
-copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(TargetDir)Ash Patch Manager.pdb"</PostBuildEvent>
+<Project Sdk="Microsoft.NET.Sdk">
+<Import Condition="Exists('ExternalPath.props')" Project="ExternalPath.props" />
+  <PropertyGroup>
+    <ProjectGuid>{595E3FE8-C183-4363-83F6-03E75C56D839}</ProjectGuid>
+    <RootNamespace>Cutebold_Assemblies</RootNamespace>
+	<AssemblyName>Cutebold_Assemblies</AssemblyName>
   </PropertyGroup>
   <PropertyGroup>
-    <OutputType>Library</OutputType>
-    <ProjectGuid>{595E3FE8-C183-4363-83F6-03E75C56D839}</ProjectGuid>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-    <TargetFrameworkProfile />
+	<PlatformTarget>AnyCPU</PlatformTarget>
+    <AllowUnsafeBlocks>False</AllowUnsafeBlocks>
+	<LangVersion>latest</LangVersion>
     <StartupObject />
-    <RootNamespace>Cutebold_Assemblies</RootNamespace>
+    <Nullable>enable</Nullable>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
+    <AnalysisMode>recommended</AnalysisMode>
+    <Configurations>Debug;Release;Debug 1.1;Release 1.1;Debug 1.2;Release 1.2;Debug 1.3;Release 1.3;Debug 1.4;Release 1.4;Debug 1.5;Release 1.5;Debug 1.6;Release 1.6;Debug 1.7;Release 1.7</Configurations>
+	<!-- Ignore warning about processor architecture mismatch with PlayMaker ConditionalExpression -->
+    <NoWarn>$(NoWarn);MSB3270;CS0649</NoWarn>
+    <RestorePackagesWithLockFile>True</RestorePackagesWithLockFile>
+    <RestoreLockedMode Condition="'$(CI)' == 'true'">True</RestoreLockedMode>
+	<!-- Shortens and anonymizes paths in debug symbols relative to the project directory. Breakpoints will not work, however. -->
+    <PathMap>$(MSBuildProjectDirectory)=/</PathMap>
+	<Deterministic>true</Deterministic>
+	<OutputType>Library</OutputType>
+	<PackageLicenseFile>LICENSE.md</PackageLicenseFile>
+	<EnforceCodeStyleInBuild>True</EnforceCodeStyleInBuild>
+	<IsPublishable>False</IsPublishable>
+	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+	<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	<AppendRuntimeIdentifierToOutputPath>false</AppendRuntimeIdentifierToOutputPath>
+	<ProduceReferenceAssembly>False</ProduceReferenceAssembly>
+  </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'!='Release 1.7|AnyCPU' and '$(Configuration)|$(Platform)'!='Debug 1.7|AnyCPU'">
+	<TargetFramework>net481</TargetFramework>
+    <TargetFrameworkVersion>v4.8.1</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.7|AnyCPU' or '$(Configuration)|$(Platform)'=='Debug 1.7|AnyCPU'">
+	<TargetFramework>net10.0</TargetFramework>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.1|AnyCPU'">
+	<DefineConstants>DEBUG;RW1_1;RWPre1_2;RWPre1_3;RWPre1_4;RWPre1_5;RWPre1_6;RWPre1_7</DefineConstants>
+	<OutputPath>$(ModFolder)\1.1\Assemblies</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.1|AnyCPU'">
+	<DefineConstants>RW1_1;RWPre1_2;RWPre1_3;RWPre1_4;RWPre1_5;RWPre1_6;RWPre1_7</DefineConstants>
+    <Optimize>True</Optimize>
+	<OutputPath>$(ModFolder)\1.1\Assemblies</OutputPath>
+	<DebugType>none</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.2|AnyCPU'">
+	<DefineConstants>DEBUG;RW1_2;RWPre1_3;RWPre1_4;RWPre1_5;RWPre1_6;RWPre1_7</DefineConstants>
+	<OutputPath>$(ModFolder)\1.2\Assemblies</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.2|AnyCPU'">
+	<DefineConstants>RW1_2;RWPre1_3;RWPre1_4;RWPre1_5;RWPre1_6;RWPre1_7</DefineConstants>
+    <Optimize>True</Optimize>
+	<OutputPath>$(ModFolder)\1.2\Assemblies</OutputPath>
+	<DebugType>none</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.3|AnyCPU'">
+	<DefineConstants>DEBUG;RW1_3;RWPre1_4;RWPre1_5;RWPre1_6;RWPre1_7</DefineConstants>
+	<OutputPath>$(ModFolder)\1.3\Assemblies</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.3|AnyCPU'">
+	<DefineConstants>RW1_3;RWPre1_4;RWPre1_5;RWPre1_6;RWPre1_7</DefineConstants>
+    <Optimize>True</Optimize>
+	<OutputPath>$(ModFolder)\1.3\Assemblies</OutputPath>
+	<DebugType>none</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.4|AnyCPU'">
+	<DefineConstants>DEBUG;RW1_4;RWPre1_5;RWPre1_6;RWPre1_7</DefineConstants>
+	<OutputPath>$(ModFolder)\1.4\Assemblies</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.4|AnyCPU'">
+	<DefineConstants>RW1_4;RWPre1_5;RWPre1_6;RWPre1_7</DefineConstants>
+    <Optimize>True</Optimize>
+	<OutputPath>$(ModFolder)\1.4\Assemblies</OutputPath>
+	<DebugType>none</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.5|AnyCPU'">
+	<DefineConstants>DEBUG;RW1_5;RWPre1_6;RWPre1_7</DefineConstants>
+	<OutputPath>$(ModFolder)\1.5\Assemblies</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.5|AnyCPU'">
+	<DefineConstants>RW1_5;RWPre1_6;RWPre1_7</DefineConstants>
+    <Optimize>True</Optimize>
+	<OutputPath>$(ModFolder)\1.5\Assemblies</OutputPath>
+	<DebugType>none</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.6|AnyCPU'">
+	<DefineConstants>DEBUG;RW1_6;RWPre1_7</DefineConstants>
+	<OutputPath>$(ModFolder)\1.6\Assemblies</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.6|AnyCPU'">
+	<DefineConstants>RW1_6;RWPre1_7</DefineConstants>
+    <Optimize>True</Optimize>
+	<OutputPath>$(ModFolder)\1.6\Assemblies</OutputPath>
+	<DebugType>none</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug 1.7|AnyCPU'">
+  <DefineConstants>DEBUG;RW1_7</DefineConstants>
+  <OutputPath>$(ModFolder)\1.7\Assemblies</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release 1.7|AnyCPU'">
+  <DefineConstants>RW1_7;</DefineConstants>
+    <Optimize>True</Optimize>
+	<OutputPath>$(ModFolder)\1.7\Assemblies</OutputPath>
+	<DebugType>none</DebugType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DebugType>none</DebugType>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Hediffs\Cutebold_Hediff_LightSickness.cs" />
-    <Compile Include="Patches\Cutebold_Patch_Body.cs" />
-    <Compile Include="Patches\Cutebold_Patch_HediffRelated.cs" />
-    <Compile Include="Patches\Cutebold_Patch_Names.cs" />
-    <Compile Include="Patches\Cutebold_Patch_Stats.cs" />
-    <Compile Include="Cutebold_DefOf.cs" />
-    <Compile Include="Cutebold_Settings.cs" />
-    <Compile Include="Cutebold_Assemblies.cs" />
-    <Compile Include="Hediffs\Cutebold_Hediff_DarkAdaptation.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <WCFMetadata Include="Connected Services\" />
+    <ProjectReference Include="..\..\Ash Patch Manager\Ash Patch Manager.csproj">
+      <Private>True</Private>
+      <ReferenceOutputAssembly>True</ReferenceOutputAssembly>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Reference Include="0Harmony">
@@ -218,23 +131,6 @@ copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(Tar
       <HintPath>..\..\References\$(Configuration)\Assembly-CSharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="BadHygiene">
-      <HintPath>..\..\References\$(Configuration)\BadHygiene.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="GrowingZonePlus">
-      <HintPath>..\..\References\$(Configuration)\GrowingZonePlus.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Rainbeau%27s Rumor Has It">
-      <HintPath>..\..\References\$(Configuration)\Rainbeau's Rumor Has It.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="SomeThingsFloat">
-      <HintPath>..\..\References\$(Configuration)\SomeThingsFloat.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System" />
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>..\..\References\$(Configuration)\UnityEngine.CoreModule.dll</HintPath>
       <Private>False</Private>
@@ -247,11 +143,18 @@ copy /Y "$(SolutionDir)References\$(Configuration)\Ash Patch Manager.pdb" "$(Tar
       <HintPath>..\..\References\$(Configuration)\UnityEngine.TextRenderingModule.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Ash Patch Manager">
-      <HintPath>..\..\References\$(Configuration)\Ash Patch Manager.dll</HintPath>
+    <Reference Include="UnityStubs">
+      <HintPath>..\..\References\$(Configuration)\UnityStubs.dll</HintPath>
       <Private>False</Private>
     </Reference>
   </ItemGroup>
-  <Import Project="..\..\Ash Patch Manager\Alien Patches\Alien Patches.projitems" Label="Shared" />
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <ItemGroup>
+    <None Update="LICENSE.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="del &quot;$(OutputPath)/*.pdb&quot;" />
+  </Target>
 </Project>
